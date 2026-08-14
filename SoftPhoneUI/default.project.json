@@ -1,0 +1,42 @@
+{
+  "name": "SoftPhoneUI",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "SoftPhoneModules": {
+        "$path": "src/ReplicatedStorage/SoftPhoneModules"
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "SoftPhoneUI": {
+        "$path": "src/StarterGui/SoftPhoneUI"
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "FilteringEnabled": true
+      },
+      "Baseplate": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Size": [512, 1, 512],
+          "Position": [0, -0.5, 0],
+          "Color": [0.85, 0.9, 0.95],
+          "Material": "SmoothPlastic"
+        }
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Ambient": [0.7, 0.65, 0.75],
+        "Brightness": 2,
+        "OutdoorAmbient": [0.6, 0.55, 0.65]
+      }
+    }
+  }
+}

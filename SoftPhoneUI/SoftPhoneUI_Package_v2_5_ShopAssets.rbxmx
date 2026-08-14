@@ -1,0 +1,2794 @@
+<?xml version="1.0" encoding="utf-8"?>
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+  <Item class="Folder" referent="SoftPhonePackage">
+    <Properties><string name="Name">SoftPhonePackage</string></Properties>
+    <Item class="Folder" referent="SoftPhoneModules">
+      <Properties><string name="Name">SoftPhoneModules</string></Properties>
+    <Item class="ModuleScript" referent="MS_Theme">
+      <Properties>
+        <string name="Name">Theme</string>
+        <ProtectedString name="Source"><![CDATA[--[[
+	SoftPhoneUI Theme
+	White futuristic phone chrome with vibrant pink accents.
+]]
+
+local Theme = {}
+
+Theme.Side = "Right"
+
+Theme.Colors = {
+	PanelFill = Color3.fromRGB(255, 255, 255),
+	PanelFillAlt = Color3.fromRGB(255, 248, 253),
+	PanelStroke = Color3.fromRGB(255, 255, 255),
+	AccentPink = Color3.fromRGB(255, 190, 222),
+	AccentPinkDeep = Color3.fromRGB(232, 95, 166),
+	AccentMint = Color3.fromRGB(86, 224, 209),
+	AccentLavender = Color3.fromRGB(176, 128, 255),
+	AccentBlue = Color3.fromRGB(120, 203, 255),
+	AccentCream = Color3.fromRGB(255, 250, 254),
+	Gem = Color3.fromRGB(255, 74, 173),
+	GemInner = Color3.fromRGB(255, 218, 244),
+	TitleBar = Color3.fromRGB(255, 245, 253),
+	TitleBarAlt = Color3.fromRGB(255, 202, 229),
+	WindowChrome = Color3.fromRGB(255, 255, 255),
+	WindowBorder = Color3.fromRGB(238, 208, 232),
+	ContentBg = Color3.fromRGB(255, 251, 254),
+	ButtonFill = Color3.fromRGB(255, 211, 233),
+	ButtonFillHover = Color3.fromRGB(255, 222, 239),
+	ButtonStroke = Color3.fromRGB(255, 151, 203),
+	TextPrimary = Color3.fromRGB(74, 54, 84),
+	TextOnPink = Color3.fromRGB(255, 255, 255),
+	TextMuted = Color3.fromRGB(139, 112, 151),
+	CloseRed = Color3.fromRGB(255, 88, 126),
+	Minimize = Color3.fromRGB(255, 211, 95),
+	Maximize = Color3.fromRGB(89, 224, 172),
+	SlotBg = Color3.fromRGB(249, 238, 250),
+	SlotBgAlt = Color3.fromRGB(238, 249, 255),
+	Scrollbar = Color3.fromRGB(255, 139, 204),
+	Shadow = Color3.fromRGB(155, 104, 157),
+}
+
+Theme.Fonts = {
+	Title = Enum.Font.GothamBold,
+	Body = Enum.Font.GothamMedium,
+	UI = Enum.Font.Gotham,
+}
+
+Theme.Sizes = {
+	SidebarWidthScale = 0.22,
+	SidebarWidthMin = 200,
+	SidebarWidthMax = 280,
+	SidebarHeightScale = 0.88,
+	TabReveal = 32,
+	GemSize = 36,
+	ButtonHeight = 38,
+	CornerRadius = 18,
+	WindowCorner = 10,
+	WindowWidthScale = 0.58,
+	WindowHeightScale = 0.64,
+}
+
+Theme.Tween = {
+	SlideTime = 0.42,
+	SlideStyle = Enum.EasingStyle.Quint,
+	SlideDir = Enum.EasingDirection.Out,
+	QuickTime = 0.18,
+	WindowTime = 0.38,
+}
+
+Theme.Buttons = {
+	{ Id = "Shop", Label = "Shop", Icon = "bag", Accent = Theme.Colors.AccentPinkDeep },
+	{ Id = "Gacha", Label = "Gacha", Icon = "star", Accent = Theme.Colors.AccentLavender },
+	{ Id = "Map", Label = "Map", Icon = "map", Accent = Theme.Colors.AccentBlue },
+	{ Id = "Messages", Label = "Messages", Icon = "mail", Accent = Theme.Colors.AccentPinkDeep },
+	{ Id = "Teleport", Label = "Teleport", Icon = "portal", Accent = Theme.Colors.AccentLavender },
+	{ Id = "Job", Label = "Job", Icon = "briefcase", Accent = Theme.Colors.AccentMint },
+}
+
+-- Optional Roblox image asset ids after uploading assets/png or assets/generated.
+-- Example: bag = "rbxassetid://1234567890"
+Theme.IconImages = {
+	gem = "rbxassetid://123801663036253",
+	bag = "rbxassetid://78667116344761",
+	star = "rbxassetid://107219881831454",
+	map = "rbxassetid://82322439606303",
+	mail = "rbxassetid://87540293204246",
+	portal = "rbxassetid://137952940849608",
+	briefcase = "rbxassetid://116977598895169",
+	capsule = "rbxassetid://132648938590553",
+	crystal = "rbxassetid://126962551323488",
+	ticket = "rbxassetid://129656404868771",
+	constellation = "rbxassetid://112646389569977",
+	gift = "rbxassetid://105226340900083",
+	city = "rbxassetid://87658912537240",
+	pin = "rbxassetid://109242731362340",
+	cafe = "rbxassetid://102395837969023",
+	mall = "rbxassetid://129969640184829",
+	office = "rbxassetid://119416441801055",
+	message = "rbxassetid://87540293204246",
+	friend = "rbxassetid://103192066320011",
+	megaphone = "rbxassetid://75224246235322",
+	bell = "rbxassetid://100174367873526",
+	reply = "rbxassetid://121506647753651",
+	compass = "rbxassetid://133963455361854",
+	document = "rbxassetid://110293176551847",
+	delivery = "rbxassetid://72311386052094",
+}
+
+-- Upload assets/generated/shop_items and paste the six ids here. The shop uses
+-- polished native item art until an uploaded image id is available.
+Theme.ShopItemImages = {
+	pixel_bow_jacket = "rbxassetid://102324325450737",
+	starline_skirt = "rbxassetid://137054149355990",
+	bubble_boots = "rbxassetid://92795722045701",
+	ribbon_satchel = "rbxassetid://71825306308832",
+	mint_sleeve_set = "rbxassetid://133446076092208",
+	glow_hairclip = "rbxassetid://86930450138088",
+}
+
+return Theme
+]]></ProtectedString>
+      </Properties>
+    </Item>
+
+    <Item class="ModuleScript" referent="MS_TweenUtil">
+      <Properties>
+        <string name="Name">TweenUtil</string>
+        <ProtectedString name="Source"><![CDATA[local TweenService = game:GetService("TweenService")
+local Theme = require(script.Parent.Theme)
+
+local TweenUtil = {}
+
+function TweenUtil.play(instance: Instance, props: { [string]: any }, duration: number?, style: Enum.EasingStyle?, direction: Enum.EasingDirection?): Tween
+	local info = TweenInfo.new(
+		duration or Theme.Tween.SlideTime,
+		style or Theme.Tween.SlideStyle,
+		direction or Theme.Tween.SlideDir
+	)
+	local tween = TweenService:Create(instance, info, props)
+	tween:Play()
+	return tween
+end
+
+function TweenUtil.slidePosition(gui: GuiObject, target: UDim2, duration: number?): Tween
+	return TweenUtil.play(gui, { Position = target }, duration or Theme.Tween.SlideTime)
+end
+
+function TweenUtil.fade(gui: GuiObject, transparency: number, duration: number?): Tween
+	return TweenUtil.play(gui, { BackgroundTransparency = transparency }, duration or Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+end
+
+return TweenUtil
+]]></ProtectedString>
+      </Properties>
+    </Item>
+
+    <Item class="ModuleScript" referent="MS_IconDraw">
+      <Properties>
+        <string name="Name">IconDraw</string>
+        <ProtectedString name="Source"><![CDATA[--[[
+	Glossy UI icon builder.
+	Uses uploaded ImageLabel assets when Theme.IconImages has ids; otherwise draws
+	polished Roblox-native icons from Frames, UIStroke, UICorner, and UIGradient.
+]]
+
+local Theme = require(script.Parent.Theme)
+
+local IconDraw = {}
+
+local WHITE = Color3.fromRGB(255, 255, 255)
+local PINK = Theme.Colors.AccentPinkDeep
+local HOT_PINK = Theme.Colors.AccentPink
+local LAVENDER = Theme.Colors.AccentLavender
+local CYAN = Theme.Colors.AccentBlue
+local MINT = Theme.Colors.AccentMint
+
+local function imageId(iconName: string): string?
+	local id = Theme.IconImages and Theme.IconImages[iconName]
+	if typeof(id) == "string" and id ~= "" then
+		return id
+	end
+	return nil
+end
+
+local function corner(parent: Instance, radius: number)
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, radius)
+	c.Parent = parent
+	return c
+end
+
+local function stroke(parent: Instance, color: Color3, thickness: number, transparency: number?)
+	local s = Instance.new("UIStroke")
+	s.Color = color
+	s.Thickness = thickness
+	s.Transparency = transparency or 0
+	s.Parent = parent
+	return s
+end
+
+local function gradient(parent: Instance, colors: { Color3 }, rotation: number?)
+	local keys = {}
+	for i, color in ipairs(colors) do
+		table.insert(keys, ColorSequenceKeypoint.new((i - 1) / (#colors - 1), color))
+	end
+	local g = Instance.new("UIGradient")
+	g.Color = ColorSequence.new(keys)
+	g.Rotation = rotation or 90
+	g.Parent = parent
+	return g
+end
+
+local function frame(parent: Instance, name: string, color: Color3, pos: UDim2, size: UDim2, z: number, radius: number?)
+	local f = Instance.new("Frame")
+	f.Name = name
+	f.BackgroundColor3 = color
+	f.BorderSizePixel = 0
+	f.Position = pos
+	f.Size = size
+	f.ZIndex = z
+	f.Parent = parent
+	if radius then
+		corner(f, radius)
+	end
+	return f
+end
+
+local function addImage(parent: Instance, iconName: string, z: number): boolean
+	local id = imageId(iconName)
+	if not id then
+		return false
+	end
+	local img = Instance.new("ImageLabel")
+	img.Name = "UploadedIcon"
+	img.BackgroundTransparency = 1
+	img.Image = id
+	img.ScaleType = Enum.ScaleType.Fit
+	img.Size = UDim2.fromScale(0.9, 0.9)
+	img.AnchorPoint = Vector2.new(0.5, 0.5)
+	img.Position = UDim2.fromScale(0.5, 0.5)
+	img.ZIndex = z
+	img.Parent = parent
+	corner(img, 999)
+	return true
+end
+
+local function addShine(parent: Instance, z: number)
+	local shine = frame(parent, "Shine", WHITE, UDim2.fromScale(0.16, 0.11), UDim2.fromScale(0.68, 0.24), z, 999)
+	shine.BackgroundTransparency = 0.38
+	return shine
+end
+
+local function drawBag(parent: Instance, z: number)
+	local body = frame(parent, "BagBody", WHITE, UDim2.fromScale(0.22, 0.36), UDim2.fromScale(0.56, 0.44), z, 6)
+	stroke(body, PINK, 2, 0)
+	local handle = frame(parent, "BagHandle", HOT_PINK, UDim2.fromScale(0.34, 0.23), UDim2.fromScale(0.32, 0.2), z, 8)
+	handle.BackgroundTransparency = 1
+	stroke(handle, PINK, 3, 0)
+	local heart = frame(parent, "BagHeart", HOT_PINK, UDim2.fromScale(0.42, 0.5), UDim2.fromScale(0.16, 0.16), z + 1, 3)
+	heart.Rotation = 45
+end
+
+local function drawGacha(parent: Instance, z: number)
+	local globe = frame(parent, "Globe", WHITE, UDim2.fromScale(0.24, 0.18), UDim2.fromScale(0.52, 0.48), z, 999)
+	globe.BackgroundTransparency = 0.1
+	stroke(globe, PINK, 2, 0.05)
+	for i, color in ipairs({ HOT_PINK, LAVENDER, CYAN, MINT }) do
+		local x = 0.32 + ((i - 1) % 2) * 0.2
+		local y = 0.34 + math.floor((i - 1) / 2) * 0.16
+		frame(parent, "Capsule" .. i, color, UDim2.fromScale(x, y), UDim2.fromScale(0.14, 0.14), z + 1, 999)
+	end
+	local base = frame(parent, "Base", PINK, UDim2.fromScale(0.28, 0.64), UDim2.fromScale(0.44, 0.2), z, 7)
+	gradient(base, { HOT_PINK, PINK }, 90)
+	stroke(base, WHITE, 1.5, 0)
+end
+
+local function drawMap(parent: Instance, z: number)
+	local left = frame(parent, "MapLeft", Color3.fromRGB(255, 228, 247), UDim2.fromScale(0.22, 0.36), UDim2.fromScale(0.23, 0.4), z, 4)
+	local mid = frame(parent, "MapMid", Color3.fromRGB(225, 245, 255), UDim2.fromScale(0.43, 0.31), UDim2.fromScale(0.24, 0.45), z, 4)
+	local right = frame(parent, "MapRight", Color3.fromRGB(244, 231, 255), UDim2.fromScale(0.65, 0.36), UDim2.fromScale(0.17, 0.4), z, 4)
+	stroke(left, PINK, 1.4, 0.05)
+	stroke(mid, CYAN, 1.4, 0.05)
+	stroke(right, LAVENDER, 1.4, 0.05)
+	local pin = frame(parent, "Pin", HOT_PINK, UDim2.fromScale(0.48, 0.22), UDim2.fromScale(0.22, 0.22), z + 1, 999)
+	stroke(pin, WHITE, 1.5, 0)
+	local point = frame(parent, "PinPoint", HOT_PINK, UDim2.fromScale(0.55, 0.39), UDim2.fromScale(0.08, 0.14), z + 1, 2)
+	point.Rotation = 45
+end
+
+local function drawMail(parent: Instance, z: number)
+	local env = frame(parent, "Envelope", WHITE, UDim2.fromScale(0.18, 0.34), UDim2.fromScale(0.64, 0.4), z, 7)
+	stroke(env, PINK, 2, 0)
+	local flapA = frame(parent, "FlapA", HOT_PINK, UDim2.fromScale(0.22, 0.39), UDim2.fromScale(0.38, 0.06), z + 1, 2)
+	flapA.Rotation = 27
+	local flapB = frame(parent, "FlapB", HOT_PINK, UDim2.fromScale(0.42, 0.39), UDim2.fromScale(0.38, 0.06), z + 1, 2)
+	flapB.Rotation = -27
+	local seal = frame(parent, "Seal", HOT_PINK, UDim2.fromScale(0.43, 0.48), UDim2.fromScale(0.14, 0.14), z + 2, 3)
+	seal.Rotation = 45
+end
+
+local function drawPortal(parent: Instance, z: number)
+	local outer = frame(parent, "PortalOuter", CYAN, UDim2.fromScale(0.18, 0.18), UDim2.fromScale(0.64, 0.64), z, 999)
+	outer.BackgroundTransparency = 0.18
+	stroke(outer, WHITE, 2, 0)
+	local inner = frame(parent, "PortalInner", LAVENDER, UDim2.fromScale(0.28, 0.28), UDim2.fromScale(0.44, 0.44), z + 1, 999)
+	gradient(inner, { CYAN, HOT_PINK, LAVENDER }, 35)
+	stroke(inner, WHITE, 1.5, 0.15)
+	local core = frame(parent, "PortalCore", WHITE, UDim2.fromScale(0.42, 0.42), UDim2.fromScale(0.16, 0.16), z + 2, 999)
+	core.BackgroundTransparency = 0.12
+end
+
+local function drawBriefcase(parent: Instance, z: number)
+	local body = frame(parent, "CaseBody", WHITE, UDim2.fromScale(0.18, 0.36), UDim2.fromScale(0.64, 0.42), z, 7)
+	stroke(body, PINK, 2, 0)
+	local strap = frame(parent, "Strap", HOT_PINK, UDim2.fromScale(0.22, 0.47), UDim2.fromScale(0.56, 0.08), z + 1, 2)
+	local handle = frame(parent, "CaseHandle", HOT_PINK, UDim2.fromScale(0.36, 0.24), UDim2.fromScale(0.28, 0.16), z, 6)
+	handle.BackgroundTransparency = 1
+	stroke(handle, PINK, 2.5, 0)
+	local charm = frame(parent, "StarCharm", LAVENDER, UDim2.fromScale(0.56, 0.5), UDim2.fromScale(0.15, 0.15), z + 2, 3)
+	charm.Rotation = 45
+end
+
+local function drawTicket(parent: Instance, z: number)
+	local body = frame(parent, "Ticket", WHITE, UDim2.fromScale(0.14, 0.3), UDim2.fromScale(0.72, 0.4), z, 6)
+	stroke(body, PINK, 2, 0)
+	local band = frame(parent, "TicketBand", HOT_PINK, UDim2.fromScale(0.22, 0.46), UDim2.fromScale(0.56, 0.08), z + 1, 3)
+	local star = frame(parent, "TicketStar", LAVENDER, UDim2.fromScale(0.43, 0.36), UDim2.fromScale(0.14, 0.14), z + 2, 3)
+	star.Rotation = 45
+end
+
+local function drawConstellation(parent: Instance, z: number)
+	local lineA = frame(parent, "LinkA", LAVENDER, UDim2.fromScale(0.28, 0.43), UDim2.fromScale(0.42, 0.04), z, 2)
+	lineA.Rotation = 18
+	local lineB = frame(parent, "LinkB", CYAN, UDim2.fromScale(0.46, 0.48), UDim2.fromScale(0.3, 0.04), z, 2)
+	lineB.Rotation = -42
+	for i, data in ipairs({
+		{ 0.2, 0.3, HOT_PINK },
+		{ 0.62, 0.42, LAVENDER },
+		{ 0.42, 0.65, CYAN },
+	}) do
+		local star = frame(parent, "Star" .. i, data[3], UDim2.fromScale(data[1], data[2]), UDim2.fromScale(0.2, 0.2), z + 1, 4)
+		star.Rotation = 45
+		stroke(star, WHITE, 1.2, 0.08)
+	end
+end
+
+local function drawGift(parent: Instance, z: number)
+	local box = frame(parent, "GiftBox", WHITE, UDim2.fromScale(0.2, 0.36), UDim2.fromScale(0.6, 0.44), z, 7)
+	stroke(box, PINK, 2, 0)
+	frame(parent, "RibbonV", HOT_PINK, UDim2.fromScale(0.45, 0.34), UDim2.fromScale(0.1, 0.48), z + 1, 2)
+	frame(parent, "RibbonH", HOT_PINK, UDim2.fromScale(0.18, 0.47), UDim2.fromScale(0.64, 0.1), z + 1, 2)
+	local bowA = frame(parent, "BowA", LAVENDER, UDim2.fromScale(0.3, 0.2), UDim2.fromScale(0.2, 0.18), z + 2, 6)
+	bowA.Rotation = 22
+	local bowB = frame(parent, "BowB", LAVENDER, UDim2.fromScale(0.5, 0.2), UDim2.fromScale(0.2, 0.18), z + 2, 6)
+	bowB.Rotation = -22
+end
+
+local function drawCity(parent: Instance, z: number)
+	local buildings = {
+		{ 0.17, 0.42, 0.2, 0.34, HOT_PINK },
+		{ 0.39, 0.23, 0.24, 0.53, LAVENDER },
+		{ 0.65, 0.36, 0.18, 0.4, CYAN },
+	}
+	for i, data in ipairs(buildings) do
+		local building = frame(parent, "Building" .. i, data[5], UDim2.fromScale(data[1], data[2]), UDim2.fromScale(data[3], data[4]), z, 4)
+		stroke(building, WHITE, 1.2, 0.08)
+		frame(building, "Window", WHITE, UDim2.fromScale(0.28, 0.18), UDim2.fromScale(0.44, 0.16), z + 1, 2)
+	end
+end
+
+local function drawPin(parent: Instance, z: number)
+	local head = frame(parent, "PinHead", HOT_PINK, UDim2.fromScale(0.24, 0.16), UDim2.fromScale(0.52, 0.52), z, 999)
+	stroke(head, WHITE, 2, 0)
+	local point = frame(parent, "PinPoint", HOT_PINK, UDim2.fromScale(0.4, 0.52), UDim2.fromScale(0.2, 0.3), z, 3)
+	point.Rotation = 45
+	local center = frame(parent, "PinCenter", WHITE, UDim2.fromScale(0.4, 0.32), UDim2.fromScale(0.2, 0.2), z + 1, 999)
+	center.BackgroundTransparency = 0.08
+end
+
+local function drawCafe(parent: Instance, z: number)
+	local cup = frame(parent, "Cup", WHITE, UDim2.fromScale(0.2, 0.36), UDim2.fromScale(0.52, 0.38), z, 8)
+	stroke(cup, PINK, 2, 0)
+	local handle = frame(parent, "Handle", WHITE, UDim2.fromScale(0.62, 0.42), UDim2.fromScale(0.22, 0.22), z, 999)
+	handle.BackgroundTransparency = 1
+	stroke(handle, PINK, 2, 0)
+	local foam = frame(parent, "Foam", Color3.fromRGB(255, 222, 236), UDim2.fromScale(0.26, 0.4), UDim2.fromScale(0.4, 0.08), z + 1, 999)
+	frame(parent, "Saucer", LAVENDER, UDim2.fromScale(0.15, 0.72), UDim2.fromScale(0.7, 0.08), z, 999)
+end
+
+local function drawMall(parent: Instance, z: number)
+	local building = frame(parent, "Mall", WHITE, UDim2.fromScale(0.16, 0.3), UDim2.fromScale(0.68, 0.5), z, 6)
+	stroke(building, PINK, 2, 0)
+	for i, color in ipairs({ HOT_PINK, CYAN, LAVENDER }) do
+		frame(parent, "Awning" .. i, color, UDim2.fromScale(0.2 + ((i - 1) * 0.2), 0.42), UDim2.fromScale(0.18, 0.14), z + 1, 3)
+	end
+	frame(parent, "Door", Color3.fromRGB(230, 246, 255), UDim2.fromScale(0.42, 0.58), UDim2.fromScale(0.16, 0.22), z + 1, 3)
+	local bag = frame(parent, "Sign", HOT_PINK, UDim2.fromScale(0.39, 0.18), UDim2.fromScale(0.22, 0.18), z + 1, 5)
+	stroke(bag, WHITE, 1, 0.2)
+end
+
+local function drawOffice(parent: Instance, z: number)
+	local building = frame(parent, "Office", LAVENDER, UDim2.fromScale(0.24, 0.16), UDim2.fromScale(0.52, 0.66), z, 6)
+	stroke(building, WHITE, 2, 0)
+	for row = 0, 2 do
+		for col = 0, 1 do
+			frame(building, "Window" .. row .. col, WHITE, UDim2.fromScale(0.18 + col * 0.45, 0.16 + row * 0.22), UDim2.fromScale(0.2, 0.12), z + 1, 2)
+		end
+	end
+	frame(building, "Door", CYAN, UDim2.fromScale(0.38, 0.76), UDim2.fromScale(0.24, 0.24), z + 1, 2)
+end
+
+local function drawFriend(parent: Instance, z: number)
+	local head = frame(parent, "Head", Color3.fromRGB(255, 224, 240), UDim2.fromScale(0.36, 0.18), UDim2.fromScale(0.28, 0.28), z + 1, 999)
+	stroke(head, WHITE, 1.5, 0.1)
+	local hair = frame(parent, "Hair", HOT_PINK, UDim2.fromScale(0.32, 0.14), UDim2.fromScale(0.36, 0.18), z + 2, 999)
+	local body = frame(parent, "Body", LAVENDER, UDim2.fromScale(0.24, 0.5), UDim2.fromScale(0.52, 0.32), z, 999)
+	stroke(body, WHITE, 1.5, 0.08)
+	local badge = frame(parent, "FriendBadge", MINT, UDim2.fromScale(0.62, 0.56), UDim2.fromScale(0.22, 0.22), z + 3, 999)
+	stroke(badge, WHITE, 1, 0)
+end
+
+local function drawMegaphone(parent: Instance, z: number)
+	local horn = frame(parent, "Horn", HOT_PINK, UDim2.fromScale(0.22, 0.28), UDim2.fromScale(0.5, 0.38), z, 7)
+	horn.Rotation = -8
+	gradient(horn, { HOT_PINK, LAVENDER }, 0)
+	stroke(horn, WHITE, 1.5, 0.05)
+	local mouth = frame(parent, "Mouth", WHITE, UDim2.fromScale(0.62, 0.22), UDim2.fromScale(0.16, 0.5), z + 1, 999)
+	stroke(mouth, PINK, 1.5, 0)
+	local handle = frame(parent, "Handle", PINK, UDim2.fromScale(0.32, 0.58), UDim2.fromScale(0.15, 0.24), z, 4)
+	handle.Rotation = 15
+	for i = 1, 2 do
+		local sound = frame(parent, "Sound" .. i, CYAN, UDim2.fromScale(0.8, 0.28 + i * 0.16), UDim2.fromScale(0.1, 0.04), z + 1, 2)
+		sound.Rotation = (i == 1) and -20 or 20
+	end
+end
+
+local function drawBell(parent: Instance, z: number)
+	local bell = frame(parent, "Bell", HOT_PINK, UDim2.fromScale(0.24, 0.24), UDim2.fromScale(0.52, 0.5), z, 999)
+	stroke(bell, WHITE, 2, 0)
+	frame(parent, "BellCut", WHITE, UDim2.fromScale(0.2, 0.58), UDim2.fromScale(0.6, 0.18), z + 1, 999)
+	frame(parent, "Clapper", LAVENDER, UDim2.fromScale(0.43, 0.7), UDim2.fromScale(0.14, 0.14), z + 2, 999)
+	local dot = frame(parent, "Status", MINT, UDim2.fromScale(0.65, 0.16), UDim2.fromScale(0.2, 0.2), z + 3, 999)
+	stroke(dot, WHITE, 1.2, 0)
+end
+
+local function drawReply(parent: Instance, z: number)
+	local bubble = frame(parent, "Bubble", HOT_PINK, UDim2.fromScale(0.16, 0.22), UDim2.fromScale(0.68, 0.5), z, 12)
+	stroke(bubble, WHITE, 2, 0)
+	local arrow = frame(parent, "ReplyArrow", WHITE, UDim2.fromScale(0.28, 0.43), UDim2.fromScale(0.42, 0.1), z + 1, 3)
+	local tip = frame(parent, "ReplyTip", WHITE, UDim2.fromScale(0.26, 0.35), UDim2.fromScale(0.18, 0.18), z + 1, 3)
+	tip.Rotation = 45
+end
+
+local function drawCompass(parent: Instance, z: number)
+	local dial = frame(parent, "Compass", WHITE, UDim2.fromScale(0.18, 0.18), UDim2.fromScale(0.64, 0.64), z, 999)
+	stroke(dial, PINK, 2, 0)
+	local needleA = frame(parent, "NeedleA", HOT_PINK, UDim2.fromScale(0.46, 0.23), UDim2.fromScale(0.1, 0.34), z + 1, 3)
+	needleA.Rotation = 38
+	local needleB = frame(parent, "NeedleB", CYAN, UDim2.fromScale(0.46, 0.48), UDim2.fromScale(0.1, 0.28), z + 1, 3)
+	needleB.Rotation = 38
+	frame(parent, "Hub", LAVENDER, UDim2.fromScale(0.43, 0.43), UDim2.fromScale(0.14, 0.14), z + 2, 999)
+end
+
+local function drawDocument(parent: Instance, z: number)
+	local page = frame(parent, "Document", WHITE, UDim2.fromScale(0.22, 0.13), UDim2.fromScale(0.56, 0.7), z, 7)
+	stroke(page, PINK, 2, 0)
+	local clip = frame(parent, "Clip", LAVENDER, UDim2.fromScale(0.36, 0.09), UDim2.fromScale(0.28, 0.16), z + 1, 5)
+	stroke(clip, WHITE, 1, 0.1)
+	for i = 1, 3 do
+		frame(parent, "Line" .. i, i == 3 and MINT or HOT_PINK, UDim2.fromScale(0.31, 0.32 + i * 0.13), UDim2.fromScale(0.38, 0.05), z + 1, 2)
+	end
+end
+
+local function drawDelivery(parent: Instance, z: number)
+	local tray = frame(parent, "Tray", LAVENDER, UDim2.fromScale(0.13, 0.68), UDim2.fromScale(0.74, 0.1), z, 999)
+	stroke(tray, WHITE, 1.2, 0.08)
+	local cup = frame(parent, "Cup", WHITE, UDim2.fromScale(0.2, 0.3), UDim2.fromScale(0.36, 0.38), z + 1, 7)
+	stroke(cup, PINK, 1.8, 0)
+	frame(parent, "Lid", HOT_PINK, UDim2.fromScale(0.18, 0.27), UDim2.fromScale(0.4, 0.08), z + 2, 3)
+	local parcel = frame(parent, "Parcel", MINT, UDim2.fromScale(0.58, 0.43), UDim2.fromScale(0.24, 0.24), z + 1, 4)
+	stroke(parcel, WHITE, 1.2, 0.1)
+	frame(parcel, "Tape", WHITE, UDim2.fromScale(0.4, 0), UDim2.fromScale(0.2, 1), z + 2, 1)
+end
+
+local DRAWERS = {
+	bag = drawBag,
+	star = drawGacha,
+	capsule = drawGacha,
+	ticket = drawTicket,
+	constellation = drawConstellation,
+	gift = drawGift,
+	map = drawMap,
+	city = drawCity,
+	pin = drawPin,
+	cafe = drawCafe,
+	mall = drawMall,
+	office = drawOffice,
+	mail = drawMail,
+	message = drawMail,
+	friend = drawFriend,
+	megaphone = drawMegaphone,
+	bell = drawBell,
+	reply = drawReply,
+	portal = drawPortal,
+	compass = drawCompass,
+	briefcase = drawBriefcase,
+	document = drawDocument,
+	delivery = drawDelivery,
+}
+
+function IconDraw.makeCircleIcon(parent: Instance, iconName: string, color: Color3?): Frame
+	local parentZ = parent:IsA("GuiObject") and parent.ZIndex or 1
+	local wrap = frame(parent, "IconCircle", color or Theme.Colors.AccentCream, UDim2.new(0, 8, 0.5, 0), UDim2.fromOffset(32, 32), parentZ + 1, 999)
+	wrap.AnchorPoint = Vector2.new(0, 0.5)
+	wrap.ClipsDescendants = true
+	stroke(wrap, Theme.Colors.PanelStroke, 1.5, 0.1)
+	gradient(wrap, { WHITE, Theme.Colors.AccentCream, Color3.fromRGB(245, 236, 255) }, 90)
+	addShine(wrap, parentZ + 2)
+
+	if not addImage(wrap, iconName, parentZ + 4) then
+		local drawer = DRAWERS[iconName]
+		if drawer then
+			drawer(wrap, parentZ + 3)
+		end
+	end
+
+	return wrap
+end
+
+function IconDraw.makeGem(parent: Instance, size: number): Frame
+	local z = parent:IsA("GuiObject") and parent.ZIndex + 1 or 1
+	local wrap = frame(parent, "GemArt", Theme.Colors.Gem, UDim2.fromScale(0.5, 0.5), UDim2.fromOffset(size, size), z, 7)
+	wrap.AnchorPoint = Vector2.new(0.5, 0.5)
+	wrap.Rotation = 45
+	gradient(wrap, { Color3.fromRGB(255, 244, 252), HOT_PINK, PINK, LAVENDER }, 90)
+	stroke(wrap, WHITE, 2.5, 0)
+
+	if addImage(wrap, "gem", z + 5) then
+		return wrap
+	end
+
+	local facetA = frame(wrap, "FacetA", Color3.fromRGB(255, 230, 248), UDim2.fromScale(0.1, 0.12), UDim2.fromScale(0.5, 0.22), z + 1, 3)
+	facetA.BackgroundTransparency = 0.12
+	local facetB = frame(wrap, "FacetB", Color3.fromRGB(255, 113, 195), UDim2.fromScale(0.48, 0.2), UDim2.fromScale(0.28, 0.54), z + 1, 3)
+	facetB.BackgroundTransparency = 0.2
+	local sparkle = frame(wrap, "Sparkle", WHITE, UDim2.fromScale(0.23, 0.22), UDim2.fromScale(0.13, 0.13), z + 2, 2)
+	sparkle.Rotation = 45
+	return wrap
+end
+
+return IconDraw
+]]></ProtectedString>
+      </Properties>
+    </Item>
+
+    <Item class="ModuleScript" referent="MS_Sidebar">
+      <Properties>
+        <string name="Name">Sidebar</string>
+        <ProtectedString name="Source"><![CDATA[--[[
+	Flip-phone sidebar.
+	The edge tab is fixed; the phone panel slides in behind it.
+]]
+
+local Theme = require(script.Parent.Theme)
+local TweenUtil = require(script.Parent.TweenUtil)
+local IconDraw = require(script.Parent.IconDraw)
+local Workspace = game:GetService("Workspace")
+
+local Sidebar = {}
+Sidebar.__index = Sidebar
+
+local function clampWidth(absX: number): number
+	local w = math.floor(absX * Theme.Sizes.SidebarWidthScale)
+	return math.clamp(w, Theme.Sizes.SidebarWidthMin, Theme.Sizes.SidebarWidthMax)
+end
+
+local function clampHeight(absY: number): number
+	local h = math.floor(absY * Theme.Sizes.SidebarHeightScale)
+	local maxHeight = math.max(260, absY - 16)
+	local minHeight = math.min(430, maxHeight)
+	return math.clamp(h, minHeight, maxHeight)
+end
+
+local function isRightSide(): boolean
+	return Theme.Side == "Right"
+end
+
+local function viewportSize(): Vector2
+	local camera = Workspace.CurrentCamera
+	if camera and camera.ViewportSize.X > 0 and camera.ViewportSize.Y > 0 then
+		return camera.ViewportSize
+	end
+	return Vector2.new(1280, 720)
+end
+
+local function addBow(parent: Instance, position: UDim2, zIndex: number)
+	local bow = Instance.new("Frame")
+	bow.Name = "BowDecoration"
+	bow.BackgroundTransparency = 1
+	bow.Position = position
+	bow.Size = UDim2.fromOffset(42, 28)
+	bow.ZIndex = zIndex
+	bow.Parent = parent
+
+	local left = Instance.new("Frame")
+	left.Name = "LeftWing"
+	left.BackgroundColor3 = Theme.Colors.AccentPink
+	left.BorderSizePixel = 0
+	left.Position = UDim2.fromOffset(3, 6)
+	left.Size = UDim2.fromOffset(17, 16)
+	left.Rotation = 20
+	left.ZIndex = zIndex + 1
+	left.Parent = bow
+	local leftCorner = Instance.new("UICorner")
+	leftCorner.CornerRadius = UDim.new(0, 6)
+	leftCorner.Parent = left
+
+	local right = left:Clone()
+	right.Name = "RightWing"
+	right.Position = UDim2.fromOffset(22, 6)
+	right.Rotation = -20
+	right.Parent = bow
+
+	local knot = Instance.new("Frame")
+	knot.Name = "Knot"
+	knot.BackgroundColor3 = Theme.Colors.AccentPinkDeep
+	knot.BorderSizePixel = 0
+	knot.Position = UDim2.fromOffset(16, 8)
+	knot.Size = UDim2.fromOffset(11, 11)
+	knot.Rotation = 45
+	knot.ZIndex = zIndex + 2
+	knot.Parent = bow
+	local knotCorner = Instance.new("UICorner")
+	knotCorner.CornerRadius = UDim.new(0, 3)
+	knotCorner.Parent = knot
+
+	return bow
+end
+
+function Sidebar.new(screenGui: ScreenGui, onButtonClick: (string) -> ())
+	local self = setmetatable({}, Sidebar)
+	self._gui = screenGui
+	self._expanded = false
+	self._tweening = false
+	self._onButtonClick = onButtonClick
+	local vp = viewportSize()
+	self._width = clampWidth(vp.X)
+	self._height = clampHeight(vp.Y)
+
+	self:_build()
+	self:_bindResize()
+	self:setExpanded(false, true)
+
+	return self
+end
+
+function Sidebar:_build()
+	local root = Instance.new("Frame")
+	root.Name = "SidebarRoot"
+	root.BackgroundTransparency = 1
+	root.Size = UDim2.fromScale(1, 1)
+	root.Position = UDim2.fromScale(0, 0)
+	root.ZIndex = 200
+	root.Parent = self._gui
+	self.Root = root
+
+	local panel = Instance.new("Frame")
+	panel.Name = "PhonePanel"
+	panel.AnchorPoint = Vector2.new(isRightSide() and 1 or 0, 0.5)
+	panel.BackgroundColor3 = Theme.Colors.PanelFill
+	panel.BorderSizePixel = 0
+	panel.Size = UDim2.fromOffset(self._width, self._height)
+	panel.Position = self:_collapsedPos()
+	panel.ZIndex = 201
+	panel.ClipsDescendants = true
+	panel.Parent = root
+	self.Panel = panel
+
+	local panelCorner = Instance.new("UICorner")
+	panelCorner.CornerRadius = UDim.new(0, Theme.Sizes.CornerRadius)
+	panelCorner.Parent = panel
+
+	local panelStroke = Instance.new("UIStroke")
+	panelStroke.Color = Theme.Colors.AccentPink
+	panelStroke.Thickness = 2.5
+	panelStroke.Transparency = 0.05
+	panelStroke.Parent = panel
+
+	local tab = Instance.new("Frame")
+	tab.Name = "OuterTab"
+	tab.AnchorPoint = Vector2.new(isRightSide() and 1 or 0, 0.5)
+	tab.BackgroundColor3 = Theme.Colors.AccentPink
+	tab.BorderSizePixel = 0
+	tab.Size = UDim2.fromOffset(Theme.Sizes.TabReveal + 8, self._height)
+	tab.Position = isRightSide() and UDim2.new(1, -6, 0.5, 0) or UDim2.new(0, 6, 0.5, 0)
+	tab.ZIndex = 230
+	tab.Parent = root
+	self.Tab = tab
+
+	local tabCorner = Instance.new("UICorner")
+	tabCorner.CornerRadius = UDim.new(0, 14)
+	tabCorner.Parent = tab
+
+	local tabStroke = Instance.new("UIStroke")
+	tabStroke.Color = Color3.fromRGB(255, 255, 255)
+	tabStroke.Thickness = 2
+	tabStroke.Transparency = 0.05
+	tabStroke.Parent = tab
+
+	for i = 1, 5 do
+		local dot = Instance.new("Frame")
+		dot.Name = "Filigree" .. i
+		dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		dot.BorderSizePixel = 0
+		dot.Size = UDim2.fromOffset(6, 6)
+		dot.AnchorPoint = Vector2.new(0.5, 0)
+		dot.Position = UDim2.new(0.5, 0, 0, 18 + (i - 1) * 22)
+		dot.ZIndex = 231
+		dot.Parent = tab
+		local c = Instance.new("UICorner")
+		c.CornerRadius = UDim.new(1, 0)
+		c.Parent = dot
+	end
+
+	local gemHit = Instance.new("TextButton")
+	gemHit.Name = "GemToggle"
+	gemHit.Text = ""
+	gemHit.AutoButtonColor = false
+	gemHit.BackgroundTransparency = 1
+	gemHit.Size = UDim2.fromOffset(Theme.Sizes.GemSize + 12, Theme.Sizes.GemSize + 12)
+	gemHit.AnchorPoint = Vector2.new(0.5, 0.5)
+	gemHit.Position = UDim2.new(0.5, 0, 0.5, 0)
+	gemHit.ZIndex = 240
+	gemHit.Parent = tab
+	self.GemButton = gemHit
+
+	IconDraw.makeGem(gemHit, Theme.Sizes.GemSize)
+
+	local header = Instance.new("Frame")
+	header.Name = "Header"
+	header.BackgroundTransparency = 1
+	header.Size = UDim2.new(1, -16, 0, 66)
+	header.Position = UDim2.fromOffset(8, 8)
+	header.ZIndex = 202
+	header.Parent = panel
+
+	local badge = Instance.new("Frame")
+	badge.Name = "PhoneBadge"
+	badge.BackgroundColor3 = Theme.Colors.ButtonFill
+	badge.BorderSizePixel = 0
+	badge.AnchorPoint = Vector2.new(0.5, 0)
+	badge.Position = UDim2.new(0.5, 0, 0, 0)
+	badge.Size = UDim2.fromOffset(62, 36)
+	badge.ZIndex = 203
+	badge.Parent = header
+
+	local badgeCorner = Instance.new("UICorner")
+	badgeCorner.CornerRadius = UDim.new(0, 14)
+	badgeCorner.Parent = badge
+
+	local screen = Instance.new("Frame")
+	screen.Name = "MiniScreen"
+	screen.BackgroundColor3 = Theme.Colors.AccentCream
+	screen.BorderSizePixel = 0
+	screen.AnchorPoint = Vector2.new(0.5, 0.5)
+	screen.Position = UDim2.fromScale(0.5, 0.55)
+	screen.Size = UDim2.new(0.56, 0, 0.34, 0)
+	screen.ZIndex = 204
+	screen.Parent = badge
+
+	local screenCorner = Instance.new("UICorner")
+	screenCorner.CornerRadius = UDim.new(0, 4)
+	screenCorner.Parent = screen
+
+	local titlePill = Instance.new("TextLabel")
+	titlePill.Name = "TitlePill"
+	titlePill.BackgroundColor3 = Theme.Colors.ButtonFill
+	titlePill.BorderSizePixel = 0
+	titlePill.AnchorPoint = Vector2.new(0.5, 0)
+	titlePill.Position = UDim2.new(0.5, 0, 0, 42)
+	titlePill.Size = UDim2.new(0.84, 0, 0, 22)
+	titlePill.Font = Theme.Fonts.Title
+	titlePill.TextSize = 12
+	titlePill.TextColor3 = Theme.Colors.AccentPinkDeep
+	titlePill.Text = "FURU PHONE"
+	titlePill.ZIndex = 203
+	titlePill.Parent = header
+
+	local titleCorner = Instance.new("UICorner")
+	titleCorner.CornerRadius = UDim.new(1, 0)
+	titleCorner.Parent = titlePill
+
+	addBow(header, UDim2.new(0, 4, 0, 4), 205)
+	addBow(header, UDim2.new(1, -46, 0, 4), 205)
+	addBow(panel, UDim2.new(0, 10, 1, -44), 205)
+	addBow(panel, UDim2.new(1, -52, 0, 72), 205)
+
+	for i, decoration in ipairs({
+		{ UDim2.new(0, 16, 1, -68), 16 },
+		{ UDim2.new(1, -30, 1, -92), 12 },
+		{ UDim2.new(0, 22, 0, 78), 13 },
+		{ UDim2.new(1, -36, 0, 116), 10 },
+	}) do
+		local gemHost = Instance.new("Frame")
+		gemHost.Name = "GemDecoration" .. i
+		gemHost.BackgroundTransparency = 1
+		gemHost.Position = decoration[1]
+		gemHost.Size = UDim2.fromOffset(24, 24)
+		gemHost.ZIndex = 204
+		gemHost.Parent = panel
+		IconDraw.makeGem(gemHost, decoration[2])
+	end
+
+	local currency = Instance.new("Frame")
+	currency.Name = "CurrencyBubble"
+	currency.BackgroundColor3 = Theme.Colors.AccentCream
+	currency.BorderSizePixel = 0
+	currency.Size = UDim2.new(0.88, 0, 0, 32)
+	currency.Position = UDim2.new(0.06, 0, 0, 80)
+	currency.ZIndex = 202
+	currency.Parent = panel
+
+	local curCorner = Instance.new("UICorner")
+	curCorner.CornerRadius = UDim.new(1, 0)
+	curCorner.Parent = currency
+
+	local curStroke = Instance.new("UIStroke")
+	curStroke.Color = Theme.Colors.AccentPink
+	curStroke.Thickness = 1.5
+	curStroke.Transparency = 0.2
+	curStroke.Parent = currency
+
+	local curLabel = Instance.new("TextLabel")
+	curLabel.Name = "Amount"
+	curLabel.BackgroundTransparency = 1
+	curLabel.Size = UDim2.fromScale(1, 1)
+	curLabel.Font = Theme.Fonts.Title
+	curLabel.TextSize = 14
+	curLabel.TextColor3 = Theme.Colors.AccentPinkDeep
+	curLabel.Text = "GEMS  12,217"
+	curLabel.ZIndex = 203
+	curLabel.Parent = currency
+
+	local list = Instance.new("ScrollingFrame")
+	list.Name = "ButtonList"
+	list.BackgroundTransparency = 1
+	list.BorderSizePixel = 0
+	list.Size = UDim2.new(1, -20, 1, -166)
+	list.Position = UDim2.fromOffset(10, 120)
+	list.CanvasSize = UDim2.fromOffset(0, 0)
+	list.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	list.ScrollBarThickness = 0
+	list.ScrollingDirection = Enum.ScrollingDirection.Y
+	list.ClipsDescendants = true
+	list.ZIndex = 202
+	list.Parent = panel
+
+	local layout = Instance.new("UIListLayout")
+	layout.FillDirection = Enum.FillDirection.Vertical
+	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	layout.Padding = UDim.new(0, 6)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent = list
+
+	self.Buttons = {}
+	for i, def in ipairs(Theme.Buttons) do
+		local btn = Instance.new("TextButton")
+		btn.Name = def.Id .. "Button"
+		btn.AutoButtonColor = false
+		btn.BackgroundColor3 = Theme.Colors.ButtonFill
+		btn.BorderSizePixel = 0
+		btn.Size = UDim2.new(1, 0, 0, Theme.Sizes.ButtonHeight)
+		btn.LayoutOrder = i
+		btn.Text = ""
+		btn.ZIndex = 203
+		btn.Parent = list
+
+		local btnCorner = Instance.new("UICorner")
+		btnCorner.CornerRadius = UDim.new(1, 0)
+		btnCorner.Parent = btn
+
+		local btnStroke = Instance.new("UIStroke")
+		btnStroke.Color = Theme.Colors.ButtonStroke
+		btnStroke.Thickness = 1
+		btnStroke.Transparency = 0.35
+		btnStroke.Parent = btn
+
+		IconDraw.makeCircleIcon(btn, def.Icon, Theme.Colors.AccentCream)
+
+		local label = Instance.new("TextLabel")
+		label.Name = "Label"
+		label.BackgroundTransparency = 1
+		label.Position = UDim2.fromOffset(48, 0)
+		label.Size = UDim2.new(1, -56, 1, 0)
+		label.Font = Theme.Fonts.Title
+		label.TextSize = 16
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.TextColor3 = Theme.Colors.AccentPinkDeep
+		label.Text = def.Label
+		label.ZIndex = 205
+		label.Parent = btn
+
+		btn.MouseEnter:Connect(function()
+			TweenUtil.play(btn, { BackgroundColor3 = Theme.Colors.ButtonFillHover }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+		end)
+
+		btn.MouseLeave:Connect(function()
+			TweenUtil.play(btn, { BackgroundColor3 = Theme.Colors.ButtonFill }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+		end)
+
+		btn.Activated:Connect(function()
+			if not self._expanded then
+				self:setExpanded(true, false)
+			end
+			if self._onButtonClick then
+				self._onButtonClick(def.Id)
+			end
+		end)
+
+		self.Buttons[def.Id] = btn
+	end
+
+	local level = Instance.new("Frame")
+	level.Name = "LevelBubble"
+	level.BackgroundColor3 = Theme.Colors.AccentCream
+	level.BorderSizePixel = 0
+	level.AnchorPoint = Vector2.new(0.5, 1)
+	level.Position = UDim2.new(0.5, 0, 1, -10)
+	level.Size = UDim2.new(0.88, 0, 0, 30)
+	level.ZIndex = 202
+	level.Parent = panel
+
+	local lvCorner = Instance.new("UICorner")
+	lvCorner.CornerRadius = UDim.new(1, 0)
+	lvCorner.Parent = level
+
+	local lvStroke = Instance.new("UIStroke")
+	lvStroke.Color = Theme.Colors.AccentLavender
+	lvStroke.Thickness = 1.5
+	lvStroke.Transparency = 0.2
+	lvStroke.Parent = level
+
+	local lvLabel = Instance.new("TextLabel")
+	lvLabel.BackgroundTransparency = 1
+	lvLabel.Size = UDim2.fromScale(1, 1)
+	lvLabel.Font = Theme.Fonts.Body
+	lvLabel.TextSize = 14
+	lvLabel.TextColor3 = Theme.Colors.TextPrimary
+	lvLabel.Text = "LEVEL 1"
+	lvLabel.ZIndex = 203
+	lvLabel.Parent = level
+
+	gemHit.Activated:Connect(function()
+		self:toggle()
+	end)
+end
+
+function Sidebar:_collapsedPos(): UDim2
+	if isRightSide() then
+		return UDim2.new(1, self._width + Theme.Sizes.TabReveal, 0.5, 0)
+	end
+	return UDim2.new(0, -self._width - Theme.Sizes.TabReveal, 0.5, 0)
+end
+
+function Sidebar:_expandedPos(): UDim2
+	if isRightSide() then
+		return UDim2.new(1, -Theme.Sizes.TabReveal - 10, 0.5, 0)
+	end
+	return UDim2.new(0, Theme.Sizes.TabReveal + 10, 0.5, 0)
+end
+
+function Sidebar:setExpanded(expanded: boolean, instant: boolean?)
+	self._expanded = expanded
+	local target = expanded and self:_expandedPos() or self:_collapsedPos()
+	local closedRotation = isRightSide() and 4 or -4
+
+	if instant then
+		self.Panel.Position = target
+		self.Panel.Rotation = expanded and 0 or closedRotation
+		self._tweening = false
+		return
+	end
+
+	self._tweening = true
+	local tw = TweenUtil.play(self.Panel, {
+		Position = target,
+		Rotation = expanded and 0 or closedRotation,
+	}, Theme.Tween.SlideTime, Theme.Tween.SlideStyle, Theme.Tween.SlideDir)
+	tw.Completed:Connect(function()
+		self._tweening = false
+	end)
+end
+
+function Sidebar:toggle()
+	if self._tweening then
+		return
+	end
+	self:setExpanded(not self._expanded, false)
+end
+
+function Sidebar:isExpanded(): boolean
+	return self._expanded
+end
+
+function Sidebar:_bindResize()
+	local function resize()
+		local vp = viewportSize()
+		self._width = clampWidth(vp.X)
+		self._height = clampHeight(vp.Y)
+		self.Root.Size = UDim2.fromScale(1, 1)
+		self.Panel.AnchorPoint = Vector2.new(isRightSide() and 1 or 0, 0.5)
+		self.Panel.Size = UDim2.fromOffset(self._width, self._height)
+		self.Panel.Position = self._expanded and self:_expandedPos() or self:_collapsedPos()
+		self.Tab.AnchorPoint = Vector2.new(isRightSide() and 1 or 0, 0.5)
+		self.Tab.Size = UDim2.fromOffset(Theme.Sizes.TabReveal + 8, self._height)
+		self.Tab.Position = isRightSide() and UDim2.new(1, -6, 0.5, 0) or UDim2.new(0, 6, 0.5, 0)
+	end
+
+	local function bindCamera(camera: Camera?)
+		if camera then
+			camera:GetPropertyChangedSignal("ViewportSize"):Connect(resize)
+		end
+	end
+
+	bindCamera(Workspace.CurrentCamera)
+	Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+		bindCamera(Workspace.CurrentCamera)
+		resize()
+	end)
+end
+
+return Sidebar
+
+]]></ProtectedString>
+      </Properties>
+    </Item>
+
+    <Item class="ModuleScript" referent="MS_WindowChrome">
+      <Properties>
+        <string name="Name">WindowChrome</string>
+        <ProtectedString name="Source"><![CDATA[--[[
+	Shared futuristic .exe window chrome.
+	Windows are draggable, minimizable, maximizable, and use the same slide motion.
+]]
+
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+
+local Theme = require(script.Parent.Theme)
+local TweenUtil = require(script.Parent.TweenUtil)
+local IconDraw = require(script.Parent.IconDraw)
+
+local WindowChrome = {}
+
+export type WindowHandle = {
+	Root: Frame,
+	Content: Frame,
+	Footer: Frame,
+	TitleLabel: TextLabel,
+	setVisible: (self: WindowHandle, visible: boolean, instant: boolean?) -> (),
+	isOpen: (self: WindowHandle) -> boolean,
+}
+
+local function viewportWidth(): number
+	local camera = Workspace.CurrentCamera
+	return camera and camera.ViewportSize.X or 1280
+end
+
+local function openPosition(fullScreen: boolean?): UDim2
+	if fullScreen or viewportWidth() < 720 then
+		return UDim2.fromScale(0.5, 0.5)
+	end
+	return UDim2.fromScale(Theme.Side == "Right" and 0.39 or 0.61, 0.5)
+end
+
+local function closedPosition(): UDim2
+	if Theme.Side == "Right" then
+		return UDim2.fromScale(1.2, 0.5)
+	end
+	return UDim2.fromScale(-0.22, 0.5)
+end
+
+local function addCorner(parent: Instance, radius: number)
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, radius)
+	corner.Parent = parent
+	return corner
+end
+
+local function addStroke(parent: Instance, color: Color3, thickness: number, transparency: number?)
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = color
+	stroke.Thickness = thickness
+	stroke.Transparency = transparency or 0
+	stroke.Parent = parent
+	return stroke
+end
+
+local function addGradient(parent: Instance, colors: { Color3 }, rotation: number?)
+	local points = {}
+	for i, color in ipairs(colors) do
+		table.insert(points, ColorSequenceKeypoint.new((i - 1) / (#colors - 1), color))
+	end
+	local gradient = Instance.new("UIGradient")
+	gradient.Color = ColorSequence.new(points)
+	gradient.Rotation = rotation or 0
+	gradient.Parent = parent
+	return gradient
+end
+
+local function makeText(parent: Instance, name: string, text: string, font: Enum.Font, size: number, color: Color3, z: number)
+	local label = Instance.new("TextLabel")
+	label.Name = name
+	label.BackgroundTransparency = 1
+	label.Font = font
+	label.Text = text
+	label.TextSize = size
+	label.TextColor3 = color
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.ZIndex = z
+	label.Parent = parent
+	return label
+end
+
+local function addBowDecoration(parent: Instance, position: UDim2, zIndex: number)
+	local bow = Instance.new("Frame")
+	bow.Name = "BowDecoration"
+	bow.BackgroundTransparency = 1
+	bow.Position = position
+	bow.Size = UDim2.fromOffset(46, 30)
+	bow.ZIndex = zIndex
+	bow.Parent = parent
+
+	local left = Instance.new("Frame")
+	left.Name = "LeftWing"
+	left.BackgroundColor3 = Theme.Colors.AccentPink
+	left.BorderSizePixel = 0
+	left.Position = UDim2.fromOffset(4, 7)
+	left.Size = UDim2.fromOffset(18, 16)
+	left.Rotation = 20
+	left.ZIndex = zIndex + 1
+	left.Parent = bow
+	addCorner(left, 6)
+	addStroke(left, Color3.fromRGB(255, 255, 255), 1, 0.2)
+
+	local right = left:Clone()
+	right.Name = "RightWing"
+	right.Position = UDim2.fromOffset(24, 7)
+	right.Rotation = -20
+	right.Parent = bow
+
+	local knot = Instance.new("Frame")
+	knot.Name = "Knot"
+	knot.BackgroundColor3 = Theme.Colors.AccentPinkDeep
+	knot.BorderSizePixel = 0
+	knot.Position = UDim2.fromOffset(18, 10)
+	knot.Size = UDim2.fromOffset(11, 11)
+	knot.Rotation = 45
+	knot.ZIndex = zIndex + 2
+	knot.Parent = bow
+	addCorner(knot, 3)
+end
+
+local function addGemDecoration(parent: Instance, position: UDim2, size: number, zIndex: number)
+	local gemHost = Instance.new("Frame")
+	gemHost.Name = "GemDecoration"
+	gemHost.BackgroundTransparency = 1
+	gemHost.Position = position
+	gemHost.Size = UDim2.fromOffset(size + 8, size + 8)
+	gemHost.ZIndex = zIndex
+	gemHost.Parent = parent
+	IconDraw.makeGem(gemHost, size)
+end
+
+function WindowChrome.create(parent: Instance, id: string, title: string, onClose: (() -> ())?): WindowHandle
+	local fullScreen = id == "Gacha"
+	local root = Instance.new("Frame")
+	root.Name = id .. "Window"
+	root.AnchorPoint = Vector2.new(0.5, 0.5)
+	root.Position = closedPosition()
+	root.Size = fullScreen and UDim2.fromScale(1, 1) or UDim2.fromScale(0.62, 0.72)
+	root.BackgroundColor3 = Theme.Colors.WindowChrome
+	root.BorderSizePixel = 0
+	root.ClipsDescendants = false
+	root.Visible = false
+	root.ZIndex = 40
+	root.Parent = parent
+
+	local sizeConstraint = Instance.new("UISizeConstraint")
+	sizeConstraint.MinSize = Vector2.new(300, 300)
+	sizeConstraint.MaxSize = fullScreen and Vector2.new(10000, 10000) or Vector2.new(980, 760)
+	sizeConstraint.Parent = root
+
+	addCorner(root, fullScreen and 0 or 12)
+	addStroke(root, Theme.Colors.AccentPink, 2, 0.02)
+
+	if not fullScreen then
+		local shadow = Instance.new("Frame")
+		shadow.Name = "SoftShadow"
+		shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+		shadow.Position = UDim2.new(0.5, 8, 0.5, 10)
+		shadow.Size = UDim2.new(1, 12, 1, 14)
+		shadow.BackgroundColor3 = Theme.Colors.Shadow
+		shadow.BackgroundTransparency = 0.76
+		shadow.BorderSizePixel = 0
+		shadow.ZIndex = 39
+		shadow.Parent = root
+		addCorner(shadow, 16)
+	end
+
+	local shell = Instance.new("Frame")
+	shell.Name = "Shell"
+	shell.BackgroundColor3 = Theme.Colors.WindowChrome
+	shell.BorderSizePixel = 0
+	shell.Size = UDim2.fromScale(1, 1)
+	shell.ClipsDescendants = true
+	shell.ZIndex = 40
+	shell.Parent = root
+	addCorner(shell, fullScreen and 0 or 11)
+	addGradient(shell, {
+		Color3.fromRGB(255, 255, 255),
+		Color3.fromRGB(255, 247, 253),
+		Color3.fromRGB(247, 244, 255),
+	}, 90)
+
+	local topGlow = Instance.new("Frame")
+	topGlow.Name = "TopGlow"
+	topGlow.BackgroundColor3 = Theme.Colors.AccentPink
+	topGlow.BorderSizePixel = 0
+	topGlow.Size = UDim2.new(1, 0, 0, 5)
+	topGlow.ZIndex = 45
+	topGlow.Parent = shell
+
+	local titleBar = Instance.new("Frame")
+	titleBar.Name = "TitleBar"
+	titleBar.BackgroundColor3 = Theme.Colors.TitleBar
+	titleBar.BorderSizePixel = 0
+	titleBar.Position = UDim2.fromOffset(0, 5)
+	titleBar.Size = UDim2.new(1, 0, 0, 42)
+	titleBar.Active = true
+	titleBar.ZIndex = 42
+	titleBar.Parent = shell
+
+	local appBadge = Instance.new("Frame")
+	appBadge.Name = "AppBadge"
+	appBadge.AnchorPoint = Vector2.new(0, 0.5)
+	appBadge.Position = UDim2.new(0, 10, 0.5, 0)
+	appBadge.Size = UDim2.fromOffset(27, 27)
+	appBadge.BackgroundColor3 = Theme.Colors.AccentPink
+	appBadge.BorderSizePixel = 0
+	appBadge.ZIndex = 44
+	appBadge.Parent = titleBar
+	addCorner(appBadge, 8)
+	addStroke(appBadge, Color3.fromRGB(255, 255, 255), 1.5, 0.12)
+
+	local appGlyph = makeText(appBadge, "Glyph", string.upper(string.sub(title, 1, 1)), Theme.Fonts.Title, 13, Color3.fromRGB(255, 255, 255), 45)
+	appGlyph.Size = UDim2.fromScale(1, 1)
+	appGlyph.TextXAlignment = Enum.TextXAlignment.Center
+
+	local titleLabel = makeText(titleBar, "Title", string.lower(title) .. ".exe", Theme.Fonts.Body, 14, Theme.Colors.TextPrimary, 43)
+	titleLabel.Position = UDim2.fromOffset(46, 0)
+	titleLabel.Size = UDim2.new(1, -260, 1, 0)
+
+	local livePill = Instance.new("Frame")
+	livePill.Name = "LiveStatus"
+	livePill.AnchorPoint = Vector2.new(1, 0.5)
+	livePill.Position = UDim2.new(1, -104, 0.5, 0)
+	livePill.Size = UDim2.fromOffset(66, 22)
+	livePill.BackgroundColor3 = Color3.fromRGB(235, 255, 249)
+	livePill.BorderSizePixel = 0
+	livePill.ZIndex = 43
+	livePill.Parent = titleBar
+	addCorner(livePill, 11)
+	addStroke(livePill, Theme.Colors.AccentMint, 1, 0.35)
+
+	local liveDot = Instance.new("Frame")
+	liveDot.Name = "Dot"
+	liveDot.AnchorPoint = Vector2.new(0, 0.5)
+	liveDot.Position = UDim2.new(0, 9, 0.5, 0)
+	liveDot.Size = UDim2.fromOffset(6, 6)
+	liveDot.BackgroundColor3 = Theme.Colors.AccentMint
+	liveDot.BorderSizePixel = 0
+	liveDot.ZIndex = 44
+	liveDot.Parent = livePill
+	addCorner(liveDot, 3)
+
+	local liveText = makeText(livePill, "Text", "ONLINE", Theme.Fonts.Title, 9, Theme.Colors.TextPrimary, 44)
+	liveText.Position = UDim2.fromOffset(20, 0)
+	liveText.Size = UDim2.new(1, -22, 1, 0)
+
+	local function makeSystemButton(name: string, color: Color3, order: number, text: string): TextButton
+		local button = Instance.new("TextButton")
+		button.Name = name
+		button.AutoButtonColor = false
+		button.BackgroundColor3 = color
+		button.BorderSizePixel = 0
+		button.AnchorPoint = Vector2.new(1, 0.5)
+		button.Position = UDim2.new(1, -8 - (order * 30), 0.5, 0)
+		button.Size = UDim2.fromOffset(25, 25)
+		button.Font = Theme.Fonts.Title
+		button.Text = text
+		button.TextSize = 11
+		button.TextColor3 = Theme.Colors.TextPrimary
+		button.ZIndex = 45
+		button.Parent = titleBar
+		addCorner(button, 7)
+		addStroke(button, Color3.fromRGB(255, 255, 255), 1, 0.2)
+		button.MouseEnter:Connect(function()
+			TweenUtil.play(button, { BackgroundTransparency = 0.22 }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+		end)
+		button.MouseLeave:Connect(function()
+			TweenUtil.play(button, { BackgroundTransparency = 0 }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+		end)
+		return button
+	end
+
+	local minimizeButton = makeSystemButton("Minimize", Theme.Colors.Minimize, 2, "_")
+	local maximizeButton = makeSystemButton("Maximize", Theme.Colors.Maximize, 1, "[]")
+	local closeButton = makeSystemButton("Close", Theme.Colors.CloseRed, 0, "X")
+
+	local menuBar = Instance.new("Frame")
+	menuBar.Name = "MenuBar"
+	menuBar.BackgroundColor3 = Color3.fromRGB(255, 253, 255)
+	menuBar.BorderSizePixel = 0
+	menuBar.Position = UDim2.fromOffset(0, 47)
+	menuBar.Size = UDim2.new(1, 0, 0, 28)
+	menuBar.ZIndex = 42
+	menuBar.Parent = shell
+
+	local menuLabel = makeText(menuBar, "Menu", "HOME     VIEW     TOOLS     HELP", Theme.Fonts.Body, 10, Theme.Colors.TextMuted, 43)
+	menuLabel.Position = UDim2.fromOffset(14, 0)
+	menuLabel.Size = UDim2.new(1, -138, 1, 0)
+
+	local buildLabel = makeText(menuBar, "Build", "FURU OS 2.5", Theme.Fonts.Title, 9, Theme.Colors.AccentPinkDeep, 43)
+	buildLabel.AnchorPoint = Vector2.new(1, 0)
+	buildLabel.Position = UDim2.new(1, -14, 0, 0)
+	buildLabel.Size = UDim2.fromOffset(100, 28)
+	buildLabel.TextXAlignment = Enum.TextXAlignment.Right
+
+	local activeLine = Instance.new("Frame")
+	activeLine.Name = "ActiveLine"
+	activeLine.BackgroundColor3 = Theme.Colors.AccentPink
+	activeLine.BorderSizePixel = 0
+	activeLine.Position = UDim2.new(0, 14, 1, -2)
+	activeLine.Size = UDim2.fromOffset(34, 2)
+	activeLine.ZIndex = 44
+	activeLine.Parent = menuBar
+	addCorner(activeLine, 1)
+
+	local content = Instance.new("Frame")
+	content.Name = "Content"
+	content.BackgroundColor3 = Theme.Colors.ContentBg
+	content.BorderSizePixel = 0
+	content.Position = UDim2.fromOffset(8, 82)
+	content.Size = UDim2.new(1, -16, 1, -138)
+	content.ClipsDescendants = true
+	content.ZIndex = 42
+	content.Parent = shell
+	addCorner(content, 8)
+	addStroke(content, Theme.Colors.WindowBorder, 1, 0.12)
+	addGradient(content, {
+		Color3.fromRGB(255, 255, 255),
+		Color3.fromRGB(255, 248, 253),
+		Color3.fromRGB(248, 246, 255),
+	}, 90)
+
+	local footer = Instance.new("Frame")
+	footer.Name = "Footer"
+	footer.BackgroundColor3 = Color3.fromRGB(255, 239, 249)
+	footer.BorderSizePixel = 0
+	footer.AnchorPoint = Vector2.new(0, 1)
+	footer.Position = UDim2.new(0, 0, 1, 0)
+	footer.Size = UDim2.new(1, 0, 0, 48)
+	footer.ZIndex = 42
+	footer.Parent = shell
+	addBowDecoration(shell, UDim2.new(0, 12, 0, 51), 47)
+	addGemDecoration(shell, UDim2.new(1, -42, 0, 52), 18, 47)
+	addGemDecoration(shell, UDim2.new(1, -36, 1, -42), 14, 47)
+
+	local footerLayout = Instance.new("UIListLayout")
+	footerLayout.Name = "CommandLayout"
+	footerLayout.FillDirection = Enum.FillDirection.Horizontal
+	footerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	footerLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	footerLayout.Padding = UDim.new(0, 10)
+	footerLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	footerLayout.Parent = footer
+
+	local handle: WindowHandle = {
+		Root = root,
+		Content = content,
+		Footer = footer,
+		TitleLabel = titleLabel,
+		_open = false,
+		_minimized = false,
+		_maximized = false,
+	}
+
+	local normalSize = root.Size
+	local normalPosition = openPosition(fullScreen)
+
+	local function setMinimized(minimized: boolean)
+		handle._minimized = minimized
+		content.Visible = not minimized
+		menuBar.Visible = not minimized
+		footer.Visible = not minimized
+		sizeConstraint.MinSize = minimized and Vector2.new(300, 48) or Vector2.new(300, 300)
+		local targetSize = minimized and UDim2.new(normalSize.X.Scale, normalSize.X.Offset, 0, 48) or normalSize
+		TweenUtil.play(root, { Size = targetSize }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+	end
+
+	local function setMaximized(maximized: boolean)
+		if handle._minimized then
+			setMinimized(false)
+		end
+		handle._maximized = maximized
+		if maximized then
+			normalSize = root.Size
+			normalPosition = root.Position
+			TweenUtil.play(root, {
+				Position = UDim2.fromScale(0.5, 0.5),
+				Size = fullScreen and UDim2.fromScale(1, 1) or UDim2.fromScale(0.88, 0.84),
+			}, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+		else
+			TweenUtil.play(root, {
+				Position = normalPosition,
+				Size = normalSize,
+			}, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+		end
+	end
+
+	function handle:isOpen()
+		return self._open
+	end
+
+	function handle:setVisible(visible: boolean, instant: boolean?)
+		self._open = visible
+		if instant then
+			root.Visible = visible
+			root.Position = visible and openPosition(fullScreen) or closedPosition()
+			root.BackgroundTransparency = 0
+			return
+		end
+
+		if visible then
+			if self._minimized then
+				setMinimized(false)
+			end
+			root.Visible = true
+			root.Position = closedPosition()
+			root.BackgroundTransparency = 0.28
+			TweenUtil.play(root, {
+				Position = openPosition(fullScreen),
+				BackgroundTransparency = 0,
+			}, Theme.Tween.WindowTime, Theme.Tween.SlideStyle, Theme.Tween.SlideDir)
+		else
+			local tween = TweenUtil.play(root, {
+				Position = closedPosition(),
+				BackgroundTransparency = 0.28,
+			}, Theme.Tween.WindowTime, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+			tween.Completed:Connect(function()
+				if not self._open then
+					root.Visible = false
+					root.BackgroundTransparency = 0
+				end
+			end)
+		end
+	end
+
+	minimizeButton.Activated:Connect(function()
+		setMinimized(not handle._minimized)
+	end)
+	maximizeButton.Activated:Connect(function()
+		setMaximized(not handle._maximized)
+	end)
+	closeButton.Activated:Connect(function()
+		handle:setVisible(false, false)
+		if onClose then
+			onClose()
+		end
+	end)
+
+	local dragging = false
+	local dragStart = Vector2.zero
+	local startPosition = root.Position
+
+	titleBar.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPosition = root.Position
+		end
+	end)
+	titleBar.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = false
+		end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local delta = input.Position - dragStart
+			root.Position = UDim2.new(startPosition.X.Scale, startPosition.X.Offset + delta.X, startPosition.Y.Scale, startPosition.Y.Offset + delta.Y)
+		end
+	end)
+
+	return handle
+end
+
+function WindowChrome.addFooterButton(footer: Frame, text: string, order: number, callback: (() -> ())?): TextButton
+	local button = Instance.new("TextButton")
+	button.Name = text:gsub("%s", ""):gsub("%W", "") .. "Btn"
+	button.AutoButtonColor = false
+	button.BackgroundColor3 = Theme.Colors.ButtonFill
+	button.BorderSizePixel = 0
+	button.Size = UDim2.new(0.29, 0, 0, 31)
+	button.LayoutOrder = order
+	button.Font = Theme.Fonts.Title
+	button.Text = text
+	button.TextSize = 12
+	button.TextColor3 = Theme.Colors.AccentPinkDeep
+	button.ZIndex = 43
+	button.Parent = footer
+	addCorner(button, 7)
+	addStroke(button, Theme.Colors.ButtonStroke, 1, 0.2)
+
+	button.MouseEnter:Connect(function()
+		TweenUtil.play(button, { BackgroundColor3 = Theme.Colors.ButtonFillHover }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+	end)
+	button.MouseLeave:Connect(function()
+		TweenUtil.play(button, { BackgroundColor3 = Theme.Colors.ButtonFill }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+	end)
+	if callback then
+		button.Activated:Connect(callback)
+	end
+	return button
+end
+
+return WindowChrome
+]]></ProtectedString>
+      </Properties>
+    </Item>
+
+    <Item class="ModuleScript" referent="MS_ShopWindow">
+      <Properties>
+        <string name="Name">ShopWindow</string>
+        <ProtectedString name="Source"><![CDATA[--[[
+	Shop window with a centered R15 avatar try-on preview.
+	Catalog/apply hooks can replace the sample item callbacks later.
+]]
+
+local Players = game:GetService("Players")
+local Theme = require(script.Parent.Theme)
+local WindowChrome = require(script.Parent.WindowChrome)
+
+local ShopWindow = {}
+
+local SAMPLE_ITEMS = {
+	{ Key = "pixel_bow_jacket", Name = "Pixel Bow Jacket", Price = 120, Color = Theme.Colors.AccentPink, Tag = "NEW" },
+	{ Key = "starline_skirt", Name = "Starline Skirt", Price = 90, Color = Theme.Colors.AccentLavender, Tag = "RARE" },
+	{ Key = "bubble_boots", Name = "Bubble Boots", Price = 150, Color = Theme.Colors.AccentBlue, Tag = "TRENDING" },
+	{ Key = "ribbon_satchel", Name = "Ribbon Satchel", Price = 75, Color = Theme.Colors.AccentPinkDeep, Tag = "CUTE" },
+	{ Key = "mint_sleeve_set", Name = "Mint Sleeve Set", Price = 40, Color = Theme.Colors.AccentMint, Tag = "SET" },
+	{ Key = "glow_hairclip", Name = "Glow Hairclip", Price = 55, Color = Theme.Colors.AccentLavender, Tag = "LIMITED" },
+}
+
+local function corner(parent: Instance, radius: number)
+	local item = Instance.new("UICorner")
+	item.CornerRadius = UDim.new(0, radius)
+	item.Parent = parent
+	return item
+end
+
+local function stroke(parent: Instance, color: Color3, thickness: number, transparency: number?)
+	local item = Instance.new("UIStroke")
+	item.Color = color
+	item.Thickness = thickness
+	item.Transparency = transparency or 0
+	item.Parent = parent
+	return item
+end
+
+local function gradient(parent: Instance, colors: { Color3 }, rotation: number?)
+	local points = {}
+	for i, color in ipairs(colors) do
+		table.insert(points, ColorSequenceKeypoint.new((i - 1) / (#colors - 1), color))
+	end
+	local item = Instance.new("UIGradient")
+	item.Color = ColorSequence.new(points)
+	item.Rotation = rotation or 90
+	item.Parent = parent
+	return item
+end
+
+local function artPart(parent: Instance, name: string, color: Color3, position: UDim2, size: UDim2, radius: number, rotation: number?)
+	local item = Instance.new("Frame")
+	item.Name = name
+	item.BackgroundColor3 = color
+	item.BorderSizePixel = 0
+	item.Position = position
+	item.Size = size
+	item.Rotation = rotation or 0
+	item.ZIndex = (parent:IsA("GuiObject") and parent.ZIndex or 44) + 1
+	item.Parent = parent
+	corner(item, radius)
+	return item
+end
+
+
+local function drawNativeItem(parent: Instance, item)
+	local pink = Theme.Colors.AccentPink
+	local deep = Theme.Colors.AccentPinkDeep
+	local lavender = Theme.Colors.AccentLavender
+	local mint = Theme.Colors.AccentMint
+	local cyan = Theme.Colors.AccentBlue
+	local white = Color3.fromRGB(255, 255, 255)
+
+	if item.Key == "pixel_bow_jacket" then
+		local body = artPart(parent, "JacketBody", item.Color, UDim2.fromScale(0.3, 0.28), UDim2.fromScale(0.4, 0.46), 8)
+		stroke(body, white, 2, 0.12)
+		artPart(parent, "LeftSleeve", Color3.fromRGB(255, 174, 220), UDim2.fromScale(0.14, 0.31), UDim2.fromScale(0.23, 0.4), 12, 8)
+		artPart(parent, "RightSleeve", Color3.fromRGB(255, 174, 220), UDim2.fromScale(0.63, 0.31), UDim2.fromScale(0.23, 0.4), 12, -8)
+		local bowLeft = artPart(parent, "BowLeft", deep, UDim2.fromScale(0.34, 0.26), UDim2.fromScale(0.18, 0.16), 5, 18)
+		local bowRight = artPart(parent, "BowRight", deep, UDim2.fromScale(0.48, 0.26), UDim2.fromScale(0.18, 0.16), 5, -18)
+		stroke(bowLeft, white, 1, 0.2)
+		stroke(bowRight, white, 1, 0.2)
+	elseif item.Key == "starline_skirt" then
+		for i, data in ipairs({ { 0.2, 0.34, 0.6, 0.42 }, { 0.14, 0.47, 0.72, 0.32 }, { 0.09, 0.6, 0.82, 0.22 } }) do
+			local layer = artPart(parent, "SkirtLayer" .. i, Color3.fromRGB(193 - i * 8, 144 + i * 10, 255), UDim2.fromScale(data[1], data[2]), UDim2.fromScale(data[3], data[4]), 12)
+			stroke(layer, white, 1.5, 0.2)
+		end
+		artPart(parent, "Waist", lavender, UDim2.fromScale(0.31, 0.24), UDim2.fromScale(0.38, 0.14), 7)
+	elseif item.Key == "bubble_boots" then
+		for i, x in ipairs({ 0.18, 0.52 }) do
+			local boot = artPart(parent, "Boot" .. i, Color3.fromRGB(255, 148, 211), UDim2.fromScale(x, 0.26), UDim2.fromScale(0.3, 0.48), 10)
+			stroke(boot, white, 1.5, 0.1)
+			local sole = artPart(parent, "Sole" .. i, cyan, UDim2.fromScale(x - 0.03, 0.66), UDim2.fromScale(0.36, 0.18), 9)
+			gradient(sole, { cyan, Color3.fromRGB(184, 242, 255), lavender }, 0)
+		end
+	elseif item.Key == "ribbon_satchel" then
+		local bag = artPart(parent, "Satchel", Color3.fromRGB(255, 151, 207), UDim2.fromScale(0.18, 0.32), UDim2.fromScale(0.64, 0.5), 22)
+		stroke(bag, white, 2, 0.08)
+		local handle = artPart(parent, "PearlHandle", white, UDim2.fromScale(0.28, 0.18), UDim2.fromScale(0.44, 0.24), 999)
+		handle.BackgroundTransparency = 1
+		stroke(handle, Color3.fromRGB(255, 220, 239), 4, 0)
+		artPart(parent, "Ribbon", deep, UDim2.fromScale(0.37, 0.5), UDim2.fromScale(0.26, 0.18), 7, 45)
+	elseif item.Key == "mint_sleeve_set" then
+		for i, x in ipairs({ 0.2, 0.56 }) do
+			local sleeve = artPart(parent, "Sleeve" .. i, mint, UDim2.fromScale(x, 0.24), UDim2.fromScale(0.24, 0.58), 999)
+			gradient(sleeve, { Color3.fromRGB(232, 255, 250), mint, Color3.fromRGB(182, 241, 225) }, 90)
+			stroke(sleeve, white, 1.5, 0.1)
+			artPart(parent, "Cuff" .. i, white, UDim2.fromScale(x - 0.02, 0.7), UDim2.fromScale(0.28, 0.12), 6)
+		end
+	else
+		local crystal = artPart(parent, "CrystalStar", Color3.fromRGB(255, 98, 183), UDim2.fromScale(0.28, 0.2), UDim2.fromScale(0.44, 0.44), 7, 45)
+		gradient(crystal, { Color3.fromRGB(255, 235, 249), pink, lavender }, 45)
+		stroke(crystal, white, 2, 0.05)
+		for i, x in ipairs({ 0.36, 0.5, 0.64 }) do
+			artPart(parent, "Charm" .. i, i == 2 and cyan or pink, UDim2.fromScale(x, 0.62), UDim2.fromScale(0.08, 0.18 + i * 0.02), 999)
+		end
+	end
+end
+
+local function renderItemArt(parent: Instance, item)
+	for _, child in ipairs(parent:GetChildren()) do
+		if child:IsA("GuiObject") then
+			child:Destroy()
+		end
+	end
+
+	local imageId = Theme.ShopItemImages and Theme.ShopItemImages[item.Key]
+	if typeof(imageId) == "string" and imageId ~= "" then
+		local image = Instance.new("ImageLabel")
+		image.Name = "ProductImage"
+		image.BackgroundTransparency = 1
+		image.Size = UDim2.fromScale(1, 1)
+		image.Image = imageId
+		image.ScaleType = Enum.ScaleType.Crop
+		image.ZIndex = (parent:IsA("GuiObject") and parent.ZIndex or 44) + 1
+		image.Parent = parent
+		corner(image, 9)
+		return
+	end
+
+	local canvas = Instance.new("Frame")
+	canvas.Name = "NativeProductArt"
+	canvas.BackgroundColor3 = Color3.fromRGB(255, 244, 252)
+	canvas.BorderSizePixel = 0
+	canvas.Size = UDim2.fromScale(1, 1)
+	canvas.ClipsDescendants = true
+	canvas.ZIndex = (parent:IsA("GuiObject") and parent.ZIndex or 44) + 1
+	canvas.Parent = parent
+	corner(canvas, 9)
+	gradient(canvas, { Color3.fromRGB(255, 255, 255), Color3.fromRGB(255, 230, 247), Color3.fromRGB(242, 239, 255) }, 90)
+	drawNativeItem(canvas, item)
+end
+
+local function clearViewport(world: WorldModel)
+	for _, child in ipairs(world:GetChildren()) do
+		child:Destroy()
+	end
+end
+
+local function stripScripts(root: Instance)
+	for _, d in ipairs(root:GetDescendants()) do
+		if d:IsA("BaseScript") then
+			d:Destroy()
+		end
+	end
+end
+
+local function setupCamera(viewport: ViewportFrame, model: Model)
+	local camera = Instance.new("Camera")
+	camera.Parent = viewport
+	viewport.CurrentCamera = camera
+
+	local hrp = model:FindFirstChild("HumanoidRootPart") :: BasePart?
+	if hrp then
+		camera.CFrame = CFrame.new(hrp.Position + Vector3.new(0, 1.5, 6), hrp.Position + Vector3.new(0, 1.2, 0))
+	else
+		local cf, size = model:GetBoundingBox()
+		camera.CFrame = CFrame.new(cf.Position + Vector3.new(0, size.Y * 0.2, size.Magnitude), cf.Position)
+	end
+end
+
+function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
+	local handle = WindowChrome.create(parent, "Shop", "shop", onClose)
+	local content = handle.Content
+	local footer = handle.Root:FindFirstChild("Footer") :: Frame
+
+	local itemGrid = Instance.new("ScrollingFrame")
+	itemGrid.Name = "ItemGrid"
+	itemGrid.BackgroundColor3 = Color3.fromRGB(255, 247, 253)
+	itemGrid.BackgroundTransparency = 0
+	itemGrid.BorderSizePixel = 0
+	itemGrid.Size = UDim2.new(0.34, -8, 1, -8)
+	itemGrid.Position = UDim2.fromOffset(6, 4)
+	itemGrid.ScrollBarThickness = 4
+	itemGrid.ScrollBarImageColor3 = Theme.Colors.Scrollbar
+	itemGrid.CanvasSize = UDim2.fromOffset(0, 0)
+	itemGrid.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	itemGrid.ZIndex = 43
+	itemGrid.Parent = content
+
+	local gridCorner = Instance.new("UICorner")
+	gridCorner.CornerRadius = UDim.new(0, 10)
+	gridCorner.Parent = itemGrid
+
+	local gridStroke = Instance.new("UIStroke")
+	gridStroke.Color = Theme.Colors.AccentPink
+	gridStroke.Thickness = 1
+	gridStroke.Transparency = 0.55
+	gridStroke.Parent = itemGrid
+
+	local gridPad = Instance.new("UIPadding")
+	gridPad.PaddingTop = UDim.new(0, 8)
+	gridPad.PaddingLeft = UDim.new(0, 8)
+	gridPad.PaddingRight = UDim.new(0, 8)
+	gridPad.PaddingBottom = UDim.new(0, 8)
+	gridPad.Parent = itemGrid
+
+	local gridLayout = Instance.new("UIListLayout")
+	gridLayout.Padding = UDim.new(0, 8)
+	gridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	gridLayout.Parent = itemGrid
+
+	local stage = Instance.new("Frame")
+	stage.Name = "TryOnStage"
+	stage.BackgroundColor3 = Theme.Colors.PanelFill
+	stage.BorderSizePixel = 0
+	stage.Position = UDim2.new(0.35, 0, 0, 4)
+	stage.Size = UDim2.new(0.38, 0, 1, -8)
+	stage.ZIndex = 43
+	stage.Parent = content
+
+	local stageCorner = Instance.new("UICorner")
+	stageCorner.CornerRadius = UDim.new(0, 8)
+	stageCorner.Parent = stage
+
+	local stageGrad = Instance.new("UIGradient")
+	stageGrad.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Theme.Colors.PanelFill),
+		ColorSequenceKeypoint.new(0.55, Theme.Colors.PanelFillAlt),
+		ColorSequenceKeypoint.new(1, Theme.Colors.SlotBgAlt),
+	})
+	stageGrad.Rotation = 90
+	stageGrad.Parent = stage
+
+	local viewport = Instance.new("ViewportFrame")
+	viewport.Name = "AvatarViewport"
+	viewport.BackgroundTransparency = 1
+	viewport.Size = UDim2.new(1, -12, 1, -48)
+	viewport.Position = UDim2.fromOffset(6, 8)
+	viewport.Ambient = Color3.fromRGB(255, 220, 244)
+	viewport.LightColor = Color3.fromRGB(255, 255, 255)
+	viewport.LightDirection = Vector3.new(-0.5, -1, -0.25)
+	viewport.ZIndex = 44
+	viewport.Parent = stage
+
+	local world = Instance.new("WorldModel")
+	world.Name = "World"
+	world.Parent = viewport
+
+	local caption = Instance.new("TextLabel")
+	caption.Name = "TryOnCaption"
+	caption.BackgroundTransparency = 1
+	caption.AnchorPoint = Vector2.new(0.5, 1)
+	caption.Position = UDim2.new(0.5, 0, 1, -8)
+	caption.Size = UDim2.new(0.92, 0, 0, 28)
+	caption.Font = Theme.Fonts.Body
+	caption.TextSize = 13
+	caption.TextWrapped = true
+	caption.TextColor3 = Theme.Colors.TextMuted
+	caption.Text = "Your look - pick an item"
+	caption.ZIndex = 45
+	caption.Parent = stage
+
+	local detail = Instance.new("Frame")
+	detail.Name = "SelectedItemPanel"
+	detail.BackgroundColor3 = Theme.Colors.AccentCream
+	detail.BorderSizePixel = 0
+	detail.Position = UDim2.new(0.74, 0, 0, 4)
+	detail.Size = UDim2.new(0.26, -6, 1, -8)
+	detail.ZIndex = 43
+	detail.Parent = content
+
+	local detailCorner = Instance.new("UICorner")
+	detailCorner.CornerRadius = UDim.new(0, 8)
+	detailCorner.Parent = detail
+
+	local detailStroke = Instance.new("UIStroke")
+	detailStroke.Color = Theme.Colors.AccentPink
+	detailStroke.Thickness = 1.5
+	detailStroke.Transparency = 0.25
+	detailStroke.Parent = detail
+
+	local detailArt = Instance.new("Frame")
+	detailArt.Name = "SelectedArt"
+	detailArt.BackgroundColor3 = Color3.fromRGB(255, 244, 252)
+	detailArt.BorderSizePixel = 0
+	detailArt.Position = UDim2.fromOffset(10, 10)
+	detailArt.Size = UDim2.new(1, -20, 0, 112)
+	detailArt.ClipsDescendants = true
+	detailArt.ZIndex = 44
+	detailArt.Parent = detail
+	corner(detailArt, 9)
+	stroke(detailArt, Theme.Colors.AccentPink, 1, 0.4)
+
+	local detailTitle = Instance.new("TextLabel")
+	detailTitle.Name = "SelectedName"
+	detailTitle.BackgroundTransparency = 1
+	detailTitle.Position = UDim2.fromOffset(12, 132)
+	detailTitle.Size = UDim2.new(1, -24, 0, 42)
+	detailTitle.Font = Theme.Fonts.Title
+	detailTitle.TextSize = 18
+	detailTitle.TextWrapped = true
+	detailTitle.TextXAlignment = Enum.TextXAlignment.Left
+	detailTitle.TextColor3 = Theme.Colors.TextPrimary
+	detailTitle.Text = "Select an item"
+	detailTitle.ZIndex = 44
+	detailTitle.Parent = detail
+
+	local detailPrice = Instance.new("TextLabel")
+	detailPrice.Name = "SelectedPrice"
+	detailPrice.BackgroundTransparency = 1
+	detailPrice.Position = UDim2.fromOffset(12, 176)
+	detailPrice.Size = UDim2.new(1, -24, 0, 28)
+	detailPrice.Font = Theme.Fonts.Title
+	detailPrice.TextSize = 16
+	detailPrice.TextXAlignment = Enum.TextXAlignment.Left
+	detailPrice.TextColor3 = Theme.Colors.AccentPinkDeep
+	detailPrice.Text = "GEMS --"
+	detailPrice.ZIndex = 44
+	detailPrice.Parent = detail
+
+	local detailNote = Instance.new("TextLabel")
+	detailNote.Name = "SelectedNote"
+	detailNote.BackgroundTransparency = 1
+	detailNote.Position = UDim2.fromOffset(12, 214)
+	detailNote.Size = UDim2.new(1, -24, 1, -226)
+	detailNote.Font = Theme.Fonts.Body
+	detailNote.TextSize = 13
+	detailNote.TextWrapped = true
+	detailNote.TextXAlignment = Enum.TextXAlignment.Left
+	detailNote.TextYAlignment = Enum.TextYAlignment.Top
+	detailNote.TextColor3 = Theme.Colors.TextMuted
+	detailNote.Text = "Tap an item to preview it on your avatar. Replace the sample callbacks with catalog IDs when ready."
+	detailNote.ZIndex = 44
+	detailNote.Parent = detail
+
+	local selectedItem = nil
+
+	local function refreshAvatar()
+		clearViewport(world)
+		local player = Players.LocalPlayer
+		local character = player.Character
+		if not character then
+			caption.Text = "Waiting for avatar..."
+			return
+		end
+
+		local hum = character:FindFirstChildOfClass("Humanoid")
+		if not hum then
+			caption.Text = "Waiting for humanoid..."
+			return
+		end
+
+		character.Archivable = true
+		local clone = character:Clone()
+		character.Archivable = false
+		if not clone then
+			caption.Text = "Avatar preview unavailable"
+			return
+		end
+
+		stripScripts(clone)
+		clone.Name = "PreviewAvatar"
+		clone.Parent = world
+
+		for _, part in ipairs(clone:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.Anchored = true
+			end
+		end
+
+		setupCamera(viewport, clone)
+		caption.Text = selectedItem and ("Trying: " .. selectedItem.Name) or "Your look - pick an item"
+	end
+
+	local function selectItem(item)
+		selectedItem = item
+		caption.Text = "Trying: " .. item.Name
+		detailTitle.Text = item.Name
+		detailPrice.Text = "GEMS " .. tostring(item.Price)
+		detailNote.Text = item.Tag .. " ITEM\n\nPreview selected. Connect this card to HumanoidDescription or your owned-inventory service."
+		renderItemArt(detailArt, item)
+	end
+
+	for i, item in ipairs(SAMPLE_ITEMS) do
+		local slot = Instance.new("TextButton")
+		slot.Name = "Item_" .. i
+		slot.AutoButtonColor = true
+		slot.BackgroundColor3 = Theme.Colors.AccentCream
+		slot.BorderSizePixel = 0
+		slot.Size = UDim2.new(1, -4, 0, 96)
+		slot.Text = ""
+		slot.LayoutOrder = i
+		slot.ZIndex = 44
+		slot.Parent = itemGrid
+
+		local sc = Instance.new("UICorner")
+		sc.CornerRadius = UDim.new(0, 10)
+		sc.Parent = slot
+
+		local ss = Instance.new("UIStroke")
+		ss.Color = Theme.Colors.AccentPink
+		ss.Thickness = 1.5
+		ss.Transparency = 0.4
+		ss.Parent = slot
+
+		local preview = Instance.new("Frame")
+		preview.Name = "ItemSwatch"
+		preview.BackgroundColor3 = Color3.fromRGB(255, 244, 252)
+		preview.BorderSizePixel = 0
+		preview.Size = UDim2.fromOffset(78, 78)
+		preview.Position = UDim2.fromOffset(8, 9)
+		preview.ClipsDescendants = true
+		preview.ZIndex = 45
+		preview.Parent = slot
+
+		local pc = Instance.new("UICorner")
+		pc.CornerRadius = UDim.new(0, 9)
+		pc.Parent = preview
+		renderItemArt(preview, item)
+
+		local name = Instance.new("TextLabel")
+		name.BackgroundTransparency = 1
+		name.Position = UDim2.fromOffset(96, 12)
+		name.Size = UDim2.new(1, -104, 0, 34)
+		name.Font = Theme.Fonts.Body
+		name.TextSize = 12
+		name.TextColor3 = Theme.Colors.TextPrimary
+		name.Text = item.Name
+		name.TextWrapped = true
+		name.TextXAlignment = Enum.TextXAlignment.Left
+		name.TextYAlignment = Enum.TextYAlignment.Top
+		name.ZIndex = 45
+		name.Parent = slot
+
+		local price = Instance.new("TextLabel")
+		price.BackgroundTransparency = 1
+		price.Position = UDim2.fromOffset(96, 49)
+		price.Size = UDim2.new(1, -104, 0, 18)
+		price.Font = Theme.Fonts.Title
+		price.TextSize = 10
+		price.TextXAlignment = Enum.TextXAlignment.Left
+		price.TextColor3 = Theme.Colors.AccentPinkDeep
+		price.Text = "GEMS " .. tostring(item.Price)
+		price.ZIndex = 45
+		price.Parent = slot
+
+		local tag = Instance.new("TextLabel")
+		tag.Name = "Tag"
+		tag.BackgroundColor3 = Color3.fromRGB(255, 231, 247)
+		tag.BorderSizePixel = 0
+		tag.Position = UDim2.fromOffset(96, 70)
+		tag.Size = UDim2.fromOffset(62, 17)
+		tag.Font = Theme.Fonts.Title
+		tag.TextSize = 8
+		tag.TextColor3 = Theme.Colors.AccentPinkDeep
+		tag.Text = item.Tag
+		tag.ZIndex = 45
+		tag.Parent = slot
+		corner(tag, 8)
+
+		slot.Activated:Connect(function()
+			selectItem(item)
+			ss.Transparency = 0
+			ss.Color = Theme.Colors.AccentPinkDeep
+			task.delay(0.35, function()
+				if ss.Parent then
+					ss.Transparency = 0.4
+					ss.Color = Theme.Colors.AccentPink
+				end
+			end)
+		end)
+	end
+
+	if footer then
+		WindowChrome.addFooterButton(footer, "Reset Look", 1, function()
+			selectedItem = nil
+			detailTitle.Text = "Select an item"
+			detailPrice.Text = "GEMS --"
+			detailNote.Text = "Tap an item to preview it on your avatar. Replace the sample callbacks with catalog IDs when ready."
+			for _, child in ipairs(detailArt:GetChildren()) do
+				if child:IsA("GuiObject") then
+					child:Destroy()
+				end
+			end
+			refreshAvatar()
+		end)
+		WindowChrome.addFooterButton(footer, "Refresh", 2, refreshAvatar)
+		WindowChrome.addFooterButton(footer, "Buy Soon", 3, function()
+			caption.Text = selectedItem and ("Queued: " .. selectedItem.Name) or "Pick an item first"
+		end)
+	end
+
+	selectItem(SAMPLE_ITEMS[1])
+
+	local player = Players.LocalPlayer
+	if player.Character then
+		task.defer(refreshAvatar)
+	end
+	player.CharacterAdded:Connect(function()
+		task.wait(0.35)
+		if handle:isOpen() then
+			refreshAvatar()
+		end
+	end)
+
+	local originalSetVisible = handle.setVisible
+	function handle:setVisible(visible: boolean, instant: boolean?)
+		originalSetVisible(self, visible, instant)
+		if visible then
+			task.defer(refreshAvatar)
+		end
+	end
+
+	return handle
+end
+
+return ShopWindow
+]]></ProtectedString>
+      </Properties>
+    </Item>
+
+    <Item class="ModuleScript" referent="MS_PlaceholderWindows">
+      <Properties>
+        <string name="Name">PlaceholderWindows</string>
+        <ProtectedString name="Source"><![CDATA[--[[
+	Feature dashboards for Gacha, Map, Messages, Teleport, and Job.
+	Each feature owns one dedicated .exe window with a responsive scrolling body.
+]]
+
+local Theme = require(script.Parent.Theme)
+local IconDraw = require(script.Parent.IconDraw)
+local WindowChrome = require(script.Parent.WindowChrome)
+
+local PlaceholderWindows = {}
+
+local SPECS = {
+	Gacha = {
+		Title = "gacha",
+		Eyebrow = "CAPSULE LAB",
+		Headline = "Lucky streak ready",
+		Subline = "Your next sparkle is waiting.",
+		Icon = "star",
+		FeaturedIcon = "capsule",
+		TaskIcons = { "ticket", "constellation" },
+		Metrics = { { "PITY", "42 / 80" }, { "TOKENS", "8" } },
+		Section = "FEATURED CAPSULE",
+		Featured = "Celestial Ribbon",
+		Description = "Pastel halos, ribbon trails, and one limited aura.",
+		Reward = "150 GEMS",
+		Action = "Preview Pool",
+		Tasks = {
+			{ "Daily Wish", "Use one free pull", "READY", 1 },
+			{ "Star Collector", "Collect 3 capsule stars", "2 / 3", 0.66 },
+		},
+		Footer = { "Pull x1", "Pull x10", "History" },
+	},
+	Map = {
+		Title = "map",
+		Eyebrow = "FURU NAV",
+		Headline = "Moonlight District",
+		Subline = "3 nearby activities are active.",
+		Icon = "map",
+		FeaturedIcon = "city",
+		TaskIcons = { "cafe", "office" },
+		Metrics = { { "PINS", "12" }, { "FOUND", "68%" } },
+		Section = "RECOMMENDED STOP",
+		Featured = "Moonlight Plaza",
+		Description = "Shopping, gacha kiosks, and the evening fountain show.",
+		Reward = "240m AWAY",
+		Action = "Set Route",
+		Tasks = {
+			{ "Cafe Lumi", "New seasonal menu", "OPEN", 0.8 },
+			{ "Job Hub", "Two bonus shifts", "+20%", 0.55 },
+		},
+		Footer = { "Zoom", "Pins", "Home" },
+	},
+	Messages = {
+		Title = "messages",
+		Eyebrow = "FURU MAIL",
+		Headline = "Good afternoon",
+		Subline = "You have 3 unread messages.",
+		Icon = "mail",
+		FeaturedIcon = "megaphone",
+		TaskIcons = { "friend", "bell" },
+		Metrics = { { "UNREAD", "3" }, { "FRIENDS", "18" } },
+		Section = "LATEST MESSAGE",
+		Featured = "Welcome to Moonlight Plaza",
+		Description = "The fountain event begins tonight. Bring a friend for a bonus.",
+		Reward = "2m AGO",
+		Action = "Open Message",
+		Tasks = {
+			{ "Mika", "Meet me by the boutique!", "NEW", 0.92 },
+			{ "Furu System", "Daily reward delivered", "READ", 1 },
+		},
+		Footer = { "Compose", "Inbox", "Archive" },
+	},
+	Teleport = {
+		Title = "teleport",
+		Eyebrow = "QUICK TRAVEL",
+		Headline = "Where to next?",
+		Subline = "Travel points are online.",
+		Icon = "portal",
+		FeaturedIcon = "compass",
+		TaskIcons = { "mall", "office" },
+		Metrics = { { "POINTS", "7" }, { "COST", "FREE" } },
+		Section = "POPULAR DESTINATION",
+		Featured = "Furu Central Plaza",
+		Description = "The fastest route to shops, events, and daily rewards.",
+		Reward = "INSTANT",
+		Action = "Teleport",
+		Tasks = {
+			{ "Fashion Mall", "Boutiques and salon", "ONLINE", 1 },
+			{ "Job Hub", "Careers and shifts", "ONLINE", 1 },
+		},
+		Footer = { "Plaza", "Mall", "Job Hub" },
+	},
+	Job = {
+		Title = "job",
+		Eyebrow = "CAREER DESK",
+		Headline = "FuruUser",
+		Subline = "Intern  |  Level 1  |  120 / 500 XP",
+		Icon = "briefcase",
+		FeaturedIcon = "office",
+		TaskIcons = { "document", "delivery" },
+		Metrics = { { "BONUS", "200" }, { "REP", "1" } },
+		Section = "FEATURED CAREER",
+		Featured = "Office Assistant",
+		Description = "Organize documents, assist staff, and complete daily tasks.",
+		Reward = "150 GEMS",
+		Action = "Start Job",
+		Tasks = {
+			{ "File Documents", "Complete ten files", "6 / 10", 0.6 },
+			{ "Morning Delivery", "Deliver three orders", "1 / 3", 0.33 },
+		},
+		Footer = { "Apply", "Shifts", "Pay" },
+	},
+}
+
+local function corner(parent: Instance, radius: number)
+	local item = Instance.new("UICorner")
+	item.CornerRadius = UDim.new(0, radius)
+	item.Parent = parent
+	return item
+end
+
+local function stroke(parent: Instance, color: Color3, thickness: number, transparency: number?)
+	local item = Instance.new("UIStroke")
+	item.Color = color
+	item.Thickness = thickness
+	item.Transparency = transparency or 0
+	item.Parent = parent
+	return item
+end
+
+local function gradient(parent: Instance, colors: { Color3 }, rotation: number?)
+	local points = {}
+	for i, color in ipairs(colors) do
+		table.insert(points, ColorSequenceKeypoint.new((i - 1) / (#colors - 1), color))
+	end
+	local item = Instance.new("UIGradient")
+	item.Color = ColorSequence.new(points)
+	item.Rotation = rotation or 0
+	item.Parent = parent
+	return item
+end
+
+local function label(parent: Instance, name: string, text: string, size: number, font: Enum.Font, color: Color3, z: number)
+	local item = Instance.new("TextLabel")
+	item.Name = name
+	item.BackgroundTransparency = 1
+	item.Font = font
+	item.Text = text
+	item.TextSize = size
+	item.TextColor3 = color
+	item.TextXAlignment = Enum.TextXAlignment.Left
+	item.ZIndex = z
+	item.Parent = parent
+	return item
+end
+
+local function panel(parent: Instance, name: string, position: UDim2, size: UDim2, color: Color3, z: number)
+	local item = Instance.new("Frame")
+	item.Name = name
+	item.BackgroundColor3 = color
+	item.BorderSizePixel = 0
+	item.Position = position
+	item.Size = size
+	item.ZIndex = z
+	item.Parent = parent
+	corner(item, 8)
+	stroke(item, Theme.Colors.AccentPink, 1, 0.52)
+	return item
+end
+
+local function addMetric(parent: Instance, metric: { string }, order: number)
+	local metricPanel = panel(
+		parent,
+		"Metric" .. order,
+		UDim2.new(1, -150 + ((order - 1) * 70), 0, 10),
+		UDim2.fromOffset(62, 62),
+		Color3.fromRGB(255, 250, 253),
+		47
+	)
+
+	local value = label(metricPanel, "Value", metric[2], 15, Theme.Fonts.Title, Theme.Colors.TextPrimary, 48)
+	value.Position = UDim2.fromOffset(6, 8)
+	value.Size = UDim2.new(1, -12, 0, 22)
+	value.TextXAlignment = Enum.TextXAlignment.Center
+	value.TextTruncate = Enum.TextTruncate.AtEnd
+
+	local name = label(metricPanel, "Name", metric[1], 8, Theme.Fonts.Title, Theme.Colors.AccentPinkDeep, 48)
+	name.Position = UDim2.fromOffset(4, 34)
+	name.Size = UDim2.new(1, -8, 0, 16)
+	name.TextXAlignment = Enum.TextXAlignment.Center
+	name.TextTruncate = Enum.TextTruncate.AtEnd
+end
+
+local function addProgress(parent: Instance, amount: number, position: UDim2, size: UDim2)
+	local track = Instance.new("Frame")
+	track.Name = "ProgressTrack"
+	track.BackgroundColor3 = Color3.fromRGB(241, 225, 239)
+	track.BorderSizePixel = 0
+	track.Position = position
+	track.Size = size
+	track.ZIndex = 48
+	track.Parent = parent
+	corner(track, 5)
+
+	local fill = Instance.new("Frame")
+	fill.Name = "Fill"
+	fill.BackgroundColor3 = Theme.Colors.AccentPink
+	fill.BorderSizePixel = 0
+	fill.Size = UDim2.new(math.clamp(amount, 0.05, 1), 0, 1, 0)
+	fill.ZIndex = 49
+	fill.Parent = track
+	corner(fill, 5)
+	gradient(fill, { Theme.Colors.AccentPink, Theme.Colors.AccentLavender }, 0)
+end
+
+local function addCenteredIcon(parent: Instance, iconName: string, size: number)
+	local icon = IconDraw.makeCircleIcon(parent, iconName, Color3.fromRGB(255, 250, 253))
+	icon.AnchorPoint = Vector2.new(0.5, 0.5)
+	icon.Position = UDim2.fromScale(0.5, 0.5)
+	icon.Size = UDim2.fromOffset(size, size)
+	return icon
+end
+
+local function addTask(parent: Instance, task: { any }, order: number, iconName: string)
+	local xScale = order == 1 and 0 or 0.5
+	local xOffset = order == 1 and 0 or 5
+	local widthOffset = order == 1 and -5 or -5
+	local taskPanel = panel(parent, "Task" .. order, UDim2.new(xScale, xOffset, 0, 280), UDim2.new(0.5, widthOffset, 0, 104), Color3.fromRGB(255, 253, 255), 46)
+
+	local iconTile = Instance.new("Frame")
+	iconTile.Name = "IconTile"
+	iconTile.BackgroundColor3 = Color3.fromRGB(255, 225, 244)
+	iconTile.BorderSizePixel = 0
+	iconTile.Position = UDim2.fromOffset(10, 12)
+	iconTile.Size = UDim2.fromOffset(48, 48)
+	iconTile.ZIndex = 47
+	iconTile.Parent = taskPanel
+	corner(iconTile, 10)
+	gradient(iconTile, { Color3.fromRGB(255, 237, 249), Color3.fromRGB(244, 231, 255) }, 90)
+	addCenteredIcon(iconTile, iconName, 34)
+
+	local title = label(taskPanel, "Title", task[1], 12, Theme.Fonts.Title, Theme.Colors.TextPrimary, 47)
+	title.Position = UDim2.fromOffset(68, 10)
+	title.Size = UDim2.new(1, -128, 0, 20)
+	title.TextTruncate = Enum.TextTruncate.AtEnd
+
+	local state = label(taskPanel, "State", task[3], 9, Theme.Fonts.Title, Theme.Colors.AccentPinkDeep, 47)
+	state.AnchorPoint = Vector2.new(1, 0)
+	state.Position = UDim2.new(1, -8, 0, 12)
+	state.Size = UDim2.fromOffset(54, 16)
+	state.TextXAlignment = Enum.TextXAlignment.Right
+
+	local description = label(taskPanel, "Description", task[2], 10, Theme.Fonts.Body, Theme.Colors.TextMuted, 47)
+	description.Position = UDim2.fromOffset(68, 32)
+	description.Size = UDim2.new(1, -78, 0, 30)
+	description.TextWrapped = true
+	description.TextYAlignment = Enum.TextYAlignment.Top
+
+	addProgress(taskPanel, task[4], UDim2.new(0, 12, 1, -20), UDim2.new(1, -24, 0, 7))
+	return taskPanel
+end
+
+local function paintDashboard(content: Frame, spec)
+	local scroll = Instance.new("ScrollingFrame")
+	scroll.Name = "Dashboard"
+	scroll.BackgroundTransparency = 1
+	scroll.BorderSizePixel = 0
+	scroll.Size = UDim2.fromScale(1, 1)
+	scroll.CanvasSize = UDim2.fromOffset(0, 402)
+	scroll.ScrollBarThickness = 3
+	scroll.ScrollBarImageColor3 = Theme.Colors.Scrollbar
+	scroll.ScrollingDirection = Enum.ScrollingDirection.Y
+	scroll.ZIndex = 45
+	scroll.Parent = content
+
+	local padding = Instance.new("UIPadding")
+	padding.PaddingTop = UDim.new(0, 10)
+	padding.PaddingLeft = UDim.new(0, 10)
+	padding.PaddingRight = UDim.new(0, 10)
+	padding.PaddingBottom = UDim.new(0, 12)
+	padding.Parent = scroll
+
+	local profile = panel(scroll, "ProfileStrip", UDim2.fromOffset(0, 0), UDim2.new(1, 0, 0, 82), Color3.fromRGB(255, 253, 255), 46)
+	gradient(profile, { Color3.fromRGB(255, 255, 255), Color3.fromRGB(255, 241, 250) }, 0)
+
+	local iconWrap = Instance.new("Frame")
+	iconWrap.Name = "FeatureIcon"
+	iconWrap.BackgroundColor3 = Theme.Colors.AccentPink
+	iconWrap.BorderSizePixel = 0
+	iconWrap.Position = UDim2.fromOffset(10, 10)
+	iconWrap.Size = UDim2.fromOffset(62, 62)
+	iconWrap.ZIndex = 47
+	iconWrap.Parent = profile
+	corner(iconWrap, 16)
+	gradient(iconWrap, { Theme.Colors.AccentPink, Theme.Colors.AccentLavender }, 45)
+	addCenteredIcon(iconWrap, spec.Icon, 42)
+
+	local eyebrow = label(profile, "Eyebrow", spec.Eyebrow, 9, Theme.Fonts.Title, Theme.Colors.AccentPinkDeep, 47)
+	eyebrow.Position = UDim2.fromOffset(82, 10)
+	eyebrow.Size = UDim2.new(1, -242, 0, 14)
+
+	local headline = label(profile, "Headline", spec.Headline, 16, Theme.Fonts.Title, Theme.Colors.TextPrimary, 47)
+	headline.Position = UDim2.fromOffset(82, 25)
+	headline.Size = UDim2.new(1, -242, 0, 24)
+	headline.TextTruncate = Enum.TextTruncate.AtEnd
+
+	local subline = label(profile, "Subline", spec.Subline, 10, Theme.Fonts.Body, Theme.Colors.TextMuted, 47)
+	subline.Position = UDim2.fromOffset(82, 51)
+	subline.Size = UDim2.new(1, -242, 0, 18)
+	subline.TextTruncate = Enum.TextTruncate.AtEnd
+
+	for i, metric in ipairs(spec.Metrics) do
+		addMetric(profile, metric, i)
+	end
+
+	local section = label(scroll, "SectionTitle", spec.Section, 11, Theme.Fonts.Title, Theme.Colors.TextPrimary, 46)
+	section.Position = UDim2.fromOffset(4, 92)
+	section.Size = UDim2.new(1, -8, 0, 20)
+
+	local featured = panel(scroll, "Featured", UDim2.fromOffset(0, 116), UDim2.new(1, 0, 0, 126), Color3.fromRGB(255, 252, 255), 46)
+	gradient(featured, {
+		Color3.fromRGB(255, 255, 255),
+		Color3.fromRGB(255, 238, 249),
+		Color3.fromRGB(243, 240, 255),
+	}, 0)
+	stroke(featured, Theme.Colors.AccentPink, 1.5, 0.18)
+
+	local featureTile = Instance.new("Frame")
+	featureTile.Name = "ArtTile"
+	featureTile.BackgroundColor3 = Theme.Colors.AccentPink
+	featureTile.BorderSizePixel = 0
+	featureTile.Position = UDim2.fromOffset(12, 14)
+	featureTile.Size = UDim2.fromOffset(82, 82)
+	featureTile.ZIndex = 47
+	featureTile.Parent = featured
+	corner(featureTile, 14)
+	gradient(featureTile, { Theme.Colors.AccentPink, Theme.Colors.AccentLavender, Theme.Colors.AccentBlue }, 45)
+	addCenteredIcon(featureTile, spec.FeaturedIcon, 52)
+
+	local featuredTitle = label(featured, "Title", spec.Featured, 17, Theme.Fonts.Title, Theme.Colors.TextPrimary, 47)
+	featuredTitle.Position = UDim2.fromOffset(108, 13)
+	featuredTitle.Size = UDim2.new(1, -242, 0, 26)
+	featuredTitle.TextTruncate = Enum.TextTruncate.AtEnd
+
+	local reward = label(featured, "Reward", spec.Reward, 10, Theme.Fonts.Title, Theme.Colors.AccentPinkDeep, 47)
+	reward.AnchorPoint = Vector2.new(1, 0)
+	reward.Position = UDim2.new(1, -12, 0, 18)
+	reward.Size = UDim2.fromOffset(120, 18)
+	reward.TextXAlignment = Enum.TextXAlignment.Right
+
+	local description = label(featured, "Description", spec.Description, 11, Theme.Fonts.Body, Theme.Colors.TextMuted, 47)
+	description.Position = UDim2.fromOffset(108, 43)
+	description.Size = UDim2.new(1, -124, 0, 38)
+	description.TextWrapped = true
+	description.TextYAlignment = Enum.TextYAlignment.Top
+
+	local action = Instance.new("TextButton")
+	action.Name = "PrimaryAction"
+	action.AnchorPoint = Vector2.new(1, 1)
+	action.Position = UDim2.new(1, -12, 1, -12)
+	action.Size = UDim2.fromOffset(152, 30)
+	action.BackgroundColor3 = Theme.Colors.ButtonFill
+	action.BorderSizePixel = 0
+	action.AutoButtonColor = false
+	action.Font = Theme.Fonts.Title
+	action.Text = spec.Action
+	action.TextColor3 = Theme.Colors.AccentPinkDeep
+	action.TextSize = 11
+	action.ZIndex = 48
+	action.Parent = featured
+	corner(action, 7)
+	stroke(action, Theme.Colors.ButtonStroke, 1, 0.18)
+	action.Activated:Connect(function()
+		action.Text = "SELECTED"
+		task.delay(1.1, function()
+			if action.Parent then
+				action.Text = spec.Action
+			end
+		end)
+	end)
+
+	local taskHeading = label(scroll, "TaskHeading", "ACTIVE CARDS", 11, Theme.Fonts.Title, Theme.Colors.TextPrimary, 46)
+	taskHeading.Position = UDim2.fromOffset(4, 252)
+	taskHeading.Size = UDim2.new(1, -8, 0, 20)
+
+	local taskPanels = {}
+	for i, taskSpec in ipairs(spec.Tasks) do
+		taskPanels[i] = addTask(scroll, taskSpec, i, spec.TaskIcons[i])
+	end
+
+	local function updateTaskLayout()
+		if scroll.AbsoluteSize.X < 520 then
+			taskPanels[1].Position = UDim2.fromOffset(0, 280)
+			taskPanels[1].Size = UDim2.new(1, 0, 0, 104)
+			taskPanels[2].Position = UDim2.fromOffset(0, 394)
+			taskPanels[2].Size = UDim2.new(1, 0, 0, 104)
+			scroll.CanvasSize = UDim2.fromOffset(0, 516)
+		else
+			taskPanels[1].Position = UDim2.new(0, 0, 0, 280)
+			taskPanels[1].Size = UDim2.new(0.5, -5, 0, 104)
+			taskPanels[2].Position = UDim2.new(0.5, 5, 0, 280)
+			taskPanels[2].Size = UDim2.new(0.5, -5, 0, 104)
+			scroll.CanvasSize = UDim2.fromOffset(0, 402)
+		end
+	end
+
+	task.defer(updateTaskLayout)
+	scroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateTaskLayout)
+end
+
+function PlaceholderWindows.mountAll(parent: Instance, onCloseFactory: (id: string) -> (() -> ()))
+	local windows = {}
+	for id, spec in pairs(SPECS) do
+		local handle = WindowChrome.create(parent, id, spec.Title, onCloseFactory(id))
+		paintDashboard(handle.Content, spec)
+		for i, footerLabel in ipairs(spec.Footer) do
+			WindowChrome.addFooterButton(handle.Footer, footerLabel, i, nil)
+		end
+		windows[id] = handle
+	end
+	return windows
+end
+
+return PlaceholderWindows
+]]></ProtectedString>
+      </Properties>
+    </Item>
+
+    <Item class="ModuleScript" referent="MS_WindowManager">
+      <Properties>
+        <string name="Name">WindowManager</string>
+        <ProtectedString name="Source"><![CDATA[--[[
+	Central toggle: one feature window open at a time; slide dismiss matches open.
+]]
+
+local ShopWindow = require(script.Parent.ShopWindow)
+local PlaceholderWindows = require(script.Parent.PlaceholderWindows)
+
+local WindowManager = {}
+WindowManager.__index = WindowManager
+
+function WindowManager.new(host: Frame)
+	local self = setmetatable({}, WindowManager)
+	self._host = host
+	self._windows = {}
+	self._active = nil :: string?
+
+	local function closer(id: string)
+		return function()
+			if self._active == id then
+				self._active = nil
+			end
+		end
+	end
+
+	self._windows.Shop = ShopWindow.mount(host, closer("Shop"))
+	local placeholders = PlaceholderWindows.mountAll(host, closer)
+	for id, handle in pairs(placeholders) do
+		self._windows[id] = handle
+	end
+
+	return self
+end
+
+function WindowManager:open(id: string)
+	local target = self._windows[id]
+	if not target then
+		warn("[SoftPhoneUI] Unknown window:", id)
+		return
+	end
+
+	if self._active and self._active ~= id then
+		local current = self._windows[self._active]
+		if current then
+			current:setVisible(false, false)
+		end
+	end
+
+	if self._active == id and target:isOpen() then
+		target:setVisible(false, false)
+		self._active = nil
+		return
+	end
+
+	target:setVisible(true, false)
+	self._active = id
+end
+
+function WindowManager:closeAll(instant: boolean?)
+	for _, handle in pairs(self._windows) do
+		if handle:isOpen() then
+			handle:setVisible(false, instant)
+		end
+	end
+	self._active = nil
+end
+
+function WindowManager:getActive(): string?
+	return self._active
+end
+
+return WindowManager
+]]></ProtectedString>
+      </Properties>
+    </Item>
+
+    </Item>
+    <Item class="ScreenGui" referent="SoftPhoneUI">
+      <Properties>
+        <string name="Name">SoftPhoneUI</string>
+        <bool name="ResetOnSpawn">false</bool>
+        <bool name="IgnoreGuiInset">true</bool>
+        <bool name="Enabled">true</bool>
+        <int name="DisplayOrder">100</int>
+        <token name="ZIndexBehavior">1</token>
+      </Properties>
+      <Item class="TextButton" referent="StaticEdgeLauncher">
+        <Properties>
+          <string name="Name">StaticEdgeLauncher</string>
+          <bool name="Active">true</bool>
+          <bool name="AutoButtonColor">false</bool>
+          <Color3 name="BackgroundColor3"><R>1</R><G>0.827451</G><B>0.913725</B></Color3>
+          <float name="BackgroundTransparency">0</float>
+          <int name="BorderSizePixel">0</int>
+          <Vector2 name="AnchorPoint"><X>1</X><Y>0.5</Y></Vector2>
+          <UDim2 name="Position"><XS>1</XS><XO>-6</XO><YS>0.5</YS><YO>0</YO></UDim2>
+          <UDim2 name="Size"><XS>0</XS><XO>42</XO><YS>0</YS><YO>240</YO></UDim2>
+          <string name="Text">FURU
+PHONE</string>
+          <Color3 name="TextColor3"><R>0.909804</R><G>0.372549</G><B>0.65098</B></Color3>
+          <float name="TextSize">11</float>
+          <bool name="TextWrapped">true</bool>
+          <token name="Font">18</token>
+          <int name="ZIndex">900</int>
+        </Properties>
+        <Item class="UICorner" referent="StaticEdgeLauncherCorner">
+          <Properties>
+            <string name="Name">Corner</string>
+            <UDim name="CornerRadius"><S>0</S><O>14</O></UDim>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="StaticEdgeLauncherStroke">
+          <Properties>
+            <string name="Name">Stroke</string>
+            <Color3 name="Color"><R>1</R><G>1</G><B>1</B></Color3>
+            <float name="Thickness">2</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="LocalScript" referent="LS_SoftPhoneBootstrap">
+        <Properties>
+          <string name="Name">SoftPhoneBootstrap</string>
+          <ProtectedString name="Source"><![CDATA[--[[
+	SoftPhoneUI bootstrap.
+	Drop under StarterGui/SoftPhoneUI as a LocalScript.
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local screenGui = script.Parent
+if not screenGui:IsA("ScreenGui") then
+	screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "SoftPhoneUI"
+	screenGui.Parent = playerGui
+	script.Parent = screenGui
+end
+
+screenGui.Name = "SoftPhoneUI"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.IgnoreGuiInset = true
+screenGui.DisplayOrder = 100
+screenGui.Enabled = true
+
+-- The exported files include this launcher so the edge control is visible even
+-- before modules load. Keep it until the complete sidebar has been constructed.
+local staticLauncher = screenGui:FindFirstChild("StaticEdgeLauncher")
+
+local function makeRuntimeLauncher(): TextButton
+	local launcher = Instance.new("TextButton")
+	launcher.Name = "StaticEdgeLauncher"
+	launcher.AnchorPoint = Vector2.new(1, 0.5)
+	launcher.Position = UDim2.new(1, -6, 0.5, 0)
+	launcher.Size = UDim2.fromOffset(42, 240)
+	launcher.BackgroundColor3 = Color3.fromRGB(255, 211, 233)
+	launcher.BorderSizePixel = 0
+	launcher.AutoButtonColor = false
+	launcher.Font = Enum.Font.GothamBold
+	launcher.Text = "FURU\nPHONE"
+	launcher.TextColor3 = Color3.fromRGB(232, 95, 166)
+	launcher.TextSize = 11
+	launcher.TextWrapped = true
+	launcher.ZIndex = 900
+	launcher.Parent = screenGui
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 14)
+	corner.Parent = launcher
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(255, 255, 255)
+	stroke.Thickness = 2
+	stroke.Parent = launcher
+
+	return launcher
+end
+
+if not staticLauncher or not staticLauncher:IsA("GuiButton") then
+	if staticLauncher then
+		staticLauncher:Destroy()
+	end
+	staticLauncher = makeRuntimeLauncher()
+end
+
+for _ = 1, 120 do
+	local camera = Workspace.CurrentCamera
+	if camera and camera.ViewportSize.X > 0 and camera.ViewportSize.Y > 0 then
+		break
+	end
+	task.wait()
+end
+
+local sidebar
+local okSidebar, sidebarOrError = pcall(function()
+	local modules = ReplicatedStorage:WaitForChild("SoftPhoneModules", 10)
+	assert(modules, "ReplicatedStorage.SoftPhoneModules was not found")
+	local sidebarModule = modules:WaitForChild("Sidebar", 10)
+	assert(sidebarModule, "SoftPhoneModules.Sidebar was not found")
+	local Sidebar = require(sidebarModule)
+	return Sidebar.new(screenGui, function(id: string)
+		if sidebar and not sidebar:isExpanded() then
+			sidebar:setExpanded(true, false)
+		end
+		local windows = screenGui:FindFirstChild("SoftPhoneWindowManager")
+		if windows and windows:IsA("BindableFunction") then
+			windows:Invoke(id)
+		else
+			warn("[SoftPhoneUI] Window manager is not ready yet:", id)
+		end
+	end)
+end)
+
+if okSidebar then
+	sidebar = sidebarOrError
+	if staticLauncher then
+		staticLauncher:Destroy()
+		staticLauncher = nil
+	end
+else
+	local errorLabel = staticLauncher :: GuiButton
+	errorLabel.Name = "SoftPhoneError"
+	errorLabel.Text = "UI ERROR\nCHECK OUTPUT"
+	errorLabel.ZIndex = 999
+	warn("[SoftPhoneUI] Sidebar failed:", sidebarOrError)
+end
+
+local windowHost = Instance.new("Frame")
+windowHost.Name = "WindowHost"
+windowHost.BackgroundTransparency = 1
+windowHost.Size = UDim2.fromScale(1, 1)
+windowHost.ZIndex = 250
+windowHost.Parent = screenGui
+
+task.spawn(function()
+	local ok, err = pcall(function()
+		local modules = ReplicatedStorage:WaitForChild("SoftPhoneModules", 10)
+		assert(modules, "ReplicatedStorage.SoftPhoneModules was not found")
+		local WindowManager = require(modules:WaitForChild("WindowManager"))
+		local manager = WindowManager.new(windowHost)
+		local bridge = Instance.new("BindableFunction")
+		bridge.Name = "SoftPhoneWindowManager"
+		bridge.OnInvoke = function(id: string)
+			manager:open(id)
+		end
+		bridge.Parent = screenGui
+	end)
+	if not ok then
+		warn("[SoftPhoneUI] Window manager failed:", err)
+	end
+end)
+
+print("[SoftPhoneUI] Ready - click the gem on the edge tab to open Furu Phone.")
+]]></ProtectedString>
+          <bool name="Disabled">false</bool>
+        </Properties>
+      </Item>
+
+    </Item>
+    <Item class="Script" referent="InstallNote">
+      <Properties>
+        <string name="Name">_INSTALL</string>
+        <bool name="Disabled">true</bool>
+        <ProtectedString name="Source"><![CDATA[-- SoftPhoneUI install
+-- 1. Move SoftPhoneModules into ReplicatedStorage
+-- 2. Move SoftPhoneUI ScreenGui into StarterGui
+-- 3. Delete this SoftPhonePackage folder
+-- 4. Play (F5) - click the gem on the edge tab
+]]></ProtectedString>
+      </Properties>
+    </Item>
+  </Item>
+</roblox>

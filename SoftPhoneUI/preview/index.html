@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>SoftPhoneUI Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="banner">SoftPhoneUI browser preview - layout and motion only</div>
+
+  <div class="device-bar">
+    <button type="button" data-device="desktop" class="active">Desktop</button>
+    <button type="button" data-device="tablet">Tablet</button>
+    <button type="button" data-device="phone">Phone</button>
+  </div>
+
+  <div id="stage" class="stage desktop">
+    <aside id="sidebar" class="sidebar collapsed" aria-label="Furu Phone sidebar">
+      <div class="outer-tab">
+        <span class="filigree"></span>
+        <span class="filigree"></span>
+        <span class="filigree"></span>
+        <span class="filigree"></span>
+        <span class="filigree"></span>
+        <button id="gem" class="gem" type="button" title="Open or close Furu Phone" aria-expanded="false">
+          <span class="gem-inner"></span>
+        </button>
+      </div>
+
+      <div class="phone-panel">
+        <span class="decor bow bow-top"></span>
+        <span class="decor bow bow-bottom"></span>
+        <span class="decor gem-small gem-panel-top"></span>
+        <span class="decor gem-small gem-panel-bottom"></span>
+        <div class="header">
+          <div class="phone-badge"><span class="mini-screen"></span></div>
+          <div class="title-pill">FURU PHONE</div>
+        </div>
+        <div class="currency">GEMS 12,217</div>
+        <nav class="button-list" id="navButtons"></nav>
+        <div class="level">LEVEL 1</div>
+      </div>
+    </aside>
+
+    <div id="windowHost" class="window-host"></div>
+  </div>
+
+  <p class="hint">Click the gem on the edge tab. Each button opens one dedicated window.</p>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,498 @@
+--[[
+	Shared futuristic .exe window chrome.
+	Windows are draggable, minimizable, maximizable, and use the same slide motion.
+]]
+
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+
+local Theme = require(script.Parent.Theme)
+local TweenUtil = require(script.Parent.TweenUtil)
+local IconDraw = require(script.Parent.IconDraw)
+
+local WindowChrome = {}
+
+export type WindowHandle = {
+	Root: Frame,
+	Content: Frame,
+	Footer: Frame,
+	TitleLabel: TextLabel,
+	setVisible: (self: WindowHandle, visible: boolean, instant: boolean?) -> (),
+	isOpen: (self: WindowHandle) -> boolean,
+}
+
+local function viewportWidth(): number
+	local camera = Workspace.CurrentCamera
+	return camera and camera.ViewportSize.X or 1280
+end
+
+local function openPosition(fullScreen: boolean?): UDim2
+	if fullScreen or viewportWidth() < 720 then
+		return UDim2.fromScale(0.5, 0.5)
+	end
+	return UDim2.fromScale(Theme.Side == "Right" and 0.39 or 0.61, 0.5)
+end
+
+local function closedPosition(): UDim2
+	if Theme.Side == "Right" then
+		return UDim2.fromScale(1.2, 0.5)
+	end
+	return UDim2.fromScale(-0.22, 0.5)
+end
+
+local function addCorner(parent: Instance, radius: number)
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, radius)
+	corner.Parent = parent
+	return corner
+end
+
+local function addStroke(parent: Instance, color: Color3, thickness: number, transparency: number?)
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = color
+	stroke.Thickness = thickness
+	stroke.Transparency = transparency or 0
+	stroke.Parent = parent
+	return stroke
+end
+
+local function addGradient(parent: Instance, colors: { Color3 }, rotation: number?)
+	local points = {}
+	for i, color in ipairs(colors) do
+		table.insert(points, ColorSequenceKeypoint.new((i - 1) / (#colors - 1), color))
+	end
+	local gradient = Instance.new("UIGradient")
+	gradient.Color = ColorSequence.new(points)
+	gradient.Rotation = rotation or 0
+	gradient.Parent = parent
+	return gradient
+end
+
+local function makeText(parent: Instance, name: string, text: string, font: Enum.Font, size: number, color: Color3, z: number)
+	local label = Instance.new("TextLabel")
+	label.Name = name
+	label.BackgroundTransparency = 1
+	label.Font = font
+	label.Text = text
+	label.TextSize = size
+	label.TextColor3 = color
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.ZIndex = z
+	label.Parent = parent
+	return label
+end
+
+local function addBowDecoration(parent: Instance, position: UDim2, zIndex: number)
+	local bow = Instance.new("Frame")
+	bow.Name = "BowDecoration"
+	bow.BackgroundTransparency = 1
+	bow.Position = position
+	bow.Size = UDim2.fromOffset(46, 30)
+	bow.ZIndex = zIndex
+	bow.Parent = parent
+
+	local left = Instance.new("Frame")
+	left.Name = "LeftWing"
+	left.BackgroundColor3 = Theme.Colors.AccentPink
+	left.BorderSizePixel = 0
+	left.Position = UDim2.fromOffset(4, 7)
+	left.Size = UDim2.fromOffset(18, 16)
+	left.Rotation = 20
+	left.ZIndex = zIndex + 1
+	left.Parent = bow
+	addCorner(left, 6)
+	addStroke(left, Color3.fromRGB(255, 255, 255), 1, 0.2)
+
+	local right = left:Clone()
+	right.Name = "RightWing"
+	right.Position = UDim2.fromOffset(24, 7)
+	right.Rotation = -20
+	right.Parent = bow
+
+	local knot = Instance.new("Frame")
+	knot.Name = "Knot"
+	knot.BackgroundColor3 = Theme.Colors.AccentPinkDeep
+	knot.BorderSizePixel = 0
+	knot.Position = UDim2.fromOffset(18, 10)
+	knot.Size = UDim2.fromOffset(11, 11)
+	knot.Rotation = 45
+	knot.ZIndex = zIndex + 2
+	knot.Parent = bow
+	addCorner(knot, 3)
+end
+
+local function addGemDecoration(parent: Instance, position: UDim2, size: number, zIndex: number)
+	local gemHost = Instance.new("Frame")
+	gemHost.Name = "GemDecoration"
+	gemHost.BackgroundTransparency = 1
+	gemHost.Position = position
+	gemHost.Size = UDim2.fromOffset(size + 8, size + 8)
+	gemHost.ZIndex = zIndex
+	gemHost.Parent = parent
+	IconDraw.makeGem(gemHost, size)
+end
+
+function WindowChrome.create(parent: Instance, id: string, title: string, onClose: (() -> ())?): WindowHandle
+	local fullScreen = id == "Gacha"
+	local root = Instance.new("Frame")
+	root.Name = id .. "Window"
+	root.AnchorPoint = Vector2.new(0.5, 0.5)
+	root.Position = closedPosition()
+	root.Size = fullScreen and UDim2.fromScale(1, 1) or UDim2.fromScale(0.62, 0.72)
+	root.BackgroundColor3 = Theme.Colors.WindowChrome
+	root.BorderSizePixel = 0
+	root.ClipsDescendants = false
+	root.Visible = false
+	root.ZIndex = 40
+	root.Parent = parent
+
+	local sizeConstraint = Instance.new("UISizeConstraint")
+	sizeConstraint.MinSize = Vector2.new(300, 300)
+	sizeConstraint.MaxSize = fullScreen and Vector2.new(10000, 10000) or Vector2.new(980, 760)
+	sizeConstraint.Parent = root
+
+	addCorner(root, fullScreen and 0 or 12)
+	addStroke(root, Theme.Colors.AccentPink, 2, 0.02)
+
+	if not fullScreen then
+		local shadow = Instance.new("Frame")
+		shadow.Name = "SoftShadow"
+		shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+		shadow.Position = UDim2.new(0.5, 8, 0.5, 10)
+		shadow.Size = UDim2.new(1, 12, 1, 14)
+		shadow.BackgroundColor3 = Theme.Colors.Shadow
+		shadow.BackgroundTransparency = 0.76
+		shadow.BorderSizePixel = 0
+		shadow.ZIndex = 39
+		shadow.Parent = root
+		addCorner(shadow, 16)
+	end
+
+	local shell = Instance.new("Frame")
+	shell.Name = "Shell"
+	shell.BackgroundColor3 = Theme.Colors.WindowChrome
+	shell.BorderSizePixel = 0
+	shell.Size = UDim2.fromScale(1, 1)
+	shell.ClipsDescendants = true
+	shell.ZIndex = 40
+	shell.Parent = root
+	addCorner(shell, fullScreen and 0 or 11)
+	addGradient(shell, {
+		Color3.fromRGB(255, 255, 255),
+		Color3.fromRGB(255, 247, 253),
+		Color3.fromRGB(247, 244, 255),
+	}, 90)
+
+	local topGlow = Instance.new("Frame")
+	topGlow.Name = "TopGlow"
+	topGlow.BackgroundColor3 = Theme.Colors.AccentPink
+	topGlow.BorderSizePixel = 0
+	topGlow.Size = UDim2.new(1, 0, 0, 5)
+	topGlow.ZIndex = 45
+	topGlow.Parent = shell
+
+	local titleBar = Instance.new("Frame")
+	titleBar.Name = "TitleBar"
+	titleBar.BackgroundColor3 = Theme.Colors.TitleBar
+	titleBar.BorderSizePixel = 0
+	titleBar.Position = UDim2.fromOffset(0, 5)
+	titleBar.Size = UDim2.new(1, 0, 0, 42)
+	titleBar.Active = true
+	titleBar.ZIndex = 42
+	titleBar.Parent = shell
+
+	local appBadge = Instance.new("Frame")
+	appBadge.Name = "AppBadge"
+	appBadge.AnchorPoint = Vector2.new(0, 0.5)
+	appBadge.Position = UDim2.new(0, 10, 0.5, 0)
+	appBadge.Size = UDim2.fromOffset(27, 27)
+	appBadge.BackgroundColor3 = Theme.Colors.AccentPink
+	appBadge.BorderSizePixel = 0
+	appBadge.ZIndex = 44
+	appBadge.Parent = titleBar
+	addCorner(appBadge, 8)
+	addStroke(appBadge, Color3.fromRGB(255, 255, 255), 1.5, 0.12)
+
+	local appGlyph = makeText(appBadge, "Glyph", string.upper(string.sub(title, 1, 1)), Theme.Fonts.Title, 13, Color3.fromRGB(255, 255, 255), 45)
+	appGlyph.Size = UDim2.fromScale(1, 1)
+	appGlyph.TextXAlignment = Enum.TextXAlignment.Center
+
+	local titleLabel = makeText(titleBar, "Title", string.lower(title) .. ".exe", Theme.Fonts.Body, 14, Theme.Colors.TextPrimary, 43)
+	titleLabel.Position = UDim2.fromOffset(46, 0)
+	titleLabel.Size = UDim2.new(1, -260, 1, 0)
+
+	local livePill = Instance.new("Frame")
+	livePill.Name = "LiveStatus"
+	livePill.AnchorPoint = Vector2.new(1, 0.5)
+	livePill.Position = UDim2.new(1, -104, 0.5, 0)
+	livePill.Size = UDim2.fromOffset(66, 22)
+	livePill.BackgroundColor3 = Color3.fromRGB(235, 255, 249)
+	livePill.BorderSizePixel = 0
+	livePill.ZIndex = 43
+	livePill.Parent = titleBar
+	addCorner(livePill, 11)
+	addStroke(livePill, Theme.Colors.AccentMint, 1, 0.35)
+
+	local liveDot = Instance.new("Frame")
+	liveDot.Name = "Dot"
+	liveDot.AnchorPoint = Vector2.new(0, 0.5)
+	liveDot.Position = UDim2.new(0, 9, 0.5, 0)
+	liveDot.Size = UDim2.fromOffset(6, 6)
+	liveDot.BackgroundColor3 = Theme.Colors.AccentMint
+	liveDot.BorderSizePixel = 0
+	liveDot.ZIndex = 44
+	liveDot.Parent = livePill
+	addCorner(liveDot, 3)
+
+	local liveText = makeText(livePill, "Text", "ONLINE", Theme.Fonts.Title, 9, Theme.Colors.TextPrimary, 44)
+	liveText.Position = UDim2.fromOffset(20, 0)
+	liveText.Size = UDim2.new(1, -22, 1, 0)
+
+	local function makeSystemButton(name: string, color: Color3, order: number, text: string): TextButton
+		local button = Instance.new("TextButton")
+		button.Name = name
+		button.AutoButtonColor = false
+		button.BackgroundColor3 = color
+		button.BorderSizePixel = 0
+		button.AnchorPoint = Vector2.new(1, 0.5)
+		button.Position = UDim2.new(1, -8 - (order * 30), 0.5, 0)
+		button.Size = UDim2.fromOffset(25, 25)
+		button.Font = Theme.Fonts.Title
+		button.Text = text
+		button.TextSize = 11
+		button.TextColor3 = Theme.Colors.TextPrimary
+		button.ZIndex = 45
+		button.Parent = titleBar
+		addCorner(button, 7)
+		addStroke(button, Color3.fromRGB(255, 255, 255), 1, 0.2)
+		button.MouseEnter:Connect(function()
+			TweenUtil.play(button, { BackgroundTransparency = 0.22 }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+		end)
+		button.MouseLeave:Connect(function()
+			TweenUtil.play(button, { BackgroundTransparency = 0 }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+		end)
+		return button
+	end
+
+	local minimizeButton = makeSystemButton("Minimize", Theme.Colors.Minimize, 2, "_")
+	local maximizeButton = makeSystemButton("Maximize", Theme.Colors.Maximize, 1, "[]")
+	local closeButton = makeSystemButton("Close", Theme.Colors.CloseRed, 0, "X")
+
+	local menuBar = Instance.new("Frame")
+	menuBar.Name = "MenuBar"
+	menuBar.BackgroundColor3 = Color3.fromRGB(255, 253, 255)
+	menuBar.BorderSizePixel = 0
+	menuBar.Position = UDim2.fromOffset(0, 47)
+	menuBar.Size = UDim2.new(1, 0, 0, 28)
+	menuBar.ZIndex = 42
+	menuBar.Parent = shell
+
+	local menuLabel = makeText(menuBar, "Menu", "HOME     VIEW     TOOLS     HELP", Theme.Fonts.Body, 10, Theme.Colors.TextMuted, 43)
+	menuLabel.Position = UDim2.fromOffset(14, 0)
+	menuLabel.Size = UDim2.new(1, -138, 1, 0)
+
+	local buildLabel = makeText(menuBar, "Build", "FURU OS 2.5", Theme.Fonts.Title, 9, Theme.Colors.AccentPinkDeep, 43)
+	buildLabel.AnchorPoint = Vector2.new(1, 0)
+	buildLabel.Position = UDim2.new(1, -14, 0, 0)
+	buildLabel.Size = UDim2.fromOffset(100, 28)
+	buildLabel.TextXAlignment = Enum.TextXAlignment.Right
+
+	local activeLine = Instance.new("Frame")
+	activeLine.Name = "ActiveLine"
+	activeLine.BackgroundColor3 = Theme.Colors.AccentPink
+	activeLine.BorderSizePixel = 0
+	activeLine.Position = UDim2.new(0, 14, 1, -2)
+	activeLine.Size = UDim2.fromOffset(34, 2)
+	activeLine.ZIndex = 44
+	activeLine.Parent = menuBar
+	addCorner(activeLine, 1)
+
+	local content = Instance.new("Frame")
+	content.Name = "Content"
+	content.BackgroundColor3 = Theme.Colors.ContentBg
+	content.BorderSizePixel = 0
+	content.Position = UDim2.fromOffset(8, 82)
+	content.Size = UDim2.new(1, -16, 1, -138)
+	content.ClipsDescendants = true
+	content.ZIndex = 42
+	content.Parent = shell
+	addCorner(content, 8)
+	addStroke(content, Theme.Colors.WindowBorder, 1, 0.12)
+	addGradient(content, {
+		Color3.fromRGB(255, 255, 255),
+		Color3.fromRGB(255, 248, 253),
+		Color3.fromRGB(248, 246, 255),
+	}, 90)
+
+	local footer = Instance.new("Frame")
+	footer.Name = "Footer"
+	footer.BackgroundColor3 = Color3.fromRGB(255, 239, 249)
+	footer.BorderSizePixel = 0
+	footer.AnchorPoint = Vector2.new(0, 1)
+	footer.Position = UDim2.new(0, 0, 1, 0)
+	footer.Size = UDim2.new(1, 0, 0, 48)
+	footer.ZIndex = 42
+	footer.Parent = shell
+	addBowDecoration(shell, UDim2.new(0, 12, 0, 51), 47)
+	addGemDecoration(shell, UDim2.new(1, -42, 0, 52), 18, 47)
+	addGemDecoration(shell, UDim2.new(1, -36, 1, -42), 14, 47)
+
+	local footerLayout = Instance.new("UIListLayout")
+	footerLayout.Name = "CommandLayout"
+	footerLayout.FillDirection = Enum.FillDirection.Horizontal
+	footerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	footerLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	footerLayout.Padding = UDim.new(0, 10)
+	footerLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	footerLayout.Parent = footer
+
+	local handle: WindowHandle = {
+		Root = root,
+		Content = content,
+		Footer = footer,
+		TitleLabel = titleLabel,
+		_open = false,
+		_minimized = false,
+		_maximized = false,
+	}
+
+	local normalSize = root.Size
+	local normalPosition = openPosition(fullScreen)
+
+	local function setMinimized(minimized: boolean)
+		handle._minimized = minimized
+		content.Visible = not minimized
+		menuBar.Visible = not minimized
+		footer.Visible = not minimized
+		sizeConstraint.MinSize = minimized and Vector2.new(300, 48) or Vector2.new(300, 300)
+		local targetSize = minimized and UDim2.new(normalSize.X.Scale, normalSize.X.Offset, 0, 48) or normalSize
+		TweenUtil.play(root, { Size = targetSize }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+	end
+
+	local function setMaximized(maximized: boolean)
+		if handle._minimized then
+			setMinimized(false)
+		end
+		handle._maximized = maximized
+		if maximized then
+			normalSize = root.Size
+			normalPosition = root.Position
+			TweenUtil.play(root, {
+				Position = UDim2.fromScale(0.5, 0.5),
+				Size = fullScreen and UDim2.fromScale(1, 1) or UDim2.fromScale(0.88, 0.84),
+			}, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+		else
+			TweenUtil.play(root, {
+				Position = normalPosition,
+				Size = normalSize,
+			}, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+		end
+	end
+
+	function handle:isOpen()
+		return self._open
+	end
+
+	function handle:setVisible(visible: boolean, instant: boolean?)
+		self._open = visible
+		if instant then
+			root.Visible = visible
+			root.Position = visible and openPosition(fullScreen) or closedPosition()
+			root.BackgroundTransparency = 0
+			return
+		end
+
+		if visible then
+			if self._minimized then
+				setMinimized(false)
+			end
+			root.Visible = true
+			root.Position = closedPosition()
+			root.BackgroundTransparency = 0.28
+			TweenUtil.play(root, {
+				Position = openPosition(fullScreen),
+				BackgroundTransparency = 0,
+			}, Theme.Tween.WindowTime, Theme.Tween.SlideStyle, Theme.Tween.SlideDir)
+		else
+			local tween = TweenUtil.play(root, {
+				Position = closedPosition(),
+				BackgroundTransparency = 0.28,
+			}, Theme.Tween.WindowTime, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+			tween.Completed:Connect(function()
+				if not self._open then
+					root.Visible = false
+					root.BackgroundTransparency = 0
+				end
+			end)
+		end
+	end
+
+	minimizeButton.Activated:Connect(function()
+		setMinimized(not handle._minimized)
+	end)
+	maximizeButton.Activated:Connect(function()
+		setMaximized(not handle._maximized)
+	end)
+	closeButton.Activated:Connect(function()
+		handle:setVisible(false, false)
+		if onClose then
+			onClose()
+		end
+	end)
+
+	local dragging = false
+	local dragStart = Vector2.zero
+	local startPosition = root.Position
+
+	titleBar.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPosition = root.Position
+		end
+	end)
+	titleBar.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = false
+		end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			local delta = input.Position - dragStart
+			root.Position = UDim2.new(startPosition.X.Scale, startPosition.X.Offset + delta.X, startPosition.Y.Scale, startPosition.Y.Offset + delta.Y)
+		end
+	end)
+
+	return handle
+end
+
+function WindowChrome.addFooterButton(footer: Frame, text: string, order: number, callback: (() -> ())?): TextButton
+	local button = Instance.new("TextButton")
+	button.Name = text:gsub("%s", ""):gsub("%W", "") .. "Btn"
+	button.AutoButtonColor = false
+	button.BackgroundColor3 = Theme.Colors.ButtonFill
+	button.BorderSizePixel = 0
+	button.Size = UDim2.new(0.29, 0, 0, 31)
+	button.LayoutOrder = order
+	button.Font = Theme.Fonts.Title
+	button.Text = text
+	button.TextSize = 12
+	button.TextColor3 = Theme.Colors.AccentPinkDeep
+	button.ZIndex = 43
+	button.Parent = footer
+	addCorner(button, 7)
+	addStroke(button, Theme.Colors.ButtonStroke, 1, 0.2)
+
+	button.MouseEnter:Connect(function()
+		TweenUtil.play(button, { BackgroundColor3 = Theme.Colors.ButtonFillHover }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+	end)
+	button.MouseLeave:Connect(function()
+		TweenUtil.play(button, { BackgroundColor3 = Theme.Colors.ButtonFill }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+	end)
+	if callback then
+		button.Activated:Connect(callback)
+	end
+	return button
+end
+
+return WindowChrome

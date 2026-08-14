@@ -1,0 +1,475 @@
+--[[
+	Flip-phone sidebar.
+	The edge tab is fixed; the phone panel slides in behind it.
+]]
+
+local Theme = require(script.Parent.Theme)
+local TweenUtil = require(script.Parent.TweenUtil)
+local IconDraw = require(script.Parent.IconDraw)
+local Workspace = game:GetService("Workspace")
+
+local Sidebar = {}
+Sidebar.__index = Sidebar
+
+local function clampWidth(absX: number): number
+	local w = math.floor(absX * Theme.Sizes.SidebarWidthScale)
+	return math.clamp(w, Theme.Sizes.SidebarWidthMin, Theme.Sizes.SidebarWidthMax)
+end
+
+local function clampHeight(absY: number): number
+	local h = math.floor(absY * Theme.Sizes.SidebarHeightScale)
+	local maxHeight = math.max(260, absY - 16)
+	local minHeight = math.min(430, maxHeight)
+	return math.clamp(h, minHeight, maxHeight)
+end
+
+local function isRightSide(): boolean
+	return Theme.Side == "Right"
+end
+
+local function viewportSize(): Vector2
+	local camera = Workspace.CurrentCamera
+	if camera and camera.ViewportSize.X > 0 and camera.ViewportSize.Y > 0 then
+		return camera.ViewportSize
+	end
+	return Vector2.new(1280, 720)
+end
+
+local function addBow(parent: Instance, position: UDim2, zIndex: number)
+	local bow = Instance.new("Frame")
+	bow.Name = "BowDecoration"
+	bow.BackgroundTransparency = 1
+	bow.Position = position
+	bow.Size = UDim2.fromOffset(42, 28)
+	bow.ZIndex = zIndex
+	bow.Parent = parent
+
+	local left = Instance.new("Frame")
+	left.Name = "LeftWing"
+	left.BackgroundColor3 = Theme.Colors.AccentPink
+	left.BorderSizePixel = 0
+	left.Position = UDim2.fromOffset(3, 6)
+	left.Size = UDim2.fromOffset(17, 16)
+	left.Rotation = 20
+	left.ZIndex = zIndex + 1
+	left.Parent = bow
+	local leftCorner = Instance.new("UICorner")
+	leftCorner.CornerRadius = UDim.new(0, 6)
+	leftCorner.Parent = left
+
+	local right = left:Clone()
+	right.Name = "RightWing"
+	right.Position = UDim2.fromOffset(22, 6)
+	right.Rotation = -20
+	right.Parent = bow
+
+	local knot = Instance.new("Frame")
+	knot.Name = "Knot"
+	knot.BackgroundColor3 = Theme.Colors.AccentPinkDeep
+	knot.BorderSizePixel = 0
+	knot.Position = UDim2.fromOffset(16, 8)
+	knot.Size = UDim2.fromOffset(11, 11)
+	knot.Rotation = 45
+	knot.ZIndex = zIndex + 2
+	knot.Parent = bow
+	local knotCorner = Instance.new("UICorner")
+	knotCorner.CornerRadius = UDim.new(0, 3)
+	knotCorner.Parent = knot
+
+	return bow
+end
+
+function Sidebar.new(screenGui: ScreenGui, onButtonClick: (string) -> ())
+	local self = setmetatable({}, Sidebar)
+	self._gui = screenGui
+	self._expanded = false
+	self._tweening = false
+	self._onButtonClick = onButtonClick
+	local vp = viewportSize()
+	self._width = clampWidth(vp.X)
+	self._height = clampHeight(vp.Y)
+
+	self:_build()
+	self:_bindResize()
+	self:setExpanded(false, true)
+
+	return self
+end
+
+function Sidebar:_build()
+	local root = Instance.new("Frame")
+	root.Name = "SidebarRoot"
+	root.BackgroundTransparency = 1
+	root.Size = UDim2.fromScale(1, 1)
+	root.Position = UDim2.fromScale(0, 0)
+	root.ZIndex = 200
+	root.Parent = self._gui
+	self.Root = root
+
+	local panel = Instance.new("Frame")
+	panel.Name = "PhonePanel"
+	panel.AnchorPoint = Vector2.new(isRightSide() and 1 or 0, 0.5)
+	panel.BackgroundColor3 = Theme.Colors.PanelFill
+	panel.BorderSizePixel = 0
+	panel.Size = UDim2.fromOffset(self._width, self._height)
+	panel.Position = self:_collapsedPos()
+	panel.ZIndex = 201
+	panel.ClipsDescendants = true
+	panel.Parent = root
+	self.Panel = panel
+
+	local panelCorner = Instance.new("UICorner")
+	panelCorner.CornerRadius = UDim.new(0, Theme.Sizes.CornerRadius)
+	panelCorner.Parent = panel
+
+	local panelStroke = Instance.new("UIStroke")
+	panelStroke.Color = Theme.Colors.AccentPink
+	panelStroke.Thickness = 2.5
+	panelStroke.Transparency = 0.05
+	panelStroke.Parent = panel
+
+	local tab = Instance.new("Frame")
+	tab.Name = "OuterTab"
+	tab.AnchorPoint = Vector2.new(isRightSide() and 1 or 0, 0.5)
+	tab.BackgroundColor3 = Theme.Colors.AccentPink
+	tab.BorderSizePixel = 0
+	tab.Size = UDim2.fromOffset(Theme.Sizes.TabReveal + 8, self._height)
+	tab.Position = isRightSide() and UDim2.new(1, -6, 0.5, 0) or UDim2.new(0, 6, 0.5, 0)
+	tab.ZIndex = 230
+	tab.Parent = root
+	self.Tab = tab
+
+	local tabCorner = Instance.new("UICorner")
+	tabCorner.CornerRadius = UDim.new(0, 14)
+	tabCorner.Parent = tab
+
+	local tabStroke = Instance.new("UIStroke")
+	tabStroke.Color = Color3.fromRGB(255, 255, 255)
+	tabStroke.Thickness = 2
+	tabStroke.Transparency = 0.05
+	tabStroke.Parent = tab
+
+	for i = 1, 5 do
+		local dot = Instance.new("Frame")
+		dot.Name = "Filigree" .. i
+		dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		dot.BorderSizePixel = 0
+		dot.Size = UDim2.fromOffset(6, 6)
+		dot.AnchorPoint = Vector2.new(0.5, 0)
+		dot.Position = UDim2.new(0.5, 0, 0, 18 + (i - 1) * 22)
+		dot.ZIndex = 231
+		dot.Parent = tab
+		local c = Instance.new("UICorner")
+		c.CornerRadius = UDim.new(1, 0)
+		c.Parent = dot
+	end
+
+	local gemHit = Instance.new("TextButton")
+	gemHit.Name = "GemToggle"
+	gemHit.Text = ""
+	gemHit.AutoButtonColor = false
+	gemHit.BackgroundTransparency = 1
+	gemHit.Size = UDim2.fromOffset(Theme.Sizes.GemSize + 12, Theme.Sizes.GemSize + 12)
+	gemHit.AnchorPoint = Vector2.new(0.5, 0.5)
+	gemHit.Position = UDim2.new(0.5, 0, 0.5, 0)
+	gemHit.ZIndex = 240
+	gemHit.Parent = tab
+	self.GemButton = gemHit
+
+	IconDraw.makeGem(gemHit, Theme.Sizes.GemSize)
+
+	local header = Instance.new("Frame")
+	header.Name = "Header"
+	header.BackgroundTransparency = 1
+	header.Size = UDim2.new(1, -16, 0, 66)
+	header.Position = UDim2.fromOffset(8, 8)
+	header.ZIndex = 202
+	header.Parent = panel
+
+	local badge = Instance.new("Frame")
+	badge.Name = "PhoneBadge"
+	badge.BackgroundColor3 = Theme.Colors.ButtonFill
+	badge.BorderSizePixel = 0
+	badge.AnchorPoint = Vector2.new(0.5, 0)
+	badge.Position = UDim2.new(0.5, 0, 0, 0)
+	badge.Size = UDim2.fromOffset(62, 36)
+	badge.ZIndex = 203
+	badge.Parent = header
+
+	local badgeCorner = Instance.new("UICorner")
+	badgeCorner.CornerRadius = UDim.new(0, 14)
+	badgeCorner.Parent = badge
+
+	local screen = Instance.new("Frame")
+	screen.Name = "MiniScreen"
+	screen.BackgroundColor3 = Theme.Colors.AccentCream
+	screen.BorderSizePixel = 0
+	screen.AnchorPoint = Vector2.new(0.5, 0.5)
+	screen.Position = UDim2.fromScale(0.5, 0.55)
+	screen.Size = UDim2.new(0.56, 0, 0.34, 0)
+	screen.ZIndex = 204
+	screen.Parent = badge
+
+	local screenCorner = Instance.new("UICorner")
+	screenCorner.CornerRadius = UDim.new(0, 4)
+	screenCorner.Parent = screen
+
+	local titlePill = Instance.new("TextLabel")
+	titlePill.Name = "TitlePill"
+	titlePill.BackgroundColor3 = Theme.Colors.ButtonFill
+	titlePill.BorderSizePixel = 0
+	titlePill.AnchorPoint = Vector2.new(0.5, 0)
+	titlePill.Position = UDim2.new(0.5, 0, 0, 42)
+	titlePill.Size = UDim2.new(0.84, 0, 0, 22)
+	titlePill.Font = Theme.Fonts.Title
+	titlePill.TextSize = 12
+	titlePill.TextColor3 = Theme.Colors.AccentPinkDeep
+	titlePill.Text = "FURU PHONE"
+	titlePill.ZIndex = 203
+	titlePill.Parent = header
+
+	local titleCorner = Instance.new("UICorner")
+	titleCorner.CornerRadius = UDim.new(1, 0)
+	titleCorner.Parent = titlePill
+
+	addBow(header, UDim2.new(0, 4, 0, 4), 205)
+	addBow(header, UDim2.new(1, -46, 0, 4), 205)
+	addBow(panel, UDim2.new(0, 10, 1, -44), 205)
+	addBow(panel, UDim2.new(1, -52, 0, 72), 205)
+
+	for i, decoration in ipairs({
+		{ UDim2.new(0, 16, 1, -68), 16 },
+		{ UDim2.new(1, -30, 1, -92), 12 },
+		{ UDim2.new(0, 22, 0, 78), 13 },
+		{ UDim2.new(1, -36, 0, 116), 10 },
+	}) do
+		local gemHost = Instance.new("Frame")
+		gemHost.Name = "GemDecoration" .. i
+		gemHost.BackgroundTransparency = 1
+		gemHost.Position = decoration[1]
+		gemHost.Size = UDim2.fromOffset(24, 24)
+		gemHost.ZIndex = 204
+		gemHost.Parent = panel
+		IconDraw.makeGem(gemHost, decoration[2])
+	end
+
+	local currency = Instance.new("Frame")
+	currency.Name = "CurrencyBubble"
+	currency.BackgroundColor3 = Theme.Colors.AccentCream
+	currency.BorderSizePixel = 0
+	currency.Size = UDim2.new(0.88, 0, 0, 32)
+	currency.Position = UDim2.new(0.06, 0, 0, 80)
+	currency.ZIndex = 202
+	currency.Parent = panel
+
+	local curCorner = Instance.new("UICorner")
+	curCorner.CornerRadius = UDim.new(1, 0)
+	curCorner.Parent = currency
+
+	local curStroke = Instance.new("UIStroke")
+	curStroke.Color = Theme.Colors.AccentPink
+	curStroke.Thickness = 1.5
+	curStroke.Transparency = 0.2
+	curStroke.Parent = currency
+
+	local curLabel = Instance.new("TextLabel")
+	curLabel.Name = "Amount"
+	curLabel.BackgroundTransparency = 1
+	curLabel.Size = UDim2.fromScale(1, 1)
+	curLabel.Font = Theme.Fonts.Title
+	curLabel.TextSize = 14
+	curLabel.TextColor3 = Theme.Colors.AccentPinkDeep
+	curLabel.Text = "GEMS  12,217"
+	curLabel.ZIndex = 203
+	curLabel.Parent = currency
+
+	local list = Instance.new("ScrollingFrame")
+	list.Name = "ButtonList"
+	list.BackgroundTransparency = 1
+	list.BorderSizePixel = 0
+	list.Size = UDim2.new(1, -20, 1, -166)
+	list.Position = UDim2.fromOffset(10, 120)
+	list.CanvasSize = UDim2.fromOffset(0, 0)
+	list.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	list.ScrollBarThickness = 0
+	list.ScrollingDirection = Enum.ScrollingDirection.Y
+	list.ClipsDescendants = true
+	list.ZIndex = 202
+	list.Parent = panel
+
+	local layout = Instance.new("UIListLayout")
+	layout.FillDirection = Enum.FillDirection.Vertical
+	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	layout.Padding = UDim.new(0, 6)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent = list
+
+	self.Buttons = {}
+	for i, def in ipairs(Theme.Buttons) do
+		local btn = Instance.new("TextButton")
+		btn.Name = def.Id .. "Button"
+		btn.AutoButtonColor = false
+		btn.BackgroundColor3 = Theme.Colors.ButtonFill
+		btn.BorderSizePixel = 0
+		btn.Size = UDim2.new(1, 0, 0, Theme.Sizes.ButtonHeight)
+		btn.LayoutOrder = i
+		btn.Text = ""
+		btn.ZIndex = 203
+		btn.Parent = list
+
+		local btnCorner = Instance.new("UICorner")
+		btnCorner.CornerRadius = UDim.new(1, 0)
+		btnCorner.Parent = btn
+
+		local btnStroke = Instance.new("UIStroke")
+		btnStroke.Color = Theme.Colors.ButtonStroke
+		btnStroke.Thickness = 1
+		btnStroke.Transparency = 0.35
+		btnStroke.Parent = btn
+
+		IconDraw.makeCircleIcon(btn, def.Icon, Theme.Colors.AccentCream)
+
+		local label = Instance.new("TextLabel")
+		label.Name = "Label"
+		label.BackgroundTransparency = 1
+		label.Position = UDim2.fromOffset(48, 0)
+		label.Size = UDim2.new(1, -56, 1, 0)
+		label.Font = Theme.Fonts.Title
+		label.TextSize = 16
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.TextColor3 = Theme.Colors.AccentPinkDeep
+		label.Text = def.Label
+		label.ZIndex = 205
+		label.Parent = btn
+
+		btn.MouseEnter:Connect(function()
+			TweenUtil.play(btn, { BackgroundColor3 = Theme.Colors.ButtonFillHover }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+		end)
+
+		btn.MouseLeave:Connect(function()
+			TweenUtil.play(btn, { BackgroundColor3 = Theme.Colors.ButtonFill }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+		end)
+
+		btn.Activated:Connect(function()
+			if not self._expanded then
+				self:setExpanded(true, false)
+			end
+			if self._onButtonClick then
+				self._onButtonClick(def.Id)
+			end
+		end)
+
+		self.Buttons[def.Id] = btn
+	end
+
+	local level = Instance.new("Frame")
+	level.Name = "LevelBubble"
+	level.BackgroundColor3 = Theme.Colors.AccentCream
+	level.BorderSizePixel = 0
+	level.AnchorPoint = Vector2.new(0.5, 1)
+	level.Position = UDim2.new(0.5, 0, 1, -10)
+	level.Size = UDim2.new(0.88, 0, 0, 30)
+	level.ZIndex = 202
+	level.Parent = panel
+
+	local lvCorner = Instance.new("UICorner")
+	lvCorner.CornerRadius = UDim.new(1, 0)
+	lvCorner.Parent = level
+
+	local lvStroke = Instance.new("UIStroke")
+	lvStroke.Color = Theme.Colors.AccentLavender
+	lvStroke.Thickness = 1.5
+	lvStroke.Transparency = 0.2
+	lvStroke.Parent = level
+
+	local lvLabel = Instance.new("TextLabel")
+	lvLabel.BackgroundTransparency = 1
+	lvLabel.Size = UDim2.fromScale(1, 1)
+	lvLabel.Font = Theme.Fonts.Body
+	lvLabel.TextSize = 14
+	lvLabel.TextColor3 = Theme.Colors.TextPrimary
+	lvLabel.Text = "LEVEL 1"
+	lvLabel.ZIndex = 203
+	lvLabel.Parent = level
+
+	gemHit.Activated:Connect(function()
+		self:toggle()
+	end)
+end
+
+function Sidebar:_collapsedPos(): UDim2
+	if isRightSide() then
+		return UDim2.new(1, self._width + Theme.Sizes.TabReveal, 0.5, 0)
+	end
+	return UDim2.new(0, -self._width - Theme.Sizes.TabReveal, 0.5, 0)
+end
+
+function Sidebar:_expandedPos(): UDim2
+	if isRightSide() then
+		return UDim2.new(1, -Theme.Sizes.TabReveal - 10, 0.5, 0)
+	end
+	return UDim2.new(0, Theme.Sizes.TabReveal + 10, 0.5, 0)
+end
+
+function Sidebar:setExpanded(expanded: boolean, instant: boolean?)
+	self._expanded = expanded
+	local target = expanded and self:_expandedPos() or self:_collapsedPos()
+	local closedRotation = isRightSide() and 4 or -4
+
+	if instant then
+		self.Panel.Position = target
+		self.Panel.Rotation = expanded and 0 or closedRotation
+		self._tweening = false
+		return
+	end
+
+	self._tweening = true
+	local tw = TweenUtil.play(self.Panel, {
+		Position = target,
+		Rotation = expanded and 0 or closedRotation,
+	}, Theme.Tween.SlideTime, Theme.Tween.SlideStyle, Theme.Tween.SlideDir)
+	tw.Completed:Connect(function()
+		self._tweening = false
+	end)
+end
+
+function Sidebar:toggle()
+	if self._tweening then
+		return
+	end
+	self:setExpanded(not self._expanded, false)
+end
+
+function Sidebar:isExpanded(): boolean
+	return self._expanded
+end
+
+function Sidebar:_bindResize()
+	local function resize()
+		local vp = viewportSize()
+		self._width = clampWidth(vp.X)
+		self._height = clampHeight(vp.Y)
+		self.Root.Size = UDim2.fromScale(1, 1)
+		self.Panel.AnchorPoint = Vector2.new(isRightSide() and 1 or 0, 0.5)
+		self.Panel.Size = UDim2.fromOffset(self._width, self._height)
+		self.Panel.Position = self._expanded and self:_expandedPos() or self:_collapsedPos()
+		self.Tab.AnchorPoint = Vector2.new(isRightSide() and 1 or 0, 0.5)
+		self.Tab.Size = UDim2.fromOffset(Theme.Sizes.TabReveal + 8, self._height)
+		self.Tab.Position = isRightSide() and UDim2.new(1, -6, 0.5, 0) or UDim2.new(0, 6, 0.5, 0)
+	end
+
+	local function bindCamera(camera: Camera?)
+		if camera then
+			camera:GetPropertyChangedSignal("ViewportSize"):Connect(resize)
+		end
+	end
+
+	bindCamera(Workspace.CurrentCamera)
+	Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+		bindCamera(Workspace.CurrentCamera)
+		resize()
+	end)
+end
+
+return Sidebar
+
