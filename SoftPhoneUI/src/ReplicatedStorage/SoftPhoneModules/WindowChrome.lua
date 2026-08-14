@@ -138,7 +138,7 @@ local function addImageDecoration(parent: Instance, name: string, imageName: str
 end
 
 local function addBowDecoration(parent: Instance, position: UDim2, zIndex: number)
-	local image = addImageDecoration(parent, "BowDecoration", "bowHeart", position, UDim2.fromOffset(60, 50), zIndex + 4)
+	local image = addImageDecoration(parent, "BowDecoration", "bowHeart", position, UDim2.fromOffset(34, 28), zIndex + 4)
 	if image then
 		return
 	end
@@ -220,7 +220,7 @@ local function addBowDecoration(parent: Instance, position: UDim2, zIndex: numbe
 end
 
 local function addGemDecoration(parent: Instance, position: UDim2, size: number, zIndex: number)
-	local image = addImageDecoration(parent, "GemDecoration", size >= 18 and "gemDiamond" or "gemHeart", position, UDim2.fromOffset(size + 13, size + 15), zIndex + 2)
+	local image = addImageDecoration(parent, "GemDecoration", size >= 18 and "gemDiamond" or "gemHeart", position, UDim2.fromOffset(size, size), zIndex + 2)
 	if image then
 		addSparkle(parent, UDim2.new(position.X.Scale, position.X.Offset + size, position.Y.Scale, position.Y.Offset - 4), 7, zIndex + 4)
 		return
@@ -438,9 +438,8 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	footer.Size = UDim2.new(1, 0, 0, 48)
 	footer.ZIndex = 42
 	footer.Parent = shell
-	addBowDecoration(shell, UDim2.new(0, 12, 0, 51), 47)
-	addGemDecoration(shell, UDim2.new(1, -42, 0, 52), 18, 47)
-	addGemDecoration(shell, UDim2.new(1, -36, 1, -42), 14, 47)
+	addBowDecoration(shell, UDim2.new(0, 8, 1, -36), 47)
+	addGemDecoration(shell, UDim2.new(1, -32, 1, -32), 16, 47)
 
 	local footerLayout = Instance.new("UIListLayout")
 	footerLayout.Name = "CommandLayout"

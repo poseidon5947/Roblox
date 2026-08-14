@@ -193,45 +193,46 @@ body {
 }
 
 .bow {
-  width: 46px;
-  height: 38px;
+  width: 38px;
+  height: 32px;
   background-image: url("../assets/generated/decorations/bow_heart.png");
 }
 
 .gem-small {
-  width: 24px;
-  height: 32px;
+  width: 18px;
+  height: 18px;
   background-image: url("../assets/generated/decorations/gem_diamond.png");
 }
 
-.bow-top { left: 10px; top: 72px; }
+.bow-top { left: 10px; top: 10px; }
 .bow-bottom {
-  right: 12px;
-  bottom: 22px;
-  width: 42px;
-  height: 35px;
+  left: 10px;
+  bottom: 72px;
+  width: 40px;
+  height: 32px;
   background-image: url("../assets/generated/decorations/bow_oval.png");
 }
-.gem-panel-top { right: 18px; top: 108px; }
+.gem-panel-top { display: none; }
 .gem-panel-bottom {
-  left: 21px;
-  bottom: 76px;
-  width: 22px;
-  height: 20px;
+  right: 12px;
+  bottom: 118px;
+  width: 18px;
+  height: 18px;
   background-image: url("../assets/generated/decorations/gem_heart.png");
 }
 .win-bow {
-  left: 9px;
-  top: 47px;
-  width: 50px;
-  height: 42px;
+  left: 8px;
+  top: auto;
+  bottom: 8px;
+  width: 34px;
+  height: 28px;
 }
-.win-gem-top { right: 22px; top: 52px; }
+.win-gem-top { display: none; }
 .win-gem-bottom {
   right: 18px;
-  bottom: 12px;
-  width: 23px;
-  height: 21px;
+  bottom: 14px;
+  width: 16px;
+  height: 16px;
   background-image: url("../assets/generated/decorations/gem_heart.png");
 }
 

@@ -106,8 +106,9 @@ local function addImageDecoration(parent: Instance, name: string, imageName: str
 	return item
 end
 
-local function addBow(parent: Instance, position: UDim2, zIndex: number, imageName: string?)
-	local image = addImageDecoration(parent, "BowDecoration", imageName or "bowHeart", position, UDim2.fromOffset(58, 48), zIndex + 4)
+local function addBow(parent: Instance, position: UDim2, zIndex: number, imageName: string?, size: Vector2?)
+	local bowSize = size or Vector2.new(42, 34)
+	local image = addImageDecoration(parent, "BowDecoration", imageName or "bowHeart", position, UDim2.fromOffset(bowSize.X, bowSize.Y), zIndex + 4)
 	if image then
 		return image
 	end
@@ -191,7 +192,7 @@ local function addBow(parent: Instance, position: UDim2, zIndex: number, imageNa
 end
 
 local function addGem(parent: Instance, position: UDim2, size: number, zIndex: number, imageName: string?)
-	local image = addImageDecoration(parent, "GemDecoration", imageName or "gemDiamond", position, UDim2.fromOffset(size + 12, size + 14), zIndex + 2)
+	local image = addImageDecoration(parent, "GemDecoration", imageName or "gemDiamond", position, UDim2.fromOffset(size, size), zIndex + 2)
 	if image then
 		return image
 	end
@@ -308,6 +309,9 @@ function Sidebar:_build()
 		IconDraw.makeGem(gemHit, Theme.Sizes.GemSize)
 	end
 
+	addImageDecoration(tab, "TopTabGem", "gemHeart", UDim2.new(0.5, -8, 0, 144), UDim2.fromOffset(16, 16), 232)
+	addImageDecoration(tab, "BottomTabGem", "gemDiamond", UDim2.new(0.5, -8, 1, -56), UDim2.fromOffset(16, 16), 232)
+
 	local header = Instance.new("Frame")
 	header.Name = "Header"
 	header.BackgroundTransparency = 1
@@ -362,16 +366,13 @@ function Sidebar:_build()
 	titleCorner.CornerRadius = UDim.new(1, 0)
 	titleCorner.Parent = titlePill
 
-	addBow(header, UDim2.new(0, -2, 0, -2), 205, "bowHeart")
-	addBow(header, UDim2.new(1, -58, 0, -2), 205, "bowHeart")
-	addBow(panel, UDim2.new(0, 4, 1, -54), 205, "bowOval")
-	addBow(panel, UDim2.new(1, -64, 0, 68), 205, "bowHeart")
+	addBow(header, UDim2.new(0, 4, 0, 0), 205, "bowHeart", Vector2.new(38, 32))
+	addBow(header, UDim2.new(1, -42, 0, 0), 205, "bowHeart", Vector2.new(38, 32))
+	addBow(panel, UDim2.new(0, 8, 1, -82), 205, "bowOval", Vector2.new(40, 32))
 
 	for i, decoration in ipairs({
-		{ UDim2.new(0, 16, 1, -68), 16, UDim2.new(0, 34, 1, -72) },
-		{ UDim2.new(1, -30, 1, -92), 12, UDim2.new(1, -14, 1, -96) },
-		{ UDim2.new(0, 22, 0, 78), 13 },
-		{ UDim2.new(1, -36, 0, 116), 10 },
+		{ UDim2.new(1, -34, 1, -126), 18 },
+		{ UDim2.new(0, 52, 1, -80), 14 },
 	}) do
 		addGem(panel, decoration[1], decoration[2], 204, i % 2 == 0 and "gemHeart" or "gemDiamond")
 		if decoration[3] then
