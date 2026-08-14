@@ -82,12 +82,40 @@ local function makeText(parent: Instance, name: string, text: string, font: Enum
 	return label
 end
 
+local function addSparkle(parent: Instance, position: UDim2, size: number, zIndex: number)
+	local sparkle = Instance.new("Frame")
+	sparkle.Name = "Sparkle"
+	sparkle.BackgroundTransparency = 1
+	sparkle.Position = position
+	sparkle.Size = UDim2.fromOffset(size, size)
+	sparkle.ZIndex = zIndex
+	sparkle.Parent = parent
+
+	local vertical = Instance.new("Frame")
+	vertical.Name = "Vertical"
+	vertical.AnchorPoint = Vector2.new(0.5, 0.5)
+	vertical.Position = UDim2.fromScale(0.5, 0.5)
+	vertical.Size = UDim2.new(0, math.max(2, math.floor(size * 0.18)), 1, 0)
+	vertical.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	vertical.BorderSizePixel = 0
+	vertical.ZIndex = zIndex + 1
+	vertical.Parent = sparkle
+	addCorner(vertical, size)
+
+	local horizontal = vertical:Clone()
+	horizontal.Name = "Horizontal"
+	horizontal.Size = UDim2.new(1, 0, 0, math.max(2, math.floor(size * 0.18)))
+	horizontal.Parent = sparkle
+
+	return sparkle
+end
+
 local function addBowDecoration(parent: Instance, position: UDim2, zIndex: number)
 	local bow = Instance.new("Frame")
 	bow.Name = "BowDecoration"
 	bow.BackgroundTransparency = 1
 	bow.Position = position
-	bow.Size = UDim2.fromOffset(46, 30)
+	bow.Size = UDim2.fromOffset(56, 40)
 	bow.ZIndex = zIndex
 	bow.Parent = parent
 
@@ -95,30 +123,68 @@ local function addBowDecoration(parent: Instance, position: UDim2, zIndex: numbe
 	left.Name = "LeftWing"
 	left.BackgroundColor3 = Theme.Colors.AccentPink
 	left.BorderSizePixel = 0
-	left.Position = UDim2.fromOffset(4, 7)
-	left.Size = UDim2.fromOffset(18, 16)
-	left.Rotation = 20
+	left.Position = UDim2.fromOffset(2, 7)
+	left.Size = UDim2.fromOffset(24, 18)
+	left.Rotation = 18
 	left.ZIndex = zIndex + 1
 	left.Parent = bow
-	addCorner(left, 6)
-	addStroke(left, Color3.fromRGB(255, 255, 255), 1, 0.2)
+	addCorner(left, 8)
+	addStroke(left, Color3.fromRGB(255, 255, 255), 1.25, 0.08)
 
 	local right = left:Clone()
 	right.Name = "RightWing"
-	right.Position = UDim2.fromOffset(24, 7)
-	right.Rotation = -20
+	right.Position = UDim2.fromOffset(30, 7)
+	right.Rotation = -18
 	right.Parent = bow
 
+	local leftTail = Instance.new("Frame")
+	leftTail.Name = "LeftTail"
+	leftTail.BackgroundColor3 = Color3.fromRGB(255, 202, 229)
+	leftTail.BorderSizePixel = 0
+	leftTail.Position = UDim2.fromOffset(14, 22)
+	leftTail.Size = UDim2.fromOffset(11, 17)
+	leftTail.Rotation = 23
+	leftTail.ZIndex = zIndex + 1
+	leftTail.Parent = bow
+	addCorner(leftTail, 4)
+	addStroke(leftTail, Color3.fromRGB(255, 255, 255), 1, 0.16)
+
+	local rightTail = leftTail:Clone()
+	rightTail.Name = "RightTail"
+	rightTail.Position = UDim2.fromOffset(32, 22)
+	rightTail.Rotation = -23
+	rightTail.Parent = bow
+
 	local knot = Instance.new("Frame")
-	knot.Name = "Knot"
-	knot.BackgroundColor3 = Theme.Colors.AccentPinkDeep
+	knot.Name = "GemKnot"
+	knot.BackgroundColor3 = Theme.Colors.Gem
 	knot.BorderSizePixel = 0
-	knot.Position = UDim2.fromOffset(18, 10)
-	knot.Size = UDim2.fromOffset(11, 11)
+	knot.Position = UDim2.fromOffset(23, 9)
+	knot.Size = UDim2.fromOffset(12, 12)
 	knot.Rotation = 45
 	knot.ZIndex = zIndex + 2
 	knot.Parent = bow
 	addCorner(knot, 3)
+	addStroke(knot, Color3.fromRGB(255, 255, 255), 1.2, 0.03)
+
+	for i, data in ipairs({
+		{ 19, 5 },
+		{ 28, 3 },
+		{ 37, 5 },
+	}) do
+		local pearl = Instance.new("Frame")
+		pearl.Name = "Pearl" .. i
+		pearl.BackgroundColor3 = Color3.fromRGB(255, 245, 252)
+		pearl.BorderSizePixel = 0
+		pearl.Position = UDim2.fromOffset(data[1], data[2])
+		pearl.Size = UDim2.fromOffset(5, 5)
+		pearl.ZIndex = zIndex + 3
+		pearl.Parent = bow
+		addCorner(pearl, 999)
+	end
+
+	addSparkle(bow, UDim2.fromOffset(8, 4), 8, zIndex + 4)
+	addSparkle(bow, UDim2.fromOffset(44, 19), 6, zIndex + 4)
 end
 
 local function addGemDecoration(parent: Instance, position: UDim2, size: number, zIndex: number)
@@ -130,6 +196,7 @@ local function addGemDecoration(parent: Instance, position: UDim2, size: number,
 	gemHost.ZIndex = zIndex
 	gemHost.Parent = parent
 	IconDraw.makeGem(gemHost, size)
+	addSparkle(parent, UDim2.new(position.X.Scale, position.X.Offset + size, position.Y.Scale, position.Y.Offset - 4), 7, zIndex + 2)
 end
 
 function WindowChrome.create(parent: Instance, id: string, title: string, onClose: (() -> ())?): WindowHandle

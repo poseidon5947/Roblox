@@ -13,6 +13,7 @@ White futuristic flip-phone sidebar and six `.exe`-style feature windows for Rob
 | `assets/png/*.png` | 128x128 PNG icons for Roblox upload. |
 | `assets/generated/softphone_icon_sheet.png` | Generated glossy gem/app icon concept sheet. |
 | `assets/generated/split/*.png` | Cropped generated PNG drafts for upload to Roblox. |
+| `assets/generated/decorations/*.png` | Transparent bow and gem decoration PNGs for preview/upload. |
 | `preview/` | Browser motion/layout mock for quick review. |
 
 ## Behavior
@@ -63,6 +64,7 @@ Theme.Side = "Left" -- or "Right"
 
 - The runtime already draws no-text glossy icons from Roblox UI primitives.
 - Upload generated PNGs from `assets/generated/split/`, then paste their asset ids into `Theme.IconImages`.
+- Decoration PNGs live in `assets/generated/decorations/`; the Roblox runtime also draws native bow/gem decorations without uploads.
 - Hook Shop item buttons to your catalog IDs or `HumanoidDescription` pipeline.
 - Replace the Gacha, Map, Messages, Teleport, and Job shell bodies in `PlaceholderWindows.lua`.
 
