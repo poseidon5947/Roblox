@@ -360,8 +360,8 @@ body {
   opacity: 0;
   visibility: hidden;
   background: var(--panel);
-  border-radius: 10px;
-  box-shadow: 0 0 0 2px var(--pink), 0 12px 28px var(--shadow);
+  border-radius: 12px;
+  box-shadow: 0 0 0 2px var(--pink-deep), 0 12px 28px var(--shadow);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -376,7 +376,7 @@ body {
 
 .window .bevel {
   height: 4px;
-  background: var(--pink);
+  background: var(--pink-deep);
 }
 
 .window[data-id="Gacha"] {
@@ -388,26 +388,77 @@ body {
 }
 
 .titlebar {
-  height: 34px;
+  height: 52px;
   display: flex;
   align-items: center;
-  padding: 0 8px 0 12px;
-  background: var(--pink);
+  gap: 12px;
+  padding: 0 10px 0 12px;
+  background: linear-gradient(90deg, #ffeff9, #fff8fd, #ffdef0);
   font-size: 13px;
   font-weight: 700;
 }
 
-.titlebar .sys {
+.app-badge {
+  width: 40px;
+  height: 40px;
+  border: 1.8px solid var(--pink);
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, #fff, #ffe7f6);
+  flex: 0 0 auto;
+}
+
+.app-badge .icon {
+  width: 31px;
+  height: 31px;
+  border-radius: 50%;
+  background-color: var(--cream);
+  background-image: url("../assets/generated/softphone_icon_sheet.png");
+  background-repeat: no-repeat;
+  background-size: 252px 45px;
+}
+
+.window-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-pill {
   margin-left: auto;
+  height: 26px;
+  padding: 0 12px;
+  border: 1.5px solid rgba(86, 224, 209, 0.65);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #ebfff9;
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.live-pill span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--mint);
+}
+
+.titlebar .sys {
   display: flex;
-  gap: 4px;
+  gap: 6px;
+  flex: 0 0 auto;
 }
 
 .titlebar .sys button {
-  width: 22px;
-  height: 22px;
+  width: 30px;
+  height: 30px;
   border: 0;
-  border-radius: 4px;
+  border-radius: 9px;
   font-size: 12px;
   cursor: pointer;
   color: var(--text);
@@ -419,8 +470,8 @@ body {
 .sys .close { background: var(--close); }
 
 .menubar {
-  height: 24px;
-  padding: 0 10px;
+  height: 32px;
+  padding: 0 22px;
   display: flex;
   align-items: center;
   background: var(--cream);
@@ -429,32 +480,33 @@ body {
 }
 
 .content {
-  margin: 6px 8px;
+  margin: 10px 14px 6px;
   flex: 1;
   background: var(--content);
-  border: 1px solid rgba(238, 208, 232, 0.75);
-  border-radius: 6px;
+  border: 1.5px solid rgba(232, 95, 166, 0.35);
+  border-radius: 12px;
   overflow: hidden;
   min-height: 0;
 }
 
 .footer {
-  height: 36px;
+  height: 56px;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 12px;
+  padding: 0 56px;
   background: rgba(238, 208, 232, 0.45);
 }
 
 .footer button {
   border: 1px solid #ff97cb;
-  background: var(--pink);
-  border-radius: 6px;
-  padding: 4px 12px;
+  background: linear-gradient(180deg, #fff, var(--pink-hover));
+  border-radius: 8px;
+  padding: 8px 22px;
   font: 700 12px Nunito, sans-serif;
   color: var(--pink-deep);
   cursor: pointer;
+  min-width: 108px;
 }
 
 .footer button:hover { background: var(--pink-hover); }

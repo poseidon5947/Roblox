@@ -84,13 +84,16 @@ function makeChrome(id, titleText, bodyEl, footerLabels) {
   const win = document.createElement("section");
   win.className = "window";
   win.dataset.id = id;
+  const icon = BUTTONS.find((button) => button.id === id)?.icon || "gem";
   win.innerHTML = `
     <div class="bevel"></div>
     <span class="decor bow win-bow"></span>
     <span class="decor gem-small win-gem-top"></span>
     <span class="decor gem-small win-gem-bottom"></span>
     <div class="titlebar">
-      <span>${titleText}</span>
+      <span class="app-badge"><span class="icon icon-${icon}"></span></span>
+      <span class="window-title">${titleText}</span>
+      <span class="live-pill"><span></span>ONLINE</span>
       <div class="sys">
         <button type="button" class="min" tabindex="-1">_</button>
         <button type="button" class="max" tabindex="-1">[]</button>

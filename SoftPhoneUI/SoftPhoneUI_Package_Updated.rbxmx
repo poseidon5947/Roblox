@@ -1195,6 +1195,15 @@ local IconDraw = require(script.Parent.IconDraw)
 
 local WindowChrome = {}
 
+local WINDOW_ICONS = {
+	Shop = "bag",
+	Gacha = "star",
+	Map = "map",
+	Messages = "mail",
+	Teleport = "portal",
+	Job = "briefcase",
+}
+
 export type WindowHandle = {
 	Root: Frame,
 	Content: Frame,
@@ -1265,6 +1274,25 @@ local function makeText(parent: Instance, name: string, text: string, font: Enum
 	return label
 end
 
+local function addUploadedIcon(parent: Instance, iconName: string, zIndex: number): boolean
+	local imageId = Theme.IconImages and Theme.IconImages[iconName]
+	if typeof(imageId) ~= "string" or imageId == "" then
+		return false
+	end
+
+	local image = Instance.new("ImageLabel")
+	image.Name = "AppIconImage"
+	image.BackgroundTransparency = 1
+	image.Image = imageId
+	image.ScaleType = Enum.ScaleType.Fit
+	image.AnchorPoint = Vector2.new(0.5, 0.5)
+	image.Position = UDim2.fromScale(0.5, 0.5)
+	image.Size = UDim2.fromScale(0.78, 0.78)
+	image.ZIndex = zIndex
+	image.Parent = parent
+	return true
+end
+
 local function addSparkle(parent: Instance, position: UDim2, size: number, zIndex: number)
 	local sparkle = Instance.new("Frame")
 	sparkle.Name = "Sparkle"
@@ -1291,6 +1319,34 @@ local function addSparkle(parent: Instance, position: UDim2, size: number, zInde
 	horizontal.Parent = sparkle
 
 	return sparkle
+end
+
+local function addAppBadge(parent: Instance, id: string, title: string, zIndex: number)
+	local appBadge = Instance.new("Frame")
+	appBadge.Name = "AppBadge"
+	appBadge.AnchorPoint = Vector2.new(0, 0.5)
+	appBadge.Position = UDim2.new(0, 12, 0.5, 0)
+	appBadge.Size = UDim2.fromOffset(40, 40)
+	appBadge.BackgroundColor3 = Theme.Colors.AccentCream
+	appBadge.BorderSizePixel = 0
+	appBadge.ZIndex = zIndex
+	appBadge.Parent = parent
+	addCorner(appBadge, 12)
+	addStroke(appBadge, Theme.Colors.AccentPink, 1.8, 0.08)
+	addGradient(appBadge, {
+		Color3.fromRGB(255, 255, 255),
+		Color3.fromRGB(255, 231, 246),
+	}, 90)
+
+	local iconName = WINDOW_ICONS[id] or "gem"
+	if not addUploadedIcon(appBadge, iconName, zIndex + 3) then
+		local glyph = makeText(appBadge, "Glyph", string.upper(string.sub(title, 1, 1)), Theme.Fonts.Title, 18, Theme.Colors.AccentPinkDeep, zIndex + 3)
+		glyph.Size = UDim2.fromScale(1, 1)
+		glyph.TextXAlignment = Enum.TextXAlignment.Center
+	end
+
+	addSparkle(appBadge, UDim2.fromOffset(29, 4), 6, zIndex + 4)
+	return appBadge
 end
 
 local function decorationImage(name: string): string?
@@ -1475,7 +1531,7 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	topGlow.Name = "TopGlow"
 	topGlow.BackgroundColor3 = Theme.Colors.AccentPink
 	topGlow.BorderSizePixel = 0
-	topGlow.Size = UDim2.new(1, 0, 0, 5)
+	topGlow.Size = UDim2.new(1, 0, 0, 4)
 	topGlow.ZIndex = 45
 	topGlow.Parent = shell
 
@@ -1483,37 +1539,28 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	titleBar.Name = "TitleBar"
 	titleBar.BackgroundColor3 = Theme.Colors.TitleBar
 	titleBar.BorderSizePixel = 0
-	titleBar.Position = UDim2.fromOffset(0, 5)
-	titleBar.Size = UDim2.new(1, 0, 0, 42)
+	titleBar.Position = UDim2.fromOffset(0, 4)
+	titleBar.Size = UDim2.new(1, 0, 0, 52)
 	titleBar.Active = true
 	titleBar.ZIndex = 42
 	titleBar.Parent = shell
+	addGradient(titleBar, {
+		Color3.fromRGB(255, 239, 249),
+		Color3.fromRGB(255, 248, 253),
+		Color3.fromRGB(255, 222, 240),
+	}, 0)
 
-	local appBadge = Instance.new("Frame")
-	appBadge.Name = "AppBadge"
-	appBadge.AnchorPoint = Vector2.new(0, 0.5)
-	appBadge.Position = UDim2.new(0, 10, 0.5, 0)
-	appBadge.Size = UDim2.fromOffset(27, 27)
-	appBadge.BackgroundColor3 = Theme.Colors.AccentPink
-	appBadge.BorderSizePixel = 0
-	appBadge.ZIndex = 44
-	appBadge.Parent = titleBar
-	addCorner(appBadge, 8)
-	addStroke(appBadge, Color3.fromRGB(255, 255, 255), 1.5, 0.12)
-
-	local appGlyph = makeText(appBadge, "Glyph", string.upper(string.sub(title, 1, 1)), Theme.Fonts.Title, 13, Color3.fromRGB(255, 255, 255), 45)
-	appGlyph.Size = UDim2.fromScale(1, 1)
-	appGlyph.TextXAlignment = Enum.TextXAlignment.Center
+	addAppBadge(titleBar, id, title, 44)
 
 	local titleLabel = makeText(titleBar, "Title", string.lower(title) .. ".exe", Theme.Fonts.Body, 14, Theme.Colors.TextPrimary, 43)
-	titleLabel.Position = UDim2.fromOffset(46, 0)
-	titleLabel.Size = UDim2.new(1, -260, 1, 0)
+	titleLabel.Position = UDim2.fromOffset(64, 0)
+	titleLabel.Size = UDim2.new(1, -330, 1, 0)
 
 	local livePill = Instance.new("Frame")
 	livePill.Name = "LiveStatus"
 	livePill.AnchorPoint = Vector2.new(1, 0.5)
-	livePill.Position = UDim2.new(1, -104, 0.5, 0)
-	livePill.Size = UDim2.fromOffset(66, 22)
+	livePill.Position = UDim2.new(1, -126, 0.5, 0)
+	livePill.Size = UDim2.fromOffset(82, 26)
 	livePill.BackgroundColor3 = Color3.fromRGB(235, 255, 249)
 	livePill.BorderSizePixel = 0
 	livePill.ZIndex = 43
@@ -1543,15 +1590,15 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 		button.BackgroundColor3 = color
 		button.BorderSizePixel = 0
 		button.AnchorPoint = Vector2.new(1, 0.5)
-		button.Position = UDim2.new(1, -8 - (order * 30), 0.5, 0)
-		button.Size = UDim2.fromOffset(25, 25)
+		button.Position = UDim2.new(1, -10 - (order * 36), 0.5, 0)
+		button.Size = UDim2.fromOffset(30, 30)
 		button.Font = Theme.Fonts.Title
 		button.Text = text
 		button.TextSize = 11
 		button.TextColor3 = Theme.Colors.TextPrimary
 		button.ZIndex = 45
 		button.Parent = titleBar
-		addCorner(button, 7)
+		addCorner(button, 9)
 		addStroke(button, Color3.fromRGB(255, 255, 255), 1, 0.2)
 		button.MouseEnter:Connect(function()
 			TweenUtil.play(button, { BackgroundTransparency = 0.22 }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
@@ -1570,13 +1617,13 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	menuBar.Name = "MenuBar"
 	menuBar.BackgroundColor3 = Color3.fromRGB(255, 253, 255)
 	menuBar.BorderSizePixel = 0
-	menuBar.Position = UDim2.fromOffset(0, 47)
-	menuBar.Size = UDim2.new(1, 0, 0, 28)
+	menuBar.Position = UDim2.fromOffset(0, 56)
+	menuBar.Size = UDim2.new(1, 0, 0, 32)
 	menuBar.ZIndex = 42
 	menuBar.Parent = shell
 
 	local menuLabel = makeText(menuBar, "Menu", "HOME     VIEW     TOOLS     HELP", Theme.Fonts.Body, 10, Theme.Colors.TextMuted, 43)
-	menuLabel.Position = UDim2.fromOffset(14, 0)
+	menuLabel.Position = UDim2.fromOffset(22, 0)
 	menuLabel.Size = UDim2.new(1, -138, 1, 0)
 
 	local buildLabel = makeText(menuBar, "Build", "FURU OS 2.5", Theme.Fonts.Title, 9, Theme.Colors.AccentPinkDeep, 43)
@@ -1589,8 +1636,8 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	activeLine.Name = "ActiveLine"
 	activeLine.BackgroundColor3 = Theme.Colors.AccentPink
 	activeLine.BorderSizePixel = 0
-	activeLine.Position = UDim2.new(0, 14, 1, -2)
-	activeLine.Size = UDim2.fromOffset(34, 2)
+	activeLine.Position = UDim2.new(0, 22, 1, -3)
+	activeLine.Size = UDim2.fromOffset(42, 3)
 	activeLine.ZIndex = 44
 	activeLine.Parent = menuBar
 	addCorner(activeLine, 1)
@@ -1599,13 +1646,13 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	content.Name = "Content"
 	content.BackgroundColor3 = Theme.Colors.ContentBg
 	content.BorderSizePixel = 0
-	content.Position = UDim2.fromOffset(8, 82)
-	content.Size = UDim2.new(1, -16, 1, -138)
+	content.Position = UDim2.fromOffset(14, 98)
+	content.Size = UDim2.new(1, -28, 1, -162)
 	content.ClipsDescendants = true
 	content.ZIndex = 42
 	content.Parent = shell
-	addCorner(content, 8)
-	addStroke(content, Theme.Colors.WindowBorder, 1, 0.12)
+	addCorner(content, 12)
+	addStroke(content, Theme.Colors.AccentPink, 1.5, 0.35)
 	addGradient(content, {
 		Color3.fromRGB(255, 255, 255),
 		Color3.fromRGB(255, 248, 253),
@@ -1618,7 +1665,7 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	footer.BorderSizePixel = 0
 	footer.AnchorPoint = Vector2.new(0, 1)
 	footer.Position = UDim2.new(0, 0, 1, 0)
-	footer.Size = UDim2.new(1, 0, 0, 48)
+	footer.Size = UDim2.new(1, 0, 0, 56)
 	footer.ZIndex = 42
 	footer.Parent = shell
 	addBowDecoration(shell, UDim2.new(0, 8, 1, -36), 47)
@@ -1759,16 +1806,20 @@ function WindowChrome.addFooterButton(footer: Frame, text: string, order: number
 	button.AutoButtonColor = false
 	button.BackgroundColor3 = Theme.Colors.ButtonFill
 	button.BorderSizePixel = 0
-	button.Size = UDim2.new(0.29, 0, 0, 31)
+	button.Size = UDim2.new(0.29, 0, 0, 36)
 	button.LayoutOrder = order
 	button.Font = Theme.Fonts.Title
 	button.Text = text
-	button.TextSize = 12
+	button.TextSize = 13
 	button.TextColor3 = Theme.Colors.AccentPinkDeep
 	button.ZIndex = 43
 	button.Parent = footer
-	addCorner(button, 7)
-	addStroke(button, Theme.Colors.ButtonStroke, 1, 0.2)
+	addCorner(button, 8)
+	addStroke(button, Theme.Colors.ButtonStroke, 1.5, 0.18)
+	addGradient(button, {
+		Color3.fromRGB(255, 255, 255),
+		Theme.Colors.ButtonFillHover,
+	}, 90)
 
 	button.MouseEnter:Connect(function()
 		TweenUtil.play(button, { BackgroundColor3 = Theme.Colors.ButtonFillHover }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
