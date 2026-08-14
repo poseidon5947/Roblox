@@ -80,6 +80,15 @@ Theme.IconImages = {
 }
 ```
 
+```lua
+Theme.DecorationImages = {
+	gemHeart = "rbxassetid://124977509470211",
+	bowHeart = "rbxassetid://71160719370388",
+	bowOval = "rbxassetid://74233855824346",
+	gemDiamond = "rbxassetid://93207797663861",
+}
+```
+
 ## Regenerate
 
 ```bash

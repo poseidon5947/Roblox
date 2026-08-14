@@ -79,7 +79,39 @@ local function addSparkle(parent: Instance, position: UDim2, size: number, zInde
 	return sparkle
 end
 
-local function addBow(parent: Instance, position: UDim2, zIndex: number)
+local function decorationImage(name: string): string?
+	local images = Theme.DecorationImages
+	local image = images and images[name]
+	if typeof(image) == "string" and image ~= "" then
+		return image
+	end
+	return nil
+end
+
+local function addImageDecoration(parent: Instance, name: string, imageName: string, position: UDim2, size: UDim2, zIndex: number): ImageLabel?
+	local image = decorationImage(imageName)
+	if not image then
+		return nil
+	end
+
+	local item = Instance.new("ImageLabel")
+	item.Name = name
+	item.BackgroundTransparency = 1
+	item.Image = image
+	item.ScaleType = Enum.ScaleType.Fit
+	item.Position = position
+	item.Size = size
+	item.ZIndex = zIndex
+	item.Parent = parent
+	return item
+end
+
+local function addBow(parent: Instance, position: UDim2, zIndex: number, imageName: string?)
+	local image = addImageDecoration(parent, "BowDecoration", imageName or "bowHeart", position, UDim2.fromOffset(58, 48), zIndex + 4)
+	if image then
+		return image
+	end
+
 	local bow = Instance.new("Frame")
 	bow.Name = "BowDecoration"
 	bow.BackgroundTransparency = 1
@@ -156,6 +188,23 @@ local function addBow(parent: Instance, position: UDim2, zIndex: number)
 	addSparkle(bow, UDim2.fromOffset(42, 17), 6, zIndex + 4)
 
 	return bow
+end
+
+local function addGem(parent: Instance, position: UDim2, size: number, zIndex: number, imageName: string?)
+	local image = addImageDecoration(parent, "GemDecoration", imageName or "gemDiamond", position, UDim2.fromOffset(size + 12, size + 14), zIndex + 2)
+	if image then
+		return image
+	end
+
+	local gemHost = Instance.new("Frame")
+	gemHost.Name = "GemDecoration"
+	gemHost.BackgroundTransparency = 1
+	gemHost.Position = position
+	gemHost.Size = UDim2.fromOffset(size + 8, size + 8)
+	gemHost.ZIndex = zIndex
+	gemHost.Parent = parent
+	IconDraw.makeGem(gemHost, size)
+	return gemHost
 end
 
 function Sidebar.new(screenGui: ScreenGui, onButtonClick: (string) -> ())
@@ -255,7 +304,9 @@ function Sidebar:_build()
 	gemHit.Parent = tab
 	self.GemButton = gemHit
 
-	IconDraw.makeGem(gemHit, Theme.Sizes.GemSize)
+	if not addImageDecoration(gemHit, "GemArt", "gemDiamond", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 241) then
+		IconDraw.makeGem(gemHit, Theme.Sizes.GemSize)
+	end
 
 	local header = Instance.new("Frame")
 	header.Name = "Header"
@@ -311,10 +362,10 @@ function Sidebar:_build()
 	titleCorner.CornerRadius = UDim.new(1, 0)
 	titleCorner.Parent = titlePill
 
-	addBow(header, UDim2.new(0, 2, 0, 1), 205)
-	addBow(header, UDim2.new(1, -58, 0, 1), 205)
-	addBow(panel, UDim2.new(0, 8, 1, -50), 205)
-	addBow(panel, UDim2.new(1, -62, 0, 70), 205)
+	addBow(header, UDim2.new(0, -2, 0, -2), 205, "bowHeart")
+	addBow(header, UDim2.new(1, -58, 0, -2), 205, "bowHeart")
+	addBow(panel, UDim2.new(0, 4, 1, -54), 205, "bowOval")
+	addBow(panel, UDim2.new(1, -64, 0, 68), 205, "bowHeart")
 
 	for i, decoration in ipairs({
 		{ UDim2.new(0, 16, 1, -68), 16, UDim2.new(0, 34, 1, -72) },
@@ -322,14 +373,7 @@ function Sidebar:_build()
 		{ UDim2.new(0, 22, 0, 78), 13 },
 		{ UDim2.new(1, -36, 0, 116), 10 },
 	}) do
-		local gemHost = Instance.new("Frame")
-		gemHost.Name = "GemDecoration" .. i
-		gemHost.BackgroundTransparency = 1
-		gemHost.Position = decoration[1]
-		gemHost.Size = UDim2.fromOffset(24, 24)
-		gemHost.ZIndex = 204
-		gemHost.Parent = panel
-		IconDraw.makeGem(gemHost, decoration[2])
+		addGem(panel, decoration[1], decoration[2], 204, i % 2 == 0 and "gemHeart" or "gemDiamond")
 		if decoration[3] then
 			addSparkle(panel, decoration[3], 7, 206)
 		end

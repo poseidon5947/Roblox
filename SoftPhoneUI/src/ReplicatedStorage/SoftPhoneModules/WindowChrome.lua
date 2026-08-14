@@ -110,7 +110,39 @@ local function addSparkle(parent: Instance, position: UDim2, size: number, zInde
 	return sparkle
 end
 
+local function decorationImage(name: string): string?
+	local images = Theme.DecorationImages
+	local image = images and images[name]
+	if typeof(image) == "string" and image ~= "" then
+		return image
+	end
+	return nil
+end
+
+local function addImageDecoration(parent: Instance, name: string, imageName: string, position: UDim2, size: UDim2, zIndex: number): ImageLabel?
+	local image = decorationImage(imageName)
+	if not image then
+		return nil
+	end
+
+	local item = Instance.new("ImageLabel")
+	item.Name = name
+	item.BackgroundTransparency = 1
+	item.Image = image
+	item.ScaleType = Enum.ScaleType.Fit
+	item.Position = position
+	item.Size = size
+	item.ZIndex = zIndex
+	item.Parent = parent
+	return item
+end
+
 local function addBowDecoration(parent: Instance, position: UDim2, zIndex: number)
+	local image = addImageDecoration(parent, "BowDecoration", "bowHeart", position, UDim2.fromOffset(60, 50), zIndex + 4)
+	if image then
+		return
+	end
+
 	local bow = Instance.new("Frame")
 	bow.Name = "BowDecoration"
 	bow.BackgroundTransparency = 1
@@ -188,6 +220,12 @@ local function addBowDecoration(parent: Instance, position: UDim2, zIndex: numbe
 end
 
 local function addGemDecoration(parent: Instance, position: UDim2, size: number, zIndex: number)
+	local image = addImageDecoration(parent, "GemDecoration", size >= 18 and "gemDiamond" or "gemHeart", position, UDim2.fromOffset(size + 13, size + 15), zIndex + 2)
+	if image then
+		addSparkle(parent, UDim2.new(position.X.Scale, position.X.Offset + size, position.Y.Scale, position.Y.Offset - 4), 7, zIndex + 4)
+		return
+	end
+
 	local gemHost = Instance.new("Frame")
 	gemHost.Name = "GemDecoration"
 	gemHost.BackgroundTransparency = 1
