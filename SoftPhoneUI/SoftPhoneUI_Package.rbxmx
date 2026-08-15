@@ -2325,15 +2325,16 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		selectedBadge.Name = "SelectedBadge"
 		selectedBadge.BackgroundColor3 = Theme.Colors.AccentPinkDeep
 		selectedBadge.BorderSizePixel = 0
-		selectedBadge.Position = UDim2.new(1, -72, 0, 8)
-		selectedBadge.Size = UDim2.fromOffset(62, 17)
+		selectedBadge.AnchorPoint = Vector2.new(0.5, 1)
+		selectedBadge.Position = UDim2.new(0.5, 0, 1, -6)
+		selectedBadge.Size = UDim2.fromOffset(58, 16)
 		selectedBadge.Font = Theme.Fonts.Title
 		selectedBadge.TextSize = 8
 		selectedBadge.TextColor3 = Color3.fromRGB(255, 255, 255)
 		selectedBadge.Text = "SELECTED"
 		selectedBadge.Visible = false
-		selectedBadge.ZIndex = 46
-		selectedBadge.Parent = slot
+		selectedBadge.ZIndex = 47
+		selectedBadge.Parent = preview
 		corner(selectedBadge, 8)
 
 		table.insert(slotStates, {
