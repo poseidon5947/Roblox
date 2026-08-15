@@ -15,6 +15,7 @@
 local Theme = {}
 
 Theme.Side = "Right"
+Theme.Version = "2.6"
 
 Theme.Colors = {
 	PanelFill = Color3.fromRGB(255, 255, 255),
@@ -78,9 +79,9 @@ Theme.Tween = {
 
 Theme.Buttons = {
 	{ Id = "Shop", Label = "Shop", Icon = "bag", Accent = Theme.Colors.AccentPinkDeep },
-	{ Id = "Gacha", Label = "Gacha", Icon = "star", Accent = Theme.Colors.AccentLavender },
+	{ Id = "Gacha", Label = "Gacha", Icon = "star", Accent = Theme.Colors.AccentLavender, Badge = "FREE" },
 	{ Id = "Map", Label = "Map", Icon = "map", Accent = Theme.Colors.AccentBlue },
-	{ Id = "Messages", Label = "Messages", Icon = "mail", Accent = Theme.Colors.AccentPinkDeep },
+	{ Id = "Messages", Label = "Messages", Icon = "mail", Accent = Theme.Colors.AccentPinkDeep, Badge = "3" },
 	{ Id = "Teleport", Label = "Teleport", Icon = "portal", Accent = Theme.Colors.AccentLavender },
 	{ Id = "Job", Label = "Job", Icon = "briefcase", Accent = Theme.Colors.AccentMint },
 }
@@ -976,13 +977,26 @@ function Sidebar:_build()
 	local curLabel = Instance.new("TextLabel")
 	curLabel.Name = "Amount"
 	curLabel.BackgroundTransparency = 1
-	curLabel.Size = UDim2.fromScale(1, 1)
+	curLabel.Position = UDim2.fromOffset(34, 0)
+	curLabel.Size = UDim2.new(1, -42, 1, 0)
 	curLabel.Font = Theme.Fonts.Title
 	curLabel.TextSize = 14
 	curLabel.TextColor3 = Theme.Colors.AccentPinkDeep
-	curLabel.Text = "GEMS  12,217"
+	curLabel.Text = "GEMS 12,217"
+	curLabel.TextXAlignment = Enum.TextXAlignment.Left
 	curLabel.ZIndex = 203
 	curLabel.Parent = currency
+
+	local currencyGem = Instance.new("Frame")
+	currencyGem.Name = "GemIcon"
+	currencyGem.BackgroundTransparency = 1
+	currencyGem.Position = UDim2.fromOffset(8, 5)
+	currencyGem.Size = UDim2.fromOffset(22, 22)
+	currencyGem.ZIndex = 204
+	currencyGem.Parent = currency
+	if not addImageDecoration(currencyGem, "GemImage", "gemDiamond", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 205) then
+		IconDraw.makeGem(currencyGem, 18)
+	end
 
 	local activePill = Instance.new("Frame")
 	activePill.Name = "ActiveAppPill"
@@ -1058,7 +1072,7 @@ function Sidebar:_build()
 		label.Name = "Label"
 		label.BackgroundTransparency = 1
 		label.Position = UDim2.fromOffset(48, 0)
-		label.Size = UDim2.new(1, -56, 1, 0)
+		label.Size = UDim2.new(1, def.Badge and -104 or -56, 1, 0)
 		label.Font = Theme.Fonts.Title
 		label.TextSize = 16
 		label.TextXAlignment = Enum.TextXAlignment.Left
@@ -1066,6 +1080,25 @@ function Sidebar:_build()
 		label.Text = def.Label
 		label.ZIndex = 205
 		label.Parent = btn
+
+		local badge = nil
+		if def.Badge then
+			badge = Instance.new("TextLabel")
+			badge.Name = "NoticeBadge"
+			badge.AnchorPoint = Vector2.new(1, 0.5)
+			badge.Position = UDim2.new(1, -10, 0.5, 0)
+			badge.Size = UDim2.fromOffset(def.Badge == "FREE" and 40 or 24, 20)
+			badge.BackgroundColor3 = Theme.Colors.AccentCream
+			badge.BorderSizePixel = 0
+			badge.Font = Theme.Fonts.Title
+			badge.Text = def.Badge
+			badge.TextSize = 9
+			badge.TextColor3 = Theme.Colors.AccentPinkDeep
+			badge.ZIndex = 206
+			badge.Parent = btn
+			addCorner(badge, 10)
+			addStroke(badge, Theme.Colors.ButtonStroke, 1, 0.28)
+		end
 
 		btn.MouseEnter:Connect(function()
 			TweenUtil.play(btn, { BackgroundColor3 = Theme.Colors.ButtonFillHover }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
@@ -1091,6 +1124,7 @@ function Sidebar:_build()
 			Stroke = btnStroke,
 			Label = label,
 			Icon = iconCircle,
+			Badge = badge,
 		}
 	end
 
@@ -1190,6 +1224,10 @@ function Sidebar:setActive(id: string?)
 		state.Stroke.Transparency = active and 0 or 0.35
 		state.Label.TextColor3 = active and Theme.Colors.TextPrimary or Theme.Colors.AccentPinkDeep
 		state.Icon.BackgroundColor3 = active and Color3.fromRGB(255, 245, 252) or Theme.Colors.AccentCream
+		if state.Badge then
+			state.Badge.BackgroundColor3 = active and Theme.Colors.AccentPinkDeep or Theme.Colors.AccentCream
+			state.Badge.TextColor3 = active and Theme.Colors.TextOnPink or Theme.Colors.AccentPinkDeep
+		end
 	end
 end
 
@@ -1673,7 +1711,7 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	menuLabel.Position = UDim2.fromOffset(22, 0)
 	menuLabel.Size = UDim2.new(1, -138, 1, 0)
 
-	local buildLabel = makeText(menuBar, "Build", "FURU OS 2.5", Theme.Fonts.Title, 9, Theme.Colors.AccentPinkDeep, 43)
+	local buildLabel = makeText(menuBar, "Build", "FURU OS " .. (Theme.Version or "2.6"), Theme.Fonts.Title, 9, Theme.Colors.AccentPinkDeep, 43)
 	buildLabel.AnchorPoint = Vector2.new(1, 0)
 	buildLabel.Position = UDim2.new(1, -14, 0, 0)
 	buildLabel.Size = UDim2.fromOffset(100, 28)
@@ -1739,6 +1777,18 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 
 	local normalSize = root.Size
 	local normalPosition = openPosition(fullScreen)
+
+	local function updateResponsiveChrome()
+		local width = root.AbsoluteSize.X
+		local compact = width > 0 and width < 520
+		livePill.Visible = not compact
+		buildLabel.Visible = width == 0 or width >= 430
+		titleLabel.Size = compact and UDim2.new(1, -188, 1, 0) or UDim2.new(1, -330, 1, 0)
+		menuLabel.Size = buildLabel.Visible and UDim2.new(1, -138, 1, 0) or UDim2.new(1, -30, 1, 0)
+	end
+
+	task.defer(updateResponsiveChrome)
+	root:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateResponsiveChrome)
 
 	local function setMinimized(minimized: boolean)
 		handle._minimized = minimized
@@ -2413,6 +2463,9 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 			Button = slot,
 			Stroke = ss,
 			Tag = tag,
+			Name = name,
+			Price = price,
+			Swatch = preview,
 			SelectedBadge = selectedBadge,
 		})
 
@@ -2420,6 +2473,31 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 			selectItem(item)
 		end)
 	end
+
+	local function updateResponsiveLayout()
+		local compact = content.AbsoluteSize.X > 0 and content.AbsoluteSize.X < 520
+		detail.Visible = not compact
+		if compact then
+			itemGrid.Size = UDim2.new(0.4, -5, 1, -8)
+			stage.Position = UDim2.new(0.41, 0, 0, 4)
+			stage.Size = UDim2.new(0.59, -6, 1, -8)
+		else
+			itemGrid.Size = UDim2.new(0.34, -8, 1, -8)
+			stage.Position = UDim2.new(0.35, 0, 0, 4)
+			stage.Size = UDim2.new(0.38, 0, 1, -8)
+		end
+
+		for _, state in ipairs(slotStates) do
+			state.Name.Visible = not compact
+			state.Price.Visible = not compact
+			state.Tag.Visible = not compact
+			state.Swatch.AnchorPoint = compact and Vector2.new(0.5, 0) or Vector2.zero
+			state.Swatch.Position = compact and UDim2.new(0.5, 0, 0, 9) or UDim2.fromOffset(8, 9)
+		end
+	end
+
+	task.defer(updateResponsiveLayout)
+	content:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateResponsiveLayout)
 
 	if footer then
 		WindowChrome.addFooterButton(footer, "Reset Look", 1, function()
@@ -2873,13 +2951,46 @@ local function paintDashboard(content: Frame, spec)
 	end
 
 	local function updateTaskLayout()
-		if scroll.AbsoluteSize.X < 520 then
+		local compact = scroll.AbsoluteSize.X > 0 and scroll.AbsoluteSize.X < 520
+		for _, metricPanel in ipairs({ profile:FindFirstChild("Metric1"), profile:FindFirstChild("Metric2") }) do
+			if metricPanel and metricPanel:IsA("GuiObject") then
+				metricPanel.Visible = not compact
+			end
+		end
+
+		if compact then
+			eyebrow.Size = UDim2.new(1, -94, 0, 14)
+			headline.Size = UDim2.new(1, -94, 0, 24)
+			subline.Size = UDim2.new(1, -94, 0, 18)
+			featureTile.Size = UDim2.fromOffset(72, 72)
+			featuredTitle.Position = UDim2.fromOffset(96, 12)
+			featuredTitle.Size = UDim2.new(1, -108, 0, 24)
+			reward.AnchorPoint = Vector2.zero
+			reward.Position = UDim2.fromOffset(12, 101)
+			reward.Size = UDim2.fromOffset(84, 18)
+			reward.TextXAlignment = Enum.TextXAlignment.Left
+			description.Position = UDim2.fromOffset(96, 40)
+			description.Size = UDim2.new(1, -108, 0, 42)
+			action.Size = UDim2.fromOffset(140, 30)
 			taskPanels[1].Position = UDim2.fromOffset(0, 280)
 			taskPanels[1].Size = UDim2.new(1, 0, 0, 104)
 			taskPanels[2].Position = UDim2.fromOffset(0, 394)
 			taskPanels[2].Size = UDim2.new(1, 0, 0, 104)
 			scroll.CanvasSize = UDim2.fromOffset(0, 516)
 		else
+			eyebrow.Size = UDim2.new(1, -242, 0, 14)
+			headline.Size = UDim2.new(1, -242, 0, 24)
+			subline.Size = UDim2.new(1, -242, 0, 18)
+			featureTile.Size = UDim2.fromOffset(82, 82)
+			featuredTitle.Position = UDim2.fromOffset(108, 13)
+			featuredTitle.Size = UDim2.new(1, -242, 0, 26)
+			reward.AnchorPoint = Vector2.new(1, 0)
+			reward.Position = UDim2.new(1, -12, 0, 18)
+			reward.Size = UDim2.fromOffset(120, 18)
+			reward.TextXAlignment = Enum.TextXAlignment.Right
+			description.Position = UDim2.fromOffset(108, 43)
+			description.Size = UDim2.new(1, -124, 0, 38)
+			action.Size = UDim2.fromOffset(152, 30)
 			taskPanels[1].Position = UDim2.new(0, 0, 0, 280)
 			taskPanels[1].Size = UDim2.new(0.5, -5, 0, 104)
 			taskPanels[2].Position = UDim2.new(0.5, 5, 0, 280)
@@ -2898,7 +3009,16 @@ function PlaceholderWindows.mountAll(parent: Instance, onCloseFactory: (id: stri
 		local handle = WindowChrome.create(parent, id, spec.Title, onCloseFactory(id))
 		paintDashboard(handle.Content, spec)
 		for i, footerLabel in ipairs(spec.Footer) do
-			WindowChrome.addFooterButton(handle.Footer, footerLabel, i, nil)
+			local button
+			button = WindowChrome.addFooterButton(handle.Footer, footerLabel, i, function()
+				local original = footerLabel
+				button.Text = string.upper(original) .. " READY"
+				task.delay(1, function()
+					if button.Parent then
+						button.Text = original
+					end
+				end)
+			end)
 		end
 		windows[id] = handle
 	end

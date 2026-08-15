@@ -523,6 +523,9 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 			Button = slot,
 			Stroke = ss,
 			Tag = tag,
+			Name = name,
+			Price = price,
+			Swatch = preview,
 			SelectedBadge = selectedBadge,
 		})
 
@@ -530,6 +533,31 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 			selectItem(item)
 		end)
 	end
+
+	local function updateResponsiveLayout()
+		local compact = content.AbsoluteSize.X > 0 and content.AbsoluteSize.X < 520
+		detail.Visible = not compact
+		if compact then
+			itemGrid.Size = UDim2.new(0.4, -5, 1, -8)
+			stage.Position = UDim2.new(0.41, 0, 0, 4)
+			stage.Size = UDim2.new(0.59, -6, 1, -8)
+		else
+			itemGrid.Size = UDim2.new(0.34, -8, 1, -8)
+			stage.Position = UDim2.new(0.35, 0, 0, 4)
+			stage.Size = UDim2.new(0.38, 0, 1, -8)
+		end
+
+		for _, state in ipairs(slotStates) do
+			state.Name.Visible = not compact
+			state.Price.Visible = not compact
+			state.Tag.Visible = not compact
+			state.Swatch.AnchorPoint = compact and Vector2.new(0.5, 0) or Vector2.zero
+			state.Swatch.Position = compact and UDim2.new(0.5, 0, 0, 9) or UDim2.fromOffset(8, 9)
+		end
+	end
+
+	task.defer(updateResponsiveLayout)
+	content:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateResponsiveLayout)
 
 	if footer then
 		WindowChrome.addFooterButton(footer, "Reset Look", 1, function()

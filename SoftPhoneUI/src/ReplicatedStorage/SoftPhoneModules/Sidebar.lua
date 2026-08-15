@@ -402,13 +402,26 @@ function Sidebar:_build()
 	local curLabel = Instance.new("TextLabel")
 	curLabel.Name = "Amount"
 	curLabel.BackgroundTransparency = 1
-	curLabel.Size = UDim2.fromScale(1, 1)
+	curLabel.Position = UDim2.fromOffset(34, 0)
+	curLabel.Size = UDim2.new(1, -42, 1, 0)
 	curLabel.Font = Theme.Fonts.Title
 	curLabel.TextSize = 14
 	curLabel.TextColor3 = Theme.Colors.AccentPinkDeep
-	curLabel.Text = "GEMS  12,217"
+	curLabel.Text = "GEMS 12,217"
+	curLabel.TextXAlignment = Enum.TextXAlignment.Left
 	curLabel.ZIndex = 203
 	curLabel.Parent = currency
+
+	local currencyGem = Instance.new("Frame")
+	currencyGem.Name = "GemIcon"
+	currencyGem.BackgroundTransparency = 1
+	currencyGem.Position = UDim2.fromOffset(8, 5)
+	currencyGem.Size = UDim2.fromOffset(22, 22)
+	currencyGem.ZIndex = 204
+	currencyGem.Parent = currency
+	if not addImageDecoration(currencyGem, "GemImage", "gemDiamond", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 205) then
+		IconDraw.makeGem(currencyGem, 18)
+	end
 
 	local activePill = Instance.new("Frame")
 	activePill.Name = "ActiveAppPill"
@@ -484,7 +497,7 @@ function Sidebar:_build()
 		label.Name = "Label"
 		label.BackgroundTransparency = 1
 		label.Position = UDim2.fromOffset(48, 0)
-		label.Size = UDim2.new(1, -56, 1, 0)
+		label.Size = UDim2.new(1, def.Badge and -104 or -56, 1, 0)
 		label.Font = Theme.Fonts.Title
 		label.TextSize = 16
 		label.TextXAlignment = Enum.TextXAlignment.Left
@@ -492,6 +505,25 @@ function Sidebar:_build()
 		label.Text = def.Label
 		label.ZIndex = 205
 		label.Parent = btn
+
+		local badge = nil
+		if def.Badge then
+			badge = Instance.new("TextLabel")
+			badge.Name = "NoticeBadge"
+			badge.AnchorPoint = Vector2.new(1, 0.5)
+			badge.Position = UDim2.new(1, -10, 0.5, 0)
+			badge.Size = UDim2.fromOffset(def.Badge == "FREE" and 40 or 24, 20)
+			badge.BackgroundColor3 = Theme.Colors.AccentCream
+			badge.BorderSizePixel = 0
+			badge.Font = Theme.Fonts.Title
+			badge.Text = def.Badge
+			badge.TextSize = 9
+			badge.TextColor3 = Theme.Colors.AccentPinkDeep
+			badge.ZIndex = 206
+			badge.Parent = btn
+			addCorner(badge, 10)
+			addStroke(badge, Theme.Colors.ButtonStroke, 1, 0.28)
+		end
 
 		btn.MouseEnter:Connect(function()
 			TweenUtil.play(btn, { BackgroundColor3 = Theme.Colors.ButtonFillHover }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
@@ -517,6 +549,7 @@ function Sidebar:_build()
 			Stroke = btnStroke,
 			Label = label,
 			Icon = iconCircle,
+			Badge = badge,
 		}
 	end
 
@@ -616,6 +649,10 @@ function Sidebar:setActive(id: string?)
 		state.Stroke.Transparency = active and 0 or 0.35
 		state.Label.TextColor3 = active and Theme.Colors.TextPrimary or Theme.Colors.AccentPinkDeep
 		state.Icon.BackgroundColor3 = active and Color3.fromRGB(255, 245, 252) or Theme.Colors.AccentCream
+		if state.Badge then
+			state.Badge.BackgroundColor3 = active and Theme.Colors.AccentPinkDeep or Theme.Colors.AccentCream
+			state.Badge.TextColor3 = active and Theme.Colors.TextOnPink or Theme.Colors.AccentPinkDeep
+		end
 	end
 end
 

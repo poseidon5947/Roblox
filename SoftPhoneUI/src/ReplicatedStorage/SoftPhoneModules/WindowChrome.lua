@@ -443,7 +443,7 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	menuLabel.Position = UDim2.fromOffset(22, 0)
 	menuLabel.Size = UDim2.new(1, -138, 1, 0)
 
-	local buildLabel = makeText(menuBar, "Build", "FURU OS 2.5", Theme.Fonts.Title, 9, Theme.Colors.AccentPinkDeep, 43)
+	local buildLabel = makeText(menuBar, "Build", "FURU OS " .. (Theme.Version or "2.6"), Theme.Fonts.Title, 9, Theme.Colors.AccentPinkDeep, 43)
 	buildLabel.AnchorPoint = Vector2.new(1, 0)
 	buildLabel.Position = UDim2.new(1, -14, 0, 0)
 	buildLabel.Size = UDim2.fromOffset(100, 28)
@@ -509,6 +509,18 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 
 	local normalSize = root.Size
 	local normalPosition = openPosition(fullScreen)
+
+	local function updateResponsiveChrome()
+		local width = root.AbsoluteSize.X
+		local compact = width > 0 and width < 520
+		livePill.Visible = not compact
+		buildLabel.Visible = width == 0 or width >= 430
+		titleLabel.Size = compact and UDim2.new(1, -188, 1, 0) or UDim2.new(1, -330, 1, 0)
+		menuLabel.Size = buildLabel.Visible and UDim2.new(1, -138, 1, 0) or UDim2.new(1, -30, 1, 0)
+	end
+
+	task.defer(updateResponsiveChrome)
+	root:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateResponsiveChrome)
 
 	local function setMinimized(minimized: boolean)
 		handle._minimized = minimized

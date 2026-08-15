@@ -1,8 +1,8 @@
 const BUTTONS = [
   { id: "Shop", label: "Shop", icon: "shop" },
-  { id: "Gacha", label: "Gacha", icon: "gacha" },
+  { id: "Gacha", label: "Gacha", icon: "gacha", badge: "FREE" },
   { id: "Map", label: "Map", icon: "map" },
-  { id: "Messages", label: "Messages", icon: "messages" },
+  { id: "Messages", label: "Messages", icon: "messages", badge: "3" },
   { id: "Teleport", label: "Teleport", icon: "teleport" },
   { id: "Job", label: "Job", icon: "job" },
 ];
@@ -19,32 +19,72 @@ const ITEMS = [
 const SHELLS = {
   Gacha: {
     title: "gacha.exe",
-    headline: "Gacha",
-    body: "Capsule pull screen. Connect rarity tables, reward animations, and inventory grants here.",
+    eyebrow: "CAPSULE LAB",
+    headline: "Lucky streak ready",
+    subline: "Your next sparkle is waiting.",
+    metrics: [["PITY", "42 / 80"], ["TOKENS", "8"]],
+    section: "FEATURED CAPSULE",
+    featured: "Celestial Ribbon",
+    body: "Pastel halos, ribbon trails, and one limited aura.",
+    reward: "150 GEMS",
+    action: "Preview Pool",
+    cards: [["Daily Wish", "Use one free pull", "READY", 100], ["Star Collector", "Collect 3 capsule stars", "2 / 3", 66]],
     footer: ["Pull x1", "Pull x10", "History"],
   },
   Map: {
     title: "map.exe",
-    headline: "Map",
-    body: "World map shell. Add landmark buttons, current-player markers, and quest pins.",
+    eyebrow: "FURU NAV",
+    headline: "Moonlight District",
+    subline: "3 nearby activities are active.",
+    metrics: [["PINS", "12"], ["FOUND", "68%"]],
+    section: "RECOMMENDED STOP",
+    featured: "Moonlight Plaza",
+    body: "Shopping, gacha kiosks, and the evening fountain show.",
+    reward: "240m AWAY",
+    action: "Set Route",
+    cards: [["Cafe Lumi", "New seasonal menu", "OPEN", 80], ["Job Hub", "Two bonus shifts", "+20%", 55]],
     footer: ["Zoom", "Pins", "Home"],
   },
   Messages: {
     title: "messages.exe",
-    headline: "Messages",
-    body: "Inbox shell for friends, mail, announcements, and system notes.",
+    eyebrow: "FURU MAIL",
+    headline: "Good afternoon",
+    subline: "You have 3 unread messages.",
+    metrics: [["UNREAD", "3"], ["FRIENDS", "18"]],
+    section: "LATEST MESSAGE",
+    featured: "Welcome to Moonlight Plaza",
+    body: "The fountain event begins tonight. Bring a friend for a bonus.",
+    reward: "2m AGO",
+    action: "Open Message",
+    cards: [["Mika", "Meet me by the boutique!", "NEW", 92], ["Furu System", "Daily reward delivered", "READ", 100]],
     footer: ["Compose", "Inbox", "Clear"],
   },
   Teleport: {
     title: "teleport.exe",
-    headline: "Teleport",
-    body: "Quick travel shell. Hook TeleportService or local destination pads here.",
+    eyebrow: "QUICK TRAVEL",
+    headline: "Where to next?",
+    subline: "Travel points are online.",
+    metrics: [["POINTS", "7"], ["COST", "FREE"]],
+    section: "POPULAR DESTINATION",
+    featured: "Furu Central Plaza",
+    body: "The fastest route to shops, events, and daily rewards.",
+    reward: "INSTANT",
+    action: "Teleport",
+    cards: [["Fashion Mall", "Boutiques and salon", "ONLINE", 100], ["Job Hub", "Careers and shifts", "ONLINE", 100]],
     footer: ["Plaza", "Mall", "Job Hub"],
   },
   Job: {
     title: "job.exe",
-    headline: "Job",
-    body: "Career board shell. List shifts, pay, outfit rules, and active tasks.",
+    eyebrow: "CAREER DESK",
+    headline: "FuruUser",
+    subline: "Intern | Level 1 | 120 / 500 XP",
+    metrics: [["BONUS", "200"], ["REP", "1"]],
+    section: "FEATURED CAREER",
+    featured: "Office Assistant",
+    body: "Organize documents, assist staff, and complete daily tasks.",
+    reward: "150 GEMS",
+    action: "Start Job",
+    cards: [["File Documents", "Complete ten files", "6 / 10", 60], ["Morning Delivery", "Deliver three orders", "1 / 3", 33]],
     footer: ["Apply", "Shifts", "Pay"],
   },
 };
@@ -74,7 +114,7 @@ BUTTONS.forEach((def) => {
   btn.type = "button";
   btn.className = "nav-btn";
   btn.dataset.id = def.id;
-  btn.innerHTML = `<span class="icon icon-${def.icon}"></span><span>${def.label}</span>`;
+  btn.innerHTML = `<span class="icon icon-${def.icon}"></span><span class="nav-label">${def.label}</span>${def.badge ? `<span class="notice-badge">${def.badge}</span>` : ""}`;
   btn.addEventListener("click", () => {
     if (!expanded) setExpanded(true);
     openWindow(def.id);
@@ -112,6 +152,10 @@ function makeChrome(id, titleText, bodyEl, footerLabels) {
     const b = document.createElement("button");
     b.type = "button";
     b.textContent = label;
+    b.addEventListener("click", () => {
+      b.textContent = `${label.toUpperCase()} READY`;
+      window.setTimeout(() => { b.textContent = label; }, 1000);
+    });
     footer.appendChild(b);
   });
   win.querySelector(".close").addEventListener("click", () => closeWindow(id));
@@ -192,8 +236,30 @@ function buildShop() {
 function buildShells() {
   Object.entries(SHELLS).forEach(([id, spec]) => {
     const body = document.createElement("div");
-    body.className = "shell";
-    body.innerHTML = `<h2>${spec.headline}</h2><div class="panel">${spec.body}</div>`;
+    body.className = "dashboard";
+    body.innerHTML = `
+      <section class="profile-strip">
+        <span class="feature-icon icon icon-${BUTTONS.find((item) => item.id === id)?.icon}"></span>
+        <div class="profile-copy"><small>${spec.eyebrow}</small><h2>${spec.headline}</h2><p>${spec.subline}</p></div>
+        <div class="metrics">${spec.metrics.map(([name, value]) => `<div class="metric"><strong>${value}</strong><span>${name}</span></div>`).join("")}</div>
+      </section>
+      <h3 class="section-label">${spec.section}</h3>
+      <section class="featured-card">
+        <span class="featured-icon icon icon-${BUTTONS.find((item) => item.id === id)?.icon}"></span>
+        <div class="featured-copy"><h2>${spec.featured}</h2><p>${spec.body}</p></div>
+        <strong class="reward">${spec.reward}</strong>
+        <button type="button" class="primary-action">${spec.action}</button>
+      </section>
+      <h3 class="section-label">ACTIVE CARDS</h3>
+      <div class="task-grid">${spec.cards.map(([name, description, state, progress]) => `
+        <article class="task-card"><div><h4>${name}</h4><strong>${state}</strong></div><p>${description}</p><span class="progress"><i style="width:${progress}%"></i></span></article>`).join("")}</div>
+    `;
+    const action = body.querySelector(".primary-action");
+    action.addEventListener("click", () => {
+      const original = spec.action;
+      action.textContent = "SELECTED";
+      window.setTimeout(() => { action.textContent = original; }, 1000);
+    });
     makeChrome(id, spec.title, body, spec.footer);
   });
 }

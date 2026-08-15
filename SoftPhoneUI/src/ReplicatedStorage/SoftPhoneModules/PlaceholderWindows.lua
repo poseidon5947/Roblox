@@ -389,13 +389,46 @@ local function paintDashboard(content: Frame, spec)
 	end
 
 	local function updateTaskLayout()
-		if scroll.AbsoluteSize.X < 520 then
+		local compact = scroll.AbsoluteSize.X > 0 and scroll.AbsoluteSize.X < 520
+		for _, metricPanel in ipairs({ profile:FindFirstChild("Metric1"), profile:FindFirstChild("Metric2") }) do
+			if metricPanel and metricPanel:IsA("GuiObject") then
+				metricPanel.Visible = not compact
+			end
+		end
+
+		if compact then
+			eyebrow.Size = UDim2.new(1, -94, 0, 14)
+			headline.Size = UDim2.new(1, -94, 0, 24)
+			subline.Size = UDim2.new(1, -94, 0, 18)
+			featureTile.Size = UDim2.fromOffset(72, 72)
+			featuredTitle.Position = UDim2.fromOffset(96, 12)
+			featuredTitle.Size = UDim2.new(1, -108, 0, 24)
+			reward.AnchorPoint = Vector2.zero
+			reward.Position = UDim2.fromOffset(12, 101)
+			reward.Size = UDim2.fromOffset(84, 18)
+			reward.TextXAlignment = Enum.TextXAlignment.Left
+			description.Position = UDim2.fromOffset(96, 40)
+			description.Size = UDim2.new(1, -108, 0, 42)
+			action.Size = UDim2.fromOffset(140, 30)
 			taskPanels[1].Position = UDim2.fromOffset(0, 280)
 			taskPanels[1].Size = UDim2.new(1, 0, 0, 104)
 			taskPanels[2].Position = UDim2.fromOffset(0, 394)
 			taskPanels[2].Size = UDim2.new(1, 0, 0, 104)
 			scroll.CanvasSize = UDim2.fromOffset(0, 516)
 		else
+			eyebrow.Size = UDim2.new(1, -242, 0, 14)
+			headline.Size = UDim2.new(1, -242, 0, 24)
+			subline.Size = UDim2.new(1, -242, 0, 18)
+			featureTile.Size = UDim2.fromOffset(82, 82)
+			featuredTitle.Position = UDim2.fromOffset(108, 13)
+			featuredTitle.Size = UDim2.new(1, -242, 0, 26)
+			reward.AnchorPoint = Vector2.new(1, 0)
+			reward.Position = UDim2.new(1, -12, 0, 18)
+			reward.Size = UDim2.fromOffset(120, 18)
+			reward.TextXAlignment = Enum.TextXAlignment.Right
+			description.Position = UDim2.fromOffset(108, 43)
+			description.Size = UDim2.new(1, -124, 0, 38)
+			action.Size = UDim2.fromOffset(152, 30)
 			taskPanels[1].Position = UDim2.new(0, 0, 0, 280)
 			taskPanels[1].Size = UDim2.new(0.5, -5, 0, 104)
 			taskPanels[2].Position = UDim2.new(0.5, 5, 0, 280)
@@ -414,7 +447,16 @@ function PlaceholderWindows.mountAll(parent: Instance, onCloseFactory: (id: stri
 		local handle = WindowChrome.create(parent, id, spec.Title, onCloseFactory(id))
 		paintDashboard(handle.Content, spec)
 		for i, footerLabel in ipairs(spec.Footer) do
-			WindowChrome.addFooterButton(handle.Footer, footerLabel, i, nil)
+			local button
+			button = WindowChrome.addFooterButton(handle.Footer, footerLabel, i, function()
+				local original = footerLabel
+				button.Text = string.upper(original) .. " READY"
+				task.delay(1, function()
+					if button.Parent then
+						button.Text = original
+					end
+				end)
+			end)
 		end
 		windows[id] = handle
 	end

@@ -7,6 +7,7 @@ White futuristic flip-phone sidebar and six `.exe`-style feature windows for Rob
 | Path | Purpose |
 |---|---|
 | `SoftPhoneUI_Demo.rbxlx` | Studio-openable demo place. Open it, press Play, click the gem. |
+| `SoftPhoneUI_Demo_v2_6_Complete.rbxlx` | Latest complete Studio demo with polished sidebar, shop, and dashboards. |
 | `SoftPhoneUI_Package.rbxmx` | Insertable model package with modules and ScreenGui. |
 | `src/` | Rojo-style source tree. |
 | `assets/icons/*.svg` | Editable vector icon sources. |
@@ -28,7 +29,7 @@ White futuristic flip-phone sidebar and six `.exe`-style feature windows for Rob
 
 ## Studio Install
 
-1. Insert `SoftPhoneUI_Package.rbxmx` into your existing place.
+1. Insert the latest `SoftPhoneUI_Package_v2_6_Complete.rbxmx` into your existing place.
 2. Move `SoftPhoneModules` into `ReplicatedStorage`.
 3. Move `SoftPhoneUI` into `StarterGui`.
 4. Delete the wrapper `SoftPhonePackage` folder.

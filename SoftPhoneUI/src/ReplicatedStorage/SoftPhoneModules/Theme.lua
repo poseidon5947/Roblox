@@ -6,6 +6,7 @@
 local Theme = {}
 
 Theme.Side = "Right"
+Theme.Version = "2.6"
 
 Theme.Colors = {
 	PanelFill = Color3.fromRGB(255, 255, 255),
@@ -69,9 +70,9 @@ Theme.Tween = {
 
 Theme.Buttons = {
 	{ Id = "Shop", Label = "Shop", Icon = "bag", Accent = Theme.Colors.AccentPinkDeep },
-	{ Id = "Gacha", Label = "Gacha", Icon = "star", Accent = Theme.Colors.AccentLavender },
+	{ Id = "Gacha", Label = "Gacha", Icon = "star", Accent = Theme.Colors.AccentLavender, Badge = "FREE" },
 	{ Id = "Map", Label = "Map", Icon = "map", Accent = Theme.Colors.AccentBlue },
-	{ Id = "Messages", Label = "Messages", Icon = "mail", Accent = Theme.Colors.AccentPinkDeep },
+	{ Id = "Messages", Label = "Messages", Icon = "mail", Accent = Theme.Colors.AccentPinkDeep, Badge = "3" },
 	{ Id = "Teleport", Label = "Teleport", Icon = "portal", Accent = Theme.Colors.AccentLavender },
 	{ Id = "Job", Label = "Job", Icon = "briefcase", Accent = Theme.Colors.AccentMint },
 }

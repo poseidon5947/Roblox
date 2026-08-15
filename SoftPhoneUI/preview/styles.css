@@ -286,6 +286,20 @@ body {
   box-shadow: inset 0 0 0 1.5px rgba(255, 96, 181, 0.55);
 }
 
+.currency {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.currency-gem {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  background: url("../assets/generated/decorations/gem_diamond.png") center / contain no-repeat;
+}
+
 .active-app {
   background: #fff6fc;
   border: 1px solid #ff97cb;
@@ -359,6 +373,32 @@ body {
 .nav-btn.active .icon {
   background-color: #fff5fc;
   box-shadow: inset 0 0 0 2px rgba(232, 95, 166, 0.28);
+}
+
+.nav-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notice-badge {
+  margin-left: auto;
+  min-width: 24px;
+  height: 20px;
+  padding: 0 7px;
+  border: 1px solid rgba(232, 95, 166, 0.45);
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+  background: var(--cream);
+  color: var(--pink-deep);
+  font-size: 9px;
+  flex: 0 0 auto;
+}
+
+.nav-btn.active .notice-badge {
+  background: var(--pink-deep);
+  color: #fff;
 }
 
 .icon-shop { background-position: -36px center; }
@@ -662,25 +702,108 @@ body {
 .selected h3 { font-size: 18px; }
 .selected p { margin: 0; color: var(--muted); font-weight: 700; line-height: 1.35; font-size: 13px; }
 
-.shell {
-  padding: 18px 20px;
+.dashboard {
   height: 100%;
+  padding: 10px;
+  overflow: auto;
 }
 
-.shell h2 {
-  font-size: 26px;
+.profile-strip,
+.featured-card,
+.task-card {
+  border: 1px solid rgba(232, 95, 166, 0.35);
+  border-radius: 8px;
+  background: #fff;
 }
 
-.shell .panel {
-  background: linear-gradient(180deg, var(--slot-alt), var(--slot));
-  border-radius: 10px;
-  border: 1.5px solid rgba(255, 96, 181, 0.45);
-  padding: 16px;
-  color: var(--muted);
-  font-weight: 700;
-  line-height: 1.45;
-  height: calc(100% - 48px);
+.profile-strip {
+  min-height: 82px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(90deg, #fff, #fff1fa);
 }
+
+.feature-icon,
+.featured-icon {
+  display: block;
+  border-radius: 14px;
+  background-color: var(--pink);
+  background-image: url("../assets/generated/softphone_icon_sheet.png");
+  background-repeat: no-repeat;
+}
+
+.feature-icon { width: 62px; height: 62px; background-size: 347px 62px; }
+.featured-icon { width: 82px; height: 82px; background-size: 459px 82px; }
+.feature-icon.icon-shop { background-position: -50px center; }
+.feature-icon.icon-gacha { background-position: -99px center; }
+.feature-icon.icon-map { background-position: -149px center; }
+.feature-icon.icon-messages { background-position: -198px center; }
+.feature-icon.icon-teleport { background-position: -248px center; }
+.feature-icon.icon-job { background-position: -298px center; }
+.featured-icon.icon-shop { background-position: -66px center; }
+.featured-icon.icon-gacha { background-position: -131px center; }
+.featured-icon.icon-map { background-position: -197px center; }
+.featured-icon.icon-messages { background-position: -262px center; }
+.featured-icon.icon-teleport { background-position: -328px center; }
+.featured-icon.icon-job { background-position: -393px center; }
+
+.profile-copy { min-width: 0; }
+.profile-copy small { color: var(--pink-deep); font-size: 9px; font-weight: 800; }
+.profile-copy h2,
+.featured-copy h2 { margin: 2px 0 3px; font-size: 16px; }
+.profile-copy p,
+.featured-copy p,
+.task-card p { margin: 0; color: var(--muted); font-size: 10px; font-weight: 700; }
+
+.metrics { display: flex; gap: 8px; }
+.metric {
+  width: 62px;
+  height: 62px;
+  border: 1px solid rgba(232, 95, 166, 0.28);
+  border-radius: 8px;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  background: var(--cream);
+}
+.metric strong { font-size: 14px; }
+.metric span { color: var(--pink-deep); font-size: 8px; font-weight: 800; }
+
+.section-label { margin: 10px 4px 6px; font-size: 11px; }
+.featured-card {
+  min-height: 126px;
+  padding: 13px 12px;
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr) 120px;
+  grid-template-rows: 1fr auto;
+  gap: 7px 14px;
+  background: linear-gradient(90deg, #fff, #ffeefa, #f3f0ff);
+}
+.featured-icon { grid-row: 1 / 3; align-self: center; }
+.featured-copy { min-width: 0; }
+.reward { color: var(--pink-deep); font-size: 10px; text-align: right; }
+.primary-action {
+  grid-column: 3;
+  border: 1px solid #ff97cb;
+  border-radius: 7px;
+  height: 30px;
+  background: var(--pink);
+  color: var(--pink-deep);
+  font: 800 10px Nunito, sans-serif;
+  cursor: pointer;
+}
+
+.task-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.task-card { padding: 11px 12px 13px; min-height: 96px; }
+.task-card > div { display: flex; justify-content: space-between; gap: 8px; }
+.task-card h4 { margin: 0; font-size: 12px; }
+.task-card strong { color: var(--pink-deep); font-size: 9px; }
+.task-card p { margin-top: 5px; }
+.progress { display: block; height: 7px; margin-top: 14px; border-radius: 5px; overflow: hidden; background: #f1e1ef; }
+.progress i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--pink), var(--lavender)); }
 
 .stage.phone .window {
   width: 86%;
@@ -706,3 +829,17 @@ body {
 .stage.phone .selected {
   display: none;
 }
+
+.stage.phone .live-pill { display: none; }
+.stage.phone .window-title { max-width: 70px; }
+.stage.phone .footer { padding: 0 44px; }
+.stage.phone .footer button { min-width: 0; padding: 7px 8px; font-size: 9px; }
+.stage.phone .profile-strip { grid-template-columns: 46px minmax(0, 1fr); }
+.stage.phone .feature-icon { width: 46px; height: 46px; background-size: 258px 46px; }
+.stage.phone .metrics { grid-column: 1 / -1; justify-content: stretch; }
+.stage.phone .metric { width: auto; height: 44px; flex: 1; }
+.stage.phone .featured-card { grid-template-columns: 58px minmax(0, 1fr); }
+.stage.phone .featured-icon { width: 58px; height: 58px; background-size: 325px 58px; grid-row: 1; }
+.stage.phone .reward { text-align: left; }
+.stage.phone .primary-action { grid-column: 1 / -1; }
+.stage.phone .task-grid { grid-template-columns: 1fr; }
