@@ -432,6 +432,7 @@ function Sidebar:_build()
 	layout.Parent = list
 
 	self.Buttons = {}
+	self.ButtonStates = {}
 	for i, def in ipairs(Theme.Buttons) do
 		local btn = Instance.new("TextButton")
 		btn.Name = def.Id .. "Button"
@@ -454,7 +455,7 @@ function Sidebar:_build()
 		btnStroke.Transparency = 0.35
 		btnStroke.Parent = btn
 
-		IconDraw.makeCircleIcon(btn, def.Icon, Theme.Colors.AccentCream)
+		local iconCircle = IconDraw.makeCircleIcon(btn, def.Icon, Theme.Colors.AccentCream)
 
 		local label = Instance.new("TextLabel")
 		label.Name = "Label"
@@ -481,12 +482,19 @@ function Sidebar:_build()
 			if not self._expanded then
 				self:setExpanded(true, false)
 			end
+			self:setActive(def.Id)
 			if self._onButtonClick then
 				self._onButtonClick(def.Id)
 			end
 		end)
 
 		self.Buttons[def.Id] = btn
+		self.ButtonStates[def.Id] = {
+			Button = btn,
+			Stroke = btnStroke,
+			Label = label,
+			Icon = iconCircle,
+		}
 	end
 
 	local level = Instance.new("Frame")
@@ -571,6 +579,19 @@ function Sidebar:isExpanded(): boolean
 	return self._expanded
 end
 
+function Sidebar:setActive(id: string?)
+	self._active = id
+	for buttonId, state in pairs(self.ButtonStates or {}) do
+		local active = buttonId == id
+		state.Button.BackgroundColor3 = active and Theme.Colors.ButtonFillHover or Theme.Colors.ButtonFill
+		state.Stroke.Color = active and Theme.Colors.AccentPinkDeep or Theme.Colors.ButtonStroke
+		state.Stroke.Thickness = active and 2 or 1
+		state.Stroke.Transparency = active and 0 or 0.35
+		state.Label.TextColor3 = active and Theme.Colors.TextPrimary or Theme.Colors.AccentPinkDeep
+		state.Icon.BackgroundColor3 = active and Color3.fromRGB(255, 245, 252) or Theme.Colors.AccentCream
+	end
+end
+
 function Sidebar:_bindResize()
 	local function resize()
 		local vp = viewportSize()
@@ -599,4 +620,3 @@ function Sidebar:_bindResize()
 end
 
 return Sidebar
-

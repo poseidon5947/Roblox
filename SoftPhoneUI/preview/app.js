@@ -72,6 +72,7 @@ BUTTONS.forEach((def) => {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "nav-btn";
+  btn.dataset.id = def.id;
   btn.innerHTML = `<span class="icon icon-${def.icon}"></span><span>${def.label}</span>`;
   btn.addEventListener("click", () => {
     if (!expanded) setExpanded(true);
@@ -205,6 +206,9 @@ function openWindow(id) {
   const win = windows[id];
   if (!win) return;
   win.classList.add("open");
+  document.querySelectorAll(".nav-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.id === id);
+  });
   activeWindow = id;
 }
 
@@ -212,7 +216,10 @@ function closeWindow(id) {
   const win = windows[id];
   if (!win) return;
   win.classList.remove("open");
-  if (activeWindow === id) activeWindow = null;
+  if (activeWindow === id) {
+    activeWindow = null;
+    document.querySelectorAll(".nav-btn").forEach((btn) => btn.classList.remove("active"));
+  }
 }
 
 buildShop();
