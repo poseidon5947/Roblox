@@ -541,6 +541,12 @@ body {
 
 .item:hover { border-color: var(--pink-deep); }
 
+.item.selected-item {
+  background: #ffe8f6;
+  border-color: var(--pink-deep);
+  box-shadow: inset 0 0 0 1px rgba(232, 95, 166, 0.24);
+}
+
 .item .swatch {
   height: 44px;
   border-radius: 8px;

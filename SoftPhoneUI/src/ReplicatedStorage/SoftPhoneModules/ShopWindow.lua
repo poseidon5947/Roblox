@@ -338,11 +338,12 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 	detailNote.TextXAlignment = Enum.TextXAlignment.Left
 	detailNote.TextYAlignment = Enum.TextYAlignment.Top
 	detailNote.TextColor3 = Theme.Colors.TextMuted
-	detailNote.Text = "Tap an item to preview it on your avatar. Replace the sample callbacks with catalog IDs when ready."
+	detailNote.Text = "Tap an item to preview it here. Full avatar try-on is ready for catalog asset IDs."
 	detailNote.ZIndex = 44
 	detailNote.Parent = detail
 
 	local selectedItem = nil
+	local slotStates = {}
 
 	local function refreshAvatar()
 		clearViewport(world)
@@ -386,8 +387,17 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		caption.Text = "Trying: " .. item.Name
 		detailTitle.Text = item.Name
 		detailPrice.Text = "GEMS " .. tostring(item.Price)
-		detailNote.Text = item.Tag .. " ITEM\n\nPreview selected. Connect this card to HumanoidDescription or your owned-inventory service."
+		detailNote.Text = item.Tag .. " ITEM\n\nSelected for preview. Add catalog IDs to enable live avatar fitting."
 		renderItemArt(detailArt, item)
+
+		for _, state in ipairs(slotStates) do
+			local selected = state.Item == item
+			state.Button.BackgroundColor3 = selected and Color3.fromRGB(255, 232, 246) or Theme.Colors.AccentCream
+			state.Stroke.Color = selected and Theme.Colors.AccentPinkDeep or Theme.Colors.AccentPink
+			state.Stroke.Thickness = selected and 2.25 or 1.5
+			state.Stroke.Transparency = selected and 0 or 0.4
+			state.Tag.BackgroundColor3 = selected and Theme.Colors.ButtonFillHover or Color3.fromRGB(255, 231, 247)
+		end
 	end
 
 	for i, item in ipairs(SAMPLE_ITEMS) do
@@ -467,16 +477,15 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		tag.Parent = slot
 		corner(tag, 8)
 
+		table.insert(slotStates, {
+			Item = item,
+			Button = slot,
+			Stroke = ss,
+			Tag = tag,
+		})
+
 		slot.Activated:Connect(function()
 			selectItem(item)
-			ss.Transparency = 0
-			ss.Color = Theme.Colors.AccentPinkDeep
-			task.delay(0.35, function()
-				if ss.Parent then
-					ss.Transparency = 0.4
-					ss.Color = Theme.Colors.AccentPink
-				end
-			end)
 		end)
 	end
 
@@ -485,7 +494,14 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 			selectedItem = nil
 			detailTitle.Text = "Select an item"
 			detailPrice.Text = "GEMS --"
-			detailNote.Text = "Tap an item to preview it on your avatar. Replace the sample callbacks with catalog IDs when ready."
+			detailNote.Text = "Tap an item to preview it here. Full avatar try-on is ready for catalog asset IDs."
+			for _, state in ipairs(slotStates) do
+				state.Button.BackgroundColor3 = Theme.Colors.AccentCream
+				state.Stroke.Color = Theme.Colors.AccentPink
+				state.Stroke.Thickness = 1.5
+				state.Stroke.Transparency = 0.4
+				state.Tag.BackgroundColor3 = Color3.fromRGB(255, 231, 247)
+			end
 			for _, child in ipairs(detailArt:GetChildren()) do
 				if child:IsA("GuiObject") then
 					child:Destroy()
@@ -494,8 +510,8 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 			refreshAvatar()
 		end)
 		WindowChrome.addFooterButton(footer, "Refresh", 2, refreshAvatar)
-		WindowChrome.addFooterButton(footer, "Buy Soon", 3, function()
-			caption.Text = selectedItem and ("Queued: " .. selectedItem.Name) or "Pick an item first"
+		WindowChrome.addFooterButton(footer, "Apply Preview", 3, function()
+			caption.Text = selectedItem and ("Previewing: " .. selectedItem.Name) or "Pick an item first"
 		end)
 	end
 

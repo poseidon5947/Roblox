@@ -136,7 +136,7 @@ function buildShop() {
   selected.innerHTML = `
     <h3 id="selectedName">Select an item</h3>
     <p id="selectedPrice">GEMS --</p>
-    <p id="selectedNote">Tap an item to preview it on the avatar. Catalog hooks can replace this sample state.</p>
+    <p id="selectedNote">Tap an item to preview it here. Full avatar try-on is ready for catalog asset IDs.</p>
   `;
 
   ITEMS.forEach((item) => {
@@ -149,24 +149,27 @@ function buildShop() {
       <div class="price">GEMS ${item.price}</div>
     `;
     el.addEventListener("click", () => {
+      grid.querySelectorAll(".item").forEach((slot) => slot.classList.remove("selected-item"));
+      el.classList.add("selected-item");
       document.getElementById("tryonCaption").textContent = `Trying: ${item.name}`;
       document.getElementById("previewAvatar").style.filter = `hue-rotate(${(item.price * 2) % 120}deg)`;
       document.getElementById("selectedName").textContent = item.name;
       document.getElementById("selectedPrice").textContent = `GEMS ${item.price}`;
-      document.getElementById("selectedNote").textContent = "Preview selected. Hook this to HumanoidDescription or owned inventory.";
+      document.getElementById("selectedNote").textContent = "Selected for preview. Add catalog IDs to enable live avatar fitting.";
     });
     grid.appendChild(el);
   });
 
   body.append(grid, stageTry, selected);
-  makeChrome("Shop", "shop.exe", body, ["Reset Look", "Refresh", "Buy Soon"]);
+  makeChrome("Shop", "shop.exe", body, ["Reset Look", "Refresh", "Apply Preview"]);
 
   body.parentElement.parentElement.querySelector(".footer").firstChild.addEventListener("click", () => {
+    grid.querySelectorAll(".item").forEach((slot) => slot.classList.remove("selected-item"));
     document.getElementById("tryonCaption").textContent = "Your look - pick an item";
     document.getElementById("previewAvatar").style.filter = "";
     document.getElementById("selectedName").textContent = "Select an item";
     document.getElementById("selectedPrice").textContent = "GEMS --";
-    document.getElementById("selectedNote").textContent = "Tap an item to preview it on the avatar. Catalog hooks can replace this sample state.";
+    document.getElementById("selectedNote").textContent = "Tap an item to preview it here. Full avatar try-on is ready for catalog asset IDs.";
   });
 }
 
