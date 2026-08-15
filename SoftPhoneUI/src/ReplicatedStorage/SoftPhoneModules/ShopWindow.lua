@@ -177,6 +177,80 @@ local function setupCamera(viewport: ViewportFrame, model: Model)
 	end
 end
 
+local function bodyPart(model: Model, names: { string }): BasePart?
+	for _, name in ipairs(names) do
+		local part = model:FindFirstChild(name)
+		if part and part:IsA("BasePart") then
+			return part
+		end
+	end
+	return nil
+end
+
+local function wearablePart(model: Model, name: string, target: BasePart, size: Vector3, offset: CFrame, color: Color3, shape: Enum.PartType?)
+	local part = Instance.new("Part")
+	part.Name = "PreviewWearable_" .. name
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanQuery = false
+	part.CanTouch = false
+	part.CastShadow = false
+	part.Material = Enum.Material.SmoothPlastic
+	part.Color = color
+	part.Size = size
+	part.Shape = shape or Enum.PartType.Block
+	part.CFrame = target.CFrame * offset
+	part.Parent = model
+	return part
+end
+
+local function applySampleTryOn(model: Model, item)
+	local upper = bodyPart(model, { "UpperTorso", "Torso" })
+	local lower = bodyPart(model, { "LowerTorso", "Torso" })
+	local head = bodyPart(model, { "Head" })
+	local leftArm = bodyPart(model, { "LeftUpperArm", "Left Arm" })
+	local rightArm = bodyPart(model, { "RightUpperArm", "Right Arm" })
+	local leftFoot = bodyPart(model, { "LeftFoot", "Left Leg" })
+	local rightFoot = bodyPart(model, { "RightFoot", "Right Leg" })
+
+	if item.Key == "pixel_bow_jacket" and upper then
+		wearablePart(model, "Jacket", upper, Vector3.new(upper.Size.X * 1.05, upper.Size.Y * 0.9, upper.Size.Z * 1.08), CFrame.new(0, 0.05, 0), item.Color)
+		local front = -(upper.Size.Z * 0.57)
+		wearablePart(model, "BowLeft", upper, Vector3.new(0.46, 0.27, 0.14), CFrame.new(-0.22, upper.Size.Y * 0.25, front) * CFrame.Angles(0, 0, math.rad(22)), Theme.Colors.AccentPinkDeep)
+		wearablePart(model, "BowRight", upper, Vector3.new(0.46, 0.27, 0.14), CFrame.new(0.22, upper.Size.Y * 0.25, front) * CFrame.Angles(0, 0, math.rad(-22)), Theme.Colors.AccentPinkDeep)
+		wearablePart(model, "BowGem", upper, Vector3.new(0.2, 0.2, 0.2), CFrame.new(0, upper.Size.Y * 0.25, front - 0.08), Theme.Colors.Gem, Enum.PartType.Ball)
+	elseif item.Key == "starline_skirt" and lower then
+		wearablePart(model, "SkirtTop", lower, Vector3.new(lower.Size.X * 1.32, 0.46, lower.Size.Z * 1.3), CFrame.new(0, -lower.Size.Y * 0.38, 0), item.Color)
+		wearablePart(model, "SkirtHem", lower, Vector3.new(lower.Size.X * 1.58, 0.25, lower.Size.Z * 1.5), CFrame.new(0, -lower.Size.Y * 0.7, 0), Theme.Colors.AccentLavender)
+	elseif item.Key == "bubble_boots" then
+		for _, pair in ipairs({ { "Left", leftFoot }, { "Right", rightFoot } }) do
+			local side = pair[1]
+			local foot = pair[2]
+			if foot then
+				wearablePart(model, "Boot" .. side, foot, Vector3.new(foot.Size.X * 1.28, foot.Size.Y * 1.28, foot.Size.Z * 1.42), CFrame.new(0, -0.05, -0.08), item.Color)
+				wearablePart(model, "BootSole" .. side, foot, Vector3.new(foot.Size.X * 1.38, 0.16, foot.Size.Z * 1.55), CFrame.new(0, -foot.Size.Y * 0.62, -0.08), Theme.Colors.AccentBlue)
+			end
+		end
+	elseif item.Key == "ribbon_satchel" and lower then
+		local front = -(lower.Size.Z * 0.62)
+		wearablePart(model, "Satchel", lower, Vector3.new(0.78, 0.62, 0.24), CFrame.new(0.48, -0.15, front), item.Color)
+		wearablePart(model, "SatchelGem", lower, Vector3.new(0.2, 0.2, 0.2), CFrame.new(0.48, -0.15, front - 0.16), Theme.Colors.Gem, Enum.PartType.Ball)
+	elseif item.Key == "mint_sleeve_set" then
+		for _, pair in ipairs({ { "Left", leftArm }, { "Right", rightArm } }) do
+			local side = pair[1]
+			local arm = pair[2]
+			if arm then
+				wearablePart(model, "Sleeve" .. side, arm, Vector3.new(arm.Size.X * 1.22, arm.Size.Y * 0.88, arm.Size.Z * 1.22), CFrame.new(0, -0.06, 0), item.Color)
+			end
+		end
+	elseif item.Key == "glow_hairclip" and head then
+		local front = -(head.Size.Z * 0.57)
+		wearablePart(model, "ClipLeft", head, Vector3.new(0.3, 0.2, 0.12), CFrame.new(0.38, 0.42, front) * CFrame.Angles(0, 0, math.rad(25)), item.Color)
+		wearablePart(model, "ClipRight", head, Vector3.new(0.3, 0.2, 0.12), CFrame.new(0.58, 0.42, front) * CFrame.Angles(0, 0, math.rad(-25)), Theme.Colors.AccentPink)
+		wearablePart(model, "ClipGem", head, Vector3.new(0.17, 0.17, 0.17), CFrame.new(0.48, 0.42, front - 0.08), Theme.Colors.Gem, Enum.PartType.Ball)
+	end
+end
+
 function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 	local handle = WindowChrome.create(parent, "Shop", "shop", onClose)
 	local content = handle.Content
@@ -239,6 +313,19 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 	})
 	stageGrad.Rotation = 90
 	stageGrad.Parent = stage
+
+	local stageRing = Instance.new("Frame")
+	stageRing.Name = "StageRing"
+	stageRing.AnchorPoint = Vector2.new(0.5, 1)
+	stageRing.Position = UDim2.new(0.5, 0, 1, -38)
+	stageRing.Size = UDim2.new(0.72, 0, 0, 20)
+	stageRing.BackgroundColor3 = Theme.Colors.AccentPink
+	stageRing.BackgroundTransparency = 0.62
+	stageRing.BorderSizePixel = 0
+	stageRing.ZIndex = 43
+	stageRing.Parent = stage
+	corner(stageRing, 999)
+	stroke(stageRing, Theme.Colors.AccentLavender, 1, 0.42)
 
 	local previewStatus = Instance.new("Frame")
 	previewStatus.Name = "PreviewStatus"
@@ -361,12 +448,13 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 	detailNote.TextXAlignment = Enum.TextXAlignment.Left
 	detailNote.TextYAlignment = Enum.TextYAlignment.Top
 	detailNote.TextColor3 = Theme.Colors.TextMuted
-	detailNote.Text = "Tap an item to preview it here. Full avatar try-on is ready for catalog asset IDs."
+	detailNote.Text = "Tap an item to preview its sample 3D style on your avatar."
 	detailNote.ZIndex = 44
 	detailNote.Parent = detail
 
 	local selectedItem = nil
 	local slotStates = {}
+	local previewAngle = 0
 
 	local function refreshAvatar()
 		clearViewport(world)
@@ -394,11 +482,17 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		stripScripts(clone)
 		clone.Name = "PreviewAvatar"
 		clone.Parent = world
+		if selectedItem then
+			applySampleTryOn(clone, selectedItem)
+		end
 
 		for _, part in ipairs(clone:GetDescendants()) do
 			if part:IsA("BasePart") then
 				part.Anchored = true
 			end
+		end
+		if previewAngle ~= 0 then
+			clone:PivotTo(clone:GetPivot() * CFrame.Angles(0, math.rad(previewAngle), 0))
 		end
 
 		setupCamera(viewport, clone)
@@ -411,7 +505,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		previewStatusText.Text = string.upper(item.Tag) .. " PREVIEW"
 		detailTitle.Text = item.Name
 		detailPrice.Text = "GEMS " .. tostring(item.Price)
-		detailNote.Text = item.Tag .. " ITEM\n\nSelected for preview. Add catalog IDs to enable live avatar fitting."
+		detailNote.Text = item.Tag .. " ITEM\n\nSample 3D try-on active. Add a catalog ID later for the final wearable asset."
 		renderItemArt(detailArt, item)
 
 		for _, state in ipairs(slotStates) do
@@ -423,6 +517,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 			state.Tag.BackgroundColor3 = selected and Theme.Colors.ButtonFillHover or Color3.fromRGB(255, 231, 247)
 			state.SelectedBadge.Visible = selected
 		end
+		task.defer(refreshAvatar)
 	end
 
 	for i, item in ipairs(SAMPLE_ITEMS) do
@@ -562,10 +657,11 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 	if footer then
 		WindowChrome.addFooterButton(footer, "Reset Look", 1, function()
 			selectedItem = nil
+			previewAngle = 0
 			previewStatusText.Text = "PREVIEW MODE"
 			detailTitle.Text = "Select an item"
 			detailPrice.Text = "GEMS --"
-			detailNote.Text = "Tap an item to preview it here. Full avatar try-on is ready for catalog asset IDs."
+			detailNote.Text = "Tap an item to preview its sample 3D style on your avatar."
 			for _, state in ipairs(slotStates) do
 				state.Button.BackgroundColor3 = Theme.Colors.AccentCream
 				state.Stroke.Color = Theme.Colors.AccentPink
@@ -581,10 +677,13 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 			end
 			refreshAvatar()
 		end)
-		WindowChrome.addFooterButton(footer, "Refresh", 2, refreshAvatar)
+		WindowChrome.addFooterButton(footer, "Rotate", 2, function()
+			previewAngle = (previewAngle + 35) % 360
+			refreshAvatar()
+		end)
 		WindowChrome.addFooterButton(footer, "Apply Preview", 3, function()
-			caption.Text = selectedItem and ("Previewing: " .. selectedItem.Name) or "Pick an item first"
-			previewStatusText.Text = selectedItem and "LOOK APPLIED" or "PICK ITEM"
+			caption.Text = selectedItem and ("Preview locked: " .. selectedItem.Name) or "Pick an item first"
+			previewStatusText.Text = selectedItem and "PREVIEW LOCKED" or "PICK ITEM"
 		end)
 	end
 

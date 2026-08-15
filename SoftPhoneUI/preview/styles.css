@@ -317,6 +317,29 @@ body {
   margin-top: auto;
   color: var(--text);
   box-shadow: inset 0 0 0 1.5px rgba(176, 128, 255, 0.65);
+  min-height: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.level-progress {
+  display: block;
+  width: 76%;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #eee1f4;
+}
+
+.level-progress i {
+  display: block;
+  width: 24%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--pink-deep);
 }
 
 .button-list {
@@ -615,18 +638,33 @@ body {
 }
 
 .item .swatch {
-  height: 44px;
+  height: 58px;
   border-radius: 8px;
   margin-bottom: 6px;
+  background-color: #fff4fc;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 .item .name { font-size: 11px; font-weight: 800; }
 .item .price { font-size: 11px; color: var(--pink-deep); font-weight: 800; }
 
+.item-tag {
+  display: inline-block;
+  margin-top: 3px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--pink);
+  color: var(--pink-deep);
+  font-size: 8px;
+  font-weight: 800;
+}
+
 .selected-badge {
   position: absolute;
   left: 8px;
-  top: 36px;
+  top: 49px;
   width: 78px;
   display: none;
   border-radius: 999px;
@@ -650,6 +688,19 @@ body {
   gap: 10px;
   position: relative;
   padding-top: 34px;
+  perspective: 600px;
+}
+
+.avatar-floor {
+  position: absolute;
+  left: 50%;
+  bottom: 48px;
+  width: 132px;
+  height: 20px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(176, 128, 255, 0.48);
+  border-radius: 50%;
+  background: rgba(255, 190, 222, 0.28);
 }
 
 .preview-status {
@@ -669,12 +720,97 @@ body {
 }
 
 .preview-avatar {
-  width: 78px;
-  height: 142px;
-  border-radius: 38px 38px 20px 20px;
-  background: linear-gradient(180deg, #fff, #f1dcff 52%, #ffe1f3);
-  box-shadow: 0 10px 24px var(--shadow);
-  transition: filter 0.25s ease;
+  position: relative;
+  width: 100px;
+  height: 162px;
+  transform-style: preserve-3d;
+  transform-origin: 50% 65%;
+  transition: transform 0.35s ease;
+  z-index: 2;
+}
+
+.preview-avatar > span { position: absolute; display: block; }
+.avatar-head { left: 35px; top: 3px; width: 30px; height: 32px; border-radius: 48%; background: #f4be94; z-index: 4; }
+.avatar-hair { left: 30px; top: 0; width: 40px; height: 24px; border-radius: 18px 18px 8px 8px; background: #8c4c22; z-index: 5; }
+.avatar-torso { left: 28px; top: 35px; width: 44px; height: 52px; border-radius: 8px 8px 5px 5px; background: #40384b; z-index: 2; }
+.avatar-arm { top: 38px; width: 17px; height: 58px; border-radius: 8px; background: #f4be94; z-index: 1; }
+.arm-left { left: 11px; transform: rotate(6deg); }
+.arm-right { right: 11px; transform: rotate(-6deg); }
+.avatar-leg { top: 84px; width: 21px; height: 68px; border-radius: 4px 4px 8px 8px; background: #292532; z-index: 1; }
+.leg-left { left: 27px; }
+.leg-right { right: 27px; }
+.wear-jacket,
+.wear-bow,
+.wear-skirt,
+.wear-boots,
+.wear-satchel,
+.wear-sleeves,
+.wear-hairclip { display: none !important; z-index: 6; }
+
+.preview-avatar[data-item="pixel_bow_jacket"] .wear-jacket {
+  display: block !important;
+  left: 25px;
+  top: 34px;
+  width: 50px;
+  height: 55px;
+  border-radius: 9px;
+  background: #ffbedf;
+}
+
+.preview-avatar[data-item="pixel_bow_jacket"] .wear-bow,
+.preview-avatar[data-item="glow_hairclip"] .wear-hairclip {
+  display: block !important;
+  width: 28px;
+  height: 15px;
+  border-radius: 9px 3px;
+  background: #ed62aa;
+  transform: rotate(8deg);
+}
+
+.preview-avatar[data-item="pixel_bow_jacket"] .wear-bow { left: 36px; top: 39px; }
+.preview-avatar[data-item="starline_skirt"] .wear-skirt {
+  display: block !important;
+  left: 19px;
+  top: 78px;
+  width: 62px;
+  height: 42px;
+  border-radius: 7px 7px 24px 24px;
+  background: #b080ff;
+}
+.preview-avatar[data-item="bubble_boots"] .wear-boots {
+  display: block !important;
+  left: 20px;
+  top: 126px;
+  width: 60px;
+  height: 30px;
+  border-bottom: 7px solid #78cbff;
+  border-radius: 5px 5px 12px 12px;
+  background: linear-gradient(90deg, #ff94d3 45%, transparent 45% 55%, #ff94d3 55%);
+}
+.preview-avatar[data-item="ribbon_satchel"] .wear-satchel {
+  display: block !important;
+  right: 14px;
+  top: 76px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #e85fa6;
+  box-shadow: 0 0 0 3px #ffd3e9;
+}
+.preview-avatar[data-item="mint_sleeve_set"] .wear-sleeves {
+  display: block !important;
+  left: 8px;
+  top: 39px;
+  width: 84px;
+  height: 54px;
+  border-left: 17px solid #56e0d1;
+  border-right: 17px solid #56e0d1;
+  border-radius: 12px;
+}
+.preview-avatar[data-item="glow_hairclip"] .wear-hairclip {
+  left: 56px;
+  top: 5px;
+  background: #b080ff;
 }
 
 .tryon-caption {

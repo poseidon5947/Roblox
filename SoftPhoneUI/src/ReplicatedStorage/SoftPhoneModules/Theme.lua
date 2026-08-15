@@ -6,7 +6,7 @@
 local Theme = {}
 
 Theme.Side = "Right"
-Theme.Version = "2.6"
+Theme.Version = "2.7"
 
 Theme.Colors = {
 	PanelFill = Color3.fromRGB(255, 255, 255),

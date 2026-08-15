@@ -450,7 +450,7 @@ function PlaceholderWindows.mountAll(parent: Instance, onCloseFactory: (id: stri
 			local button
 			button = WindowChrome.addFooterButton(handle.Footer, footerLabel, i, function()
 				local original = footerLabel
-				button.Text = string.upper(original) .. " READY"
+				button.Text = "DONE"
 				task.delay(1, function()
 					if button.Parent then
 						button.Text = original

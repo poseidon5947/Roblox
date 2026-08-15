@@ -559,7 +559,7 @@ function Sidebar:_build()
 	level.BorderSizePixel = 0
 	level.AnchorPoint = Vector2.new(0.5, 1)
 	level.Position = UDim2.new(0.5, 0, 1, -10)
-	level.Size = UDim2.new(0.88, 0, 0, 30)
+	level.Size = UDim2.new(0.88, 0, 0, 36)
 	level.ZIndex = 202
 	level.Parent = panel
 
@@ -575,13 +575,33 @@ function Sidebar:_build()
 
 	local lvLabel = Instance.new("TextLabel")
 	lvLabel.BackgroundTransparency = 1
-	lvLabel.Size = UDim2.fromScale(1, 1)
+	lvLabel.Size = UDim2.new(1, 0, 1, -7)
 	lvLabel.Font = Theme.Fonts.Body
 	lvLabel.TextSize = 14
 	lvLabel.TextColor3 = Theme.Colors.TextPrimary
 	lvLabel.Text = "LEVEL 1"
 	lvLabel.ZIndex = 203
 	lvLabel.Parent = level
+
+	local levelTrack = Instance.new("Frame")
+	levelTrack.Name = "LevelProgress"
+	levelTrack.AnchorPoint = Vector2.new(0.5, 1)
+	levelTrack.Position = UDim2.new(0.5, 0, 1, -4)
+	levelTrack.Size = UDim2.new(0.76, 0, 0, 4)
+	levelTrack.BackgroundColor3 = Color3.fromRGB(238, 225, 244)
+	levelTrack.BorderSizePixel = 0
+	levelTrack.ZIndex = 204
+	levelTrack.Parent = level
+	addCorner(levelTrack, 4)
+
+	local levelFill = Instance.new("Frame")
+	levelFill.Name = "Fill"
+	levelFill.Size = UDim2.new(0.24, 0, 1, 0)
+	levelFill.BackgroundColor3 = Theme.Colors.AccentPinkDeep
+	levelFill.BorderSizePixel = 0
+	levelFill.ZIndex = 205
+	levelFill.Parent = levelTrack
+	addCorner(levelFill, 4)
 
 	gemHit.Activated:Connect(function()
 		self:toggle()

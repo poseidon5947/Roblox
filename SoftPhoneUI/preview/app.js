@@ -8,12 +8,12 @@ const BUTTONS = [
 ];
 
 const ITEMS = [
-  { name: "Pixel Bow Jacket", price: 120, color: "#ff60b5" },
-  { name: "Starline Skirt", price: 90, color: "#b080ff" },
-  { name: "Bubble Boots", price: 150, color: "#78cbff" },
-  { name: "Ribbon Satchel", price: 75, color: "#e52d90" },
-  { name: "Mint Sleeve Set", price: 40, color: "#56e0d1" },
-  { name: "Glow Hairclip", price: 55, color: "#b080ff" },
+  { key: "pixel_bow_jacket", name: "Pixel Bow Jacket", price: 120, tag: "NEW", image: "../assets/generated/shop_items/pixel_bow_jacket.png" },
+  { key: "starline_skirt", name: "Starline Skirt", price: 90, tag: "RARE", image: "../assets/generated/shop_items/starline_skirt.png" },
+  { key: "bubble_boots", name: "Bubble Boots", price: 150, tag: "TRENDING", image: "../assets/generated/shop_items/bubble_boots.png" },
+  { key: "ribbon_satchel", name: "Ribbon Satchel", price: 75, tag: "CUTE", image: "../assets/generated/shop_items/ribbon_satchel.png" },
+  { key: "mint_sleeve_set", name: "Mint Sleeve Set", price: 40, tag: "SET", image: "../assets/generated/shop_items/mint_sleeve_set.png" },
+  { key: "glow_hairclip", name: "Glow Hairclip", price: 55, tag: "LIMITED", image: "../assets/generated/shop_items/glow_hairclip.png" },
 ];
 
 const SHELLS = {
@@ -153,7 +153,7 @@ function makeChrome(id, titleText, bodyEl, footerLabels) {
     b.type = "button";
     b.textContent = label;
     b.addEventListener("click", () => {
-      b.textContent = `${label.toUpperCase()} READY`;
+      b.textContent = "DONE";
       window.setTimeout(() => { b.textContent = label; }, 1000);
     });
     footer.appendChild(b);
@@ -174,7 +174,14 @@ function buildShop() {
   stageTry.className = "stage-tryon";
   stageTry.innerHTML = `
     <div class="preview-status" id="previewStatus">PREVIEW MODE</div>
-    <div class="preview-avatar" id="previewAvatar"></div>
+    <div class="avatar-floor"></div>
+    <div class="preview-avatar" id="previewAvatar">
+      <span class="avatar-head"></span><span class="avatar-hair"></span>
+      <span class="avatar-torso"></span><span class="avatar-arm arm-left"></span><span class="avatar-arm arm-right"></span>
+      <span class="avatar-leg leg-left"></span><span class="avatar-leg leg-right"></span>
+      <span class="wear-jacket"></span><span class="wear-bow"></span><span class="wear-skirt"></span>
+      <span class="wear-boots"></span><span class="wear-satchel"></span><span class="wear-sleeves"></span><span class="wear-hairclip"></span>
+    </div>
     <div class="tryon-caption" id="tryonCaption">Your look - pick an item</div>
   `;
 
@@ -183,7 +190,7 @@ function buildShop() {
   selected.innerHTML = `
     <h3 id="selectedName">Select an item</h3>
     <p id="selectedPrice">GEMS --</p>
-    <p id="selectedNote">Tap an item to preview it here. Full avatar try-on is ready for catalog asset IDs.</p>
+    <p id="selectedNote">Tap an item to preview its sample 3D style on your avatar.</p>
   `;
 
   ITEMS.forEach((item) => {
@@ -191,46 +198,57 @@ function buildShop() {
     el.type = "button";
     el.className = "item";
     el.innerHTML = `
-      <div class="swatch" style="background:${item.color}"></div>
+      <div class="swatch" style="background-image:url('${item.image}')"></div>
       <div class="name">${item.name}</div>
       <div class="price">GEMS ${item.price}</div>
+      <div class="item-tag">${item.tag}</div>
       <div class="selected-badge">SELECTED</div>
     `;
     el.addEventListener("click", () => {
       grid.querySelectorAll(".item").forEach((slot) => slot.classList.remove("selected-item"));
       el.classList.add("selected-item");
       document.getElementById("tryonCaption").textContent = `Trying: ${item.name}`;
-      document.getElementById("previewStatus").textContent = "ITEM PREVIEW";
-      document.getElementById("previewAvatar").style.filter = `hue-rotate(${(item.price * 2) % 120}deg)`;
+      document.getElementById("previewStatus").textContent = `${item.tag} PREVIEW`;
+      document.getElementById("previewAvatar").dataset.item = item.key;
       document.getElementById("selectedName").textContent = item.name;
       document.getElementById("selectedPrice").textContent = `GEMS ${item.price}`;
-      document.getElementById("selectedNote").textContent = "Selected for preview. Add catalog IDs to enable live avatar fitting.";
+      document.getElementById("selectedNote").textContent = "Sample 3D try-on active. Add a catalog ID later for the final wearable asset.";
     });
     grid.appendChild(el);
   });
 
   body.append(grid, stageTry, selected);
-  makeChrome("Shop", "shop.exe", body, ["Reset Look", "Refresh", "Apply Preview"]);
+  makeChrome("Shop", "shop.exe", body, ["Reset Look", "Rotate", "Apply Preview"]);
 
   const shopWindow = body.parentElement.parentElement;
   const footerButtons = shopWindow.querySelectorAll(".footer button");
+  let previewAngle = 0;
 
   footerButtons[0].addEventListener("click", () => {
     grid.querySelectorAll(".item").forEach((slot) => slot.classList.remove("selected-item"));
     document.getElementById("tryonCaption").textContent = "Your look - pick an item";
     document.getElementById("previewStatus").textContent = "PREVIEW MODE";
-    document.getElementById("previewAvatar").style.filter = "";
+    previewAngle = 0;
+    document.getElementById("previewAvatar").dataset.item = "";
+    document.getElementById("previewAvatar").style.transform = "rotateY(0deg)";
     document.getElementById("selectedName").textContent = "Select an item";
     document.getElementById("selectedPrice").textContent = "GEMS --";
-    document.getElementById("selectedNote").textContent = "Tap an item to preview it here. Full avatar try-on is ready for catalog asset IDs.";
+    document.getElementById("selectedNote").textContent = "Tap an item to preview its sample 3D style on your avatar.";
+  });
+
+  footerButtons[1].addEventListener("click", () => {
+    previewAngle = (previewAngle + 35) % 360;
+    document.getElementById("previewAvatar").style.transform = `rotateY(${previewAngle}deg)`;
   });
 
   footerButtons[2].addEventListener("click", () => {
     const name = document.getElementById("selectedName").textContent;
     const hasSelection = name && name !== "Select an item";
-    document.getElementById("tryonCaption").textContent = hasSelection ? `Previewing: ${name}` : "Pick an item first";
-    document.getElementById("previewStatus").textContent = hasSelection ? "LOOK APPLIED" : "PICK ITEM";
+    document.getElementById("tryonCaption").textContent = hasSelection ? `Preview locked: ${name}` : "Pick an item first";
+    document.getElementById("previewStatus").textContent = hasSelection ? "PREVIEW LOCKED" : "PICK ITEM";
   });
+
+  grid.querySelector(".item")?.click();
 }
 
 function buildShells() {
