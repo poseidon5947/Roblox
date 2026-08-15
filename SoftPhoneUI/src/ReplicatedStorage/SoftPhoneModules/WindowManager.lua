@@ -8,16 +8,20 @@ local PlaceholderWindows = require(script.Parent.PlaceholderWindows)
 local WindowManager = {}
 WindowManager.__index = WindowManager
 
-function WindowManager.new(host: Frame)
+function WindowManager.new(host: Frame, onActiveChanged: ((string?) -> ())?)
 	local self = setmetatable({}, WindowManager)
 	self._host = host
 	self._windows = {}
 	self._active = nil :: string?
+	self._onActiveChanged = onActiveChanged
 
 	local function closer(id: string)
 		return function()
 			if self._active == id then
 				self._active = nil
+				if self._onActiveChanged then
+					self._onActiveChanged(nil)
+				end
 			end
 		end
 	end
@@ -48,11 +52,18 @@ function WindowManager:open(id: string)
 	if self._active == id and target:isOpen() then
 		target:setVisible(false, false)
 		self._active = nil
-		return
+		if self._onActiveChanged then
+			self._onActiveChanged(nil)
+		end
+		return self._active
 	end
 
 	target:setVisible(true, false)
 	self._active = id
+	if self._onActiveChanged then
+		self._onActiveChanged(self._active)
+	end
+	return self._active
 end
 
 function WindowManager:closeAll(instant: boolean?)
@@ -62,6 +73,9 @@ function WindowManager:closeAll(instant: boolean?)
 		end
 	end
 	self._active = nil
+	if self._onActiveChanged then
+		self._onActiveChanged(nil)
+	end
 end
 
 function WindowManager:getActive(): string?

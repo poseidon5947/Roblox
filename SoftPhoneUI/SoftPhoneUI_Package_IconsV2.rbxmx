@@ -984,12 +984,35 @@ function Sidebar:_build()
 	curLabel.ZIndex = 203
 	curLabel.Parent = currency
 
+	local activePill = Instance.new("Frame")
+	activePill.Name = "ActiveAppPill"
+	activePill.BackgroundColor3 = Color3.fromRGB(255, 246, 252)
+	activePill.BorderSizePixel = 0
+	activePill.Size = UDim2.new(0.88, 0, 0, 24)
+	activePill.Position = UDim2.new(0.06, 0, 0, 116)
+	activePill.ZIndex = 202
+	activePill.Parent = panel
+	addCorner(activePill, 12)
+	addStroke(activePill, Theme.Colors.ButtonStroke, 1, 0.35)
+
+	local activeLabel = Instance.new("TextLabel")
+	activeLabel.Name = "ActiveLabel"
+	activeLabel.BackgroundTransparency = 1
+	activeLabel.Size = UDim2.fromScale(1, 1)
+	activeLabel.Font = Theme.Fonts.Title
+	activeLabel.TextSize = 10
+	activeLabel.TextColor3 = Theme.Colors.TextMuted
+	activeLabel.Text = "OPEN: NONE"
+	activeLabel.ZIndex = 203
+	activeLabel.Parent = activePill
+	self.ActiveLabel = activeLabel
+
 	local list = Instance.new("ScrollingFrame")
 	list.Name = "ButtonList"
 	list.BackgroundTransparency = 1
 	list.BorderSizePixel = 0
-	list.Size = UDim2.new(1, -20, 1, -166)
-	list.Position = UDim2.fromOffset(10, 120)
+	list.Size = UDim2.new(1, -20, 1, -194)
+	list.Position = UDim2.fromOffset(10, 148)
 	list.CanvasSize = UDim2.fromOffset(0, 0)
 	list.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	list.ScrollBarThickness = 0
@@ -1049,14 +1072,14 @@ function Sidebar:_build()
 		end)
 
 		btn.MouseLeave:Connect(function()
-			TweenUtil.play(btn, { BackgroundColor3 = Theme.Colors.ButtonFill }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+			local active = self._active == def.Id
+			TweenUtil.play(btn, { BackgroundColor3 = active and Theme.Colors.ButtonFillHover or Theme.Colors.ButtonFill }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
 		end)
 
 		btn.Activated:Connect(function()
 			if not self._expanded then
 				self:setExpanded(true, false)
 			end
-			self:setActive(def.Id)
 			if self._onButtonClick then
 				self._onButtonClick(def.Id)
 			end
@@ -1155,6 +1178,10 @@ end
 
 function Sidebar:setActive(id: string?)
 	self._active = id
+	if self.ActiveLabel then
+		self.ActiveLabel.Text = id and ("OPEN: " .. string.upper(id)) or "OPEN: NONE"
+		self.ActiveLabel.TextColor3 = id and Theme.Colors.AccentPinkDeep or Theme.Colors.TextMuted
+	end
 	for buttonId, state in pairs(self.ButtonStates or {}) do
 		local active = buttonId == id
 		state.Button.BackgroundColor3 = active and Theme.Colors.ButtonFillHover or Theme.Colors.ButtonFill
@@ -2896,16 +2923,20 @@ local PlaceholderWindows = require(script.Parent.PlaceholderWindows)
 local WindowManager = {}
 WindowManager.__index = WindowManager
 
-function WindowManager.new(host: Frame)
+function WindowManager.new(host: Frame, onActiveChanged: ((string?) -> ())?)
 	local self = setmetatable({}, WindowManager)
 	self._host = host
 	self._windows = {}
 	self._active = nil :: string?
+	self._onActiveChanged = onActiveChanged
 
 	local function closer(id: string)
 		return function()
 			if self._active == id then
 				self._active = nil
+				if self._onActiveChanged then
+					self._onActiveChanged(nil)
+				end
 			end
 		end
 	end
@@ -2936,11 +2967,18 @@ function WindowManager:open(id: string)
 	if self._active == id and target:isOpen() then
 		target:setVisible(false, false)
 		self._active = nil
-		return
+		if self._onActiveChanged then
+			self._onActiveChanged(nil)
+		end
+		return self._active
 	end
 
 	target:setVisible(true, false)
 	self._active = id
+	if self._onActiveChanged then
+		self._onActiveChanged(self._active)
+	end
+	return self._active
 end
 
 function WindowManager:closeAll(instant: boolean?)
@@ -2950,6 +2988,9 @@ function WindowManager:closeAll(instant: boolean?)
 		end
 	end
 	self._active = nil
+	if self._onActiveChanged then
+		self._onActiveChanged(nil)
+	end
 end
 
 function WindowManager:getActive(): string?
@@ -3095,7 +3136,10 @@ local okSidebar, sidebarOrError = pcall(function()
 		end
 		local windows = screenGui:FindFirstChild("SoftPhoneWindowManager")
 		if windows and windows:IsA("BindableFunction") then
-			windows:Invoke(id)
+			local activeId = windows:Invoke(id)
+			if sidebar then
+				sidebar:setActive(activeId)
+			end
 		else
 			warn("[SoftPhoneUI] Window manager is not ready yet:", id)
 		end
@@ -3128,11 +3172,15 @@ task.spawn(function()
 		local modules = ReplicatedStorage:WaitForChild("SoftPhoneModules", 10)
 		assert(modules, "ReplicatedStorage.SoftPhoneModules was not found")
 		local WindowManager = require(modules:WaitForChild("WindowManager"))
-		local manager = WindowManager.new(windowHost)
+		local manager = WindowManager.new(windowHost, function(activeId: string?)
+			if sidebar then
+				sidebar:setActive(activeId)
+			end
+		end)
 		local bridge = Instance.new("BindableFunction")
 		bridge.Name = "SoftPhoneWindowManager"
 		bridge.OnInvoke = function(id: string)
-			manager:open(id)
+			return manager:open(id)
 		end
 		bridge.Parent = screenGui
 	end)

@@ -86,7 +86,10 @@ local okSidebar, sidebarOrError = pcall(function()
 		end
 		local windows = screenGui:FindFirstChild("SoftPhoneWindowManager")
 		if windows and windows:IsA("BindableFunction") then
-			windows:Invoke(id)
+			local activeId = windows:Invoke(id)
+			if sidebar then
+				sidebar:setActive(activeId)
+			end
 		else
 			warn("[SoftPhoneUI] Window manager is not ready yet:", id)
 		end
@@ -119,11 +122,15 @@ task.spawn(function()
 		local modules = ReplicatedStorage:WaitForChild("SoftPhoneModules", 10)
 		assert(modules, "ReplicatedStorage.SoftPhoneModules was not found")
 		local WindowManager = require(modules:WaitForChild("WindowManager"))
-		local manager = WindowManager.new(windowHost)
+		local manager = WindowManager.new(windowHost, function(activeId: string?)
+			if sidebar then
+				sidebar:setActive(activeId)
+			end
+		end)
 		local bridge = Instance.new("BindableFunction")
 		bridge.Name = "SoftPhoneWindowManager"
 		bridge.OnInvoke = function(id: string)
-			manager:open(id)
+			return manager:open(id)
 		end
 		bridge.Parent = screenGui
 	end)

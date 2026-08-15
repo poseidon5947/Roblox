@@ -410,12 +410,35 @@ function Sidebar:_build()
 	curLabel.ZIndex = 203
 	curLabel.Parent = currency
 
+	local activePill = Instance.new("Frame")
+	activePill.Name = "ActiveAppPill"
+	activePill.BackgroundColor3 = Color3.fromRGB(255, 246, 252)
+	activePill.BorderSizePixel = 0
+	activePill.Size = UDim2.new(0.88, 0, 0, 24)
+	activePill.Position = UDim2.new(0.06, 0, 0, 116)
+	activePill.ZIndex = 202
+	activePill.Parent = panel
+	addCorner(activePill, 12)
+	addStroke(activePill, Theme.Colors.ButtonStroke, 1, 0.35)
+
+	local activeLabel = Instance.new("TextLabel")
+	activeLabel.Name = "ActiveLabel"
+	activeLabel.BackgroundTransparency = 1
+	activeLabel.Size = UDim2.fromScale(1, 1)
+	activeLabel.Font = Theme.Fonts.Title
+	activeLabel.TextSize = 10
+	activeLabel.TextColor3 = Theme.Colors.TextMuted
+	activeLabel.Text = "OPEN: NONE"
+	activeLabel.ZIndex = 203
+	activeLabel.Parent = activePill
+	self.ActiveLabel = activeLabel
+
 	local list = Instance.new("ScrollingFrame")
 	list.Name = "ButtonList"
 	list.BackgroundTransparency = 1
 	list.BorderSizePixel = 0
-	list.Size = UDim2.new(1, -20, 1, -166)
-	list.Position = UDim2.fromOffset(10, 120)
+	list.Size = UDim2.new(1, -20, 1, -194)
+	list.Position = UDim2.fromOffset(10, 148)
 	list.CanvasSize = UDim2.fromOffset(0, 0)
 	list.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	list.ScrollBarThickness = 0
@@ -475,14 +498,14 @@ function Sidebar:_build()
 		end)
 
 		btn.MouseLeave:Connect(function()
-			TweenUtil.play(btn, { BackgroundColor3 = Theme.Colors.ButtonFill }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+			local active = self._active == def.Id
+			TweenUtil.play(btn, { BackgroundColor3 = active and Theme.Colors.ButtonFillHover or Theme.Colors.ButtonFill }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
 		end)
 
 		btn.Activated:Connect(function()
 			if not self._expanded then
 				self:setExpanded(true, false)
 			end
-			self:setActive(def.Id)
 			if self._onButtonClick then
 				self._onButtonClick(def.Id)
 			end
@@ -581,6 +604,10 @@ end
 
 function Sidebar:setActive(id: string?)
 	self._active = id
+	if self.ActiveLabel then
+		self.ActiveLabel.Text = id and ("OPEN: " .. string.upper(id)) or "OPEN: NONE"
+		self.ActiveLabel.TextColor3 = id and Theme.Colors.AccentPinkDeep or Theme.Colors.TextMuted
+	end
 	for buttonId, state in pairs(self.ButtonStates or {}) do
 		local active = buttonId == id
 		state.Button.BackgroundColor3 = active and Theme.Colors.ButtonFillHover or Theme.Colors.ButtonFill

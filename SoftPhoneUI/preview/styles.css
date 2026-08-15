@@ -262,7 +262,8 @@ body {
 
 .title-pill,
 .currency,
-.level {
+.level,
+.active-app {
   border-radius: 999px;
   text-align: center;
   font-weight: 800;
@@ -285,6 +286,19 @@ body {
   box-shadow: inset 0 0 0 1.5px rgba(255, 96, 181, 0.55);
 }
 
+.active-app {
+  background: #fff6fc;
+  border: 1px solid #ff97cb;
+  color: var(--muted);
+  font-size: 10px;
+  padding: 6px;
+  margin-top: 8px;
+}
+
+.active-app.has-window {
+  color: var(--pink-deep);
+}
+
 .level {
   margin-top: auto;
   color: var(--text);
@@ -295,7 +309,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin: 12px 0;
+  margin: 8px 0 12px;
   overflow: auto;
   flex: 1;
 }

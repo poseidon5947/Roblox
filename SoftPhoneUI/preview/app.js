@@ -54,6 +54,7 @@ const gem = document.getElementById("gem");
 const nav = document.getElementById("navButtons");
 const host = document.getElementById("windowHost");
 const stage = document.getElementById("stage");
+const activeApp = document.getElementById("activeApp");
 
 let expanded = false;
 let activeWindow = null;
@@ -209,6 +210,8 @@ function openWindow(id) {
   document.querySelectorAll(".nav-btn").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.id === id);
   });
+  activeApp.textContent = `OPEN: ${id.toUpperCase()}`;
+  activeApp.classList.add("has-window");
   activeWindow = id;
 }
 
@@ -219,6 +222,8 @@ function closeWindow(id) {
   if (activeWindow === id) {
     activeWindow = null;
     document.querySelectorAll(".nav-btn").forEach((btn) => btn.classList.remove("active"));
+    activeApp.textContent = "OPEN: NONE";
+    activeApp.classList.remove("has-window");
   }
 }
 
