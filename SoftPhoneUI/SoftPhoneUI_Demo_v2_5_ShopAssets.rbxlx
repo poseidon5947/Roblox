@@ -2056,7 +2056,7 @@ end
 function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 	local handle = WindowChrome.create(parent, "Shop", "shop", onClose)
 	local content = handle.Content
-	local footer = handle.Root:FindFirstChild("Footer") :: Frame
+	local footer = handle.Footer
 
 	local itemGrid = Instance.new("ScrollingFrame")
 	itemGrid.Name = "ItemGrid"
@@ -2273,6 +2273,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 			state.Stroke.Thickness = selected and 2.25 or 1.5
 			state.Stroke.Transparency = selected and 0 or 0.4
 			state.Tag.BackgroundColor3 = selected and Theme.Colors.ButtonFillHover or Color3.fromRGB(255, 231, 247)
+			state.SelectedBadge.Visible = selected
 		end
 	end
 
@@ -2353,11 +2354,27 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		tag.Parent = slot
 		corner(tag, 8)
 
+		local selectedBadge = Instance.new("TextLabel")
+		selectedBadge.Name = "SelectedBadge"
+		selectedBadge.BackgroundColor3 = Theme.Colors.AccentPinkDeep
+		selectedBadge.BorderSizePixel = 0
+		selectedBadge.Position = UDim2.new(1, -72, 0, 8)
+		selectedBadge.Size = UDim2.fromOffset(62, 17)
+		selectedBadge.Font = Theme.Fonts.Title
+		selectedBadge.TextSize = 8
+		selectedBadge.TextColor3 = Color3.fromRGB(255, 255, 255)
+		selectedBadge.Text = "SELECTED"
+		selectedBadge.Visible = false
+		selectedBadge.ZIndex = 46
+		selectedBadge.Parent = slot
+		corner(selectedBadge, 8)
+
 		table.insert(slotStates, {
 			Item = item,
 			Button = slot,
 			Stroke = ss,
 			Tag = tag,
+			SelectedBadge = selectedBadge,
 		})
 
 		slot.Activated:Connect(function()
@@ -2377,6 +2394,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 				state.Stroke.Thickness = 1.5
 				state.Stroke.Transparency = 0.4
 				state.Tag.BackgroundColor3 = Color3.fromRGB(255, 231, 247)
+				state.SelectedBadge.Visible = false
 			end
 			for _, child in ipairs(detailArt:GetChildren()) do
 				if child:IsA("GuiObject") then

@@ -147,6 +147,7 @@ function buildShop() {
       <div class="swatch" style="background:${item.color}"></div>
       <div class="name">${item.name}</div>
       <div class="price">GEMS ${item.price}</div>
+      <div class="selected-badge">SELECTED</div>
     `;
     el.addEventListener("click", () => {
       grid.querySelectorAll(".item").forEach((slot) => slot.classList.remove("selected-item"));

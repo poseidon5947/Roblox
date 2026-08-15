@@ -537,6 +537,7 @@ body {
   padding: 8px;
   cursor: pointer;
   text-align: left;
+  position: relative;
 }
 
 .item:hover { border-color: var(--pink-deep); }
@@ -555,6 +556,21 @@ body {
 
 .item .name { font-size: 11px; font-weight: 800; }
 .item .price { font-size: 11px; color: var(--pink-deep); font-weight: 800; }
+
+.selected-badge {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  display: none;
+  border-radius: 999px;
+  background: var(--pink-deep);
+  color: #fff;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 4px 8px;
+}
+
+.item.selected-item .selected-badge { display: block; }
 
 .stage-tryon {
   border-radius: 8px;
