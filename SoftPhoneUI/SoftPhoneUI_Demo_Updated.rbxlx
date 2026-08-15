@@ -2116,11 +2116,34 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 	stageGrad.Rotation = 90
 	stageGrad.Parent = stage
 
+	local previewStatus = Instance.new("Frame")
+	previewStatus.Name = "PreviewStatus"
+	previewStatus.BackgroundColor3 = Theme.Colors.ButtonFill
+	previewStatus.BorderSizePixel = 0
+	previewStatus.AnchorPoint = Vector2.new(0.5, 0)
+	previewStatus.Position = UDim2.new(0.5, 0, 0, 10)
+	previewStatus.Size = UDim2.fromOffset(118, 24)
+	previewStatus.ZIndex = 46
+	previewStatus.Parent = stage
+	corner(previewStatus, 12)
+	stroke(previewStatus, Theme.Colors.ButtonStroke, 1, 0.22)
+
+	local previewStatusText = Instance.new("TextLabel")
+	previewStatusText.Name = "Text"
+	previewStatusText.BackgroundTransparency = 1
+	previewStatusText.Size = UDim2.fromScale(1, 1)
+	previewStatusText.Font = Theme.Fonts.Title
+	previewStatusText.TextSize = 10
+	previewStatusText.TextColor3 = Theme.Colors.AccentPinkDeep
+	previewStatusText.Text = "PREVIEW MODE"
+	previewStatusText.ZIndex = 47
+	previewStatusText.Parent = previewStatus
+
 	local viewport = Instance.new("ViewportFrame")
 	viewport.Name = "AvatarViewport"
 	viewport.BackgroundTransparency = 1
-	viewport.Size = UDim2.new(1, -12, 1, -48)
-	viewport.Position = UDim2.fromOffset(6, 8)
+	viewport.Size = UDim2.new(1, -12, 1, -72)
+	viewport.Position = UDim2.fromOffset(6, 34)
 	viewport.Ambient = Color3.fromRGB(255, 220, 244)
 	viewport.LightColor = Color3.fromRGB(255, 255, 255)
 	viewport.LightDirection = Vector3.new(-0.5, -1, -0.25)
@@ -2261,6 +2284,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 	local function selectItem(item)
 		selectedItem = item
 		caption.Text = "Trying: " .. item.Name
+		previewStatusText.Text = string.upper(item.Tag) .. " PREVIEW"
 		detailTitle.Text = item.Name
 		detailPrice.Text = "GEMS " .. tostring(item.Price)
 		detailNote.Text = item.Tag .. " ITEM\n\nSelected for preview. Add catalog IDs to enable live avatar fitting."
@@ -2386,6 +2410,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 	if footer then
 		WindowChrome.addFooterButton(footer, "Reset Look", 1, function()
 			selectedItem = nil
+			previewStatusText.Text = "PREVIEW MODE"
 			detailTitle.Text = "Select an item"
 			detailPrice.Text = "GEMS --"
 			detailNote.Text = "Tap an item to preview it here. Full avatar try-on is ready for catalog asset IDs."
@@ -2407,6 +2432,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		WindowChrome.addFooterButton(footer, "Refresh", 2, refreshAvatar)
 		WindowChrome.addFooterButton(footer, "Apply Preview", 3, function()
 			caption.Text = selectedItem and ("Previewing: " .. selectedItem.Name) or "Pick an item first"
+			previewStatusText.Text = selectedItem and "LOOK APPLIED" or "PICK ITEM"
 		end)
 	end
 

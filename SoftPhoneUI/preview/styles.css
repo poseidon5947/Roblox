@@ -583,6 +583,23 @@ body {
   justify-content: center;
   gap: 10px;
   position: relative;
+  padding-top: 34px;
+}
+
+.preview-status {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 118px;
+  border: 1px solid #ff97cb;
+  border-radius: 999px;
+  background: var(--pink);
+  color: var(--pink-deep);
+  font-size: 10px;
+  font-weight: 800;
+  text-align: center;
+  padding: 5px 10px;
 }
 
 .preview-avatar {

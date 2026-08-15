@@ -127,6 +127,7 @@ function buildShop() {
   const stageTry = document.createElement("div");
   stageTry.className = "stage-tryon";
   stageTry.innerHTML = `
+    <div class="preview-status" id="previewStatus">PREVIEW MODE</div>
     <div class="preview-avatar" id="previewAvatar"></div>
     <div class="tryon-caption" id="tryonCaption">Your look - pick an item</div>
   `;
@@ -153,6 +154,7 @@ function buildShop() {
       grid.querySelectorAll(".item").forEach((slot) => slot.classList.remove("selected-item"));
       el.classList.add("selected-item");
       document.getElementById("tryonCaption").textContent = `Trying: ${item.name}`;
+      document.getElementById("previewStatus").textContent = "ITEM PREVIEW";
       document.getElementById("previewAvatar").style.filter = `hue-rotate(${(item.price * 2) % 120}deg)`;
       document.getElementById("selectedName").textContent = item.name;
       document.getElementById("selectedPrice").textContent = `GEMS ${item.price}`;
@@ -164,13 +166,24 @@ function buildShop() {
   body.append(grid, stageTry, selected);
   makeChrome("Shop", "shop.exe", body, ["Reset Look", "Refresh", "Apply Preview"]);
 
-  body.parentElement.parentElement.querySelector(".footer").firstChild.addEventListener("click", () => {
+  const shopWindow = body.parentElement.parentElement;
+  const footerButtons = shopWindow.querySelectorAll(".footer button");
+
+  footerButtons[0].addEventListener("click", () => {
     grid.querySelectorAll(".item").forEach((slot) => slot.classList.remove("selected-item"));
     document.getElementById("tryonCaption").textContent = "Your look - pick an item";
+    document.getElementById("previewStatus").textContent = "PREVIEW MODE";
     document.getElementById("previewAvatar").style.filter = "";
     document.getElementById("selectedName").textContent = "Select an item";
     document.getElementById("selectedPrice").textContent = "GEMS --";
     document.getElementById("selectedNote").textContent = "Tap an item to preview it here. Full avatar try-on is ready for catalog asset IDs.";
+  });
+
+  footerButtons[2].addEventListener("click", () => {
+    const name = document.getElementById("selectedName").textContent;
+    const hasSelection = name && name !== "Select an item";
+    document.getElementById("tryonCaption").textContent = hasSelection ? `Previewing: ${name}` : "Pick an item first";
+    document.getElementById("previewStatus").textContent = hasSelection ? "LOOK APPLIED" : "PICK ITEM";
   });
 }
 
