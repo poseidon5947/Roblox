@@ -28,6 +28,8 @@ const OUT_PLACE_UICOMPLETE = join(ROOT, "SoftPhoneUI_Demo_v2_8_UIComplete.rbxlx"
 const OUT_MODEL_UICOMPLETE = join(ROOT, "SoftPhoneUI_Package_v2_8_UIComplete.rbxmx");
 const OUT_PLACE_SHOP_UX = join(ROOT, "SoftPhoneUI_Demo_v2_9_ShopUX.rbxlx");
 const OUT_MODEL_SHOP_UX = join(ROOT, "SoftPhoneUI_Package_v2_9_ShopUX.rbxmx");
+const OUT_PLACE_FIXED = join(ROOT, "SoftPhoneUI_Demo_v2_10_WindowFix.rbxlx");
+const OUT_MODEL_FIXED = join(ROOT, "SoftPhoneUI_Package_v2_10_WindowFix.rbxmx");
 
 const MODULE_FILES = [
   "Theme.lua",
@@ -258,6 +260,8 @@ writeFileSync(OUT_PLACE_UICOMPLETE, placeXml, "utf8");
 writeFileSync(OUT_MODEL_UICOMPLETE, modelXml, "utf8");
 writeFileSync(OUT_PLACE_SHOP_UX, placeXml, "utf8");
 writeFileSync(OUT_MODEL_SHOP_UX, modelXml, "utf8");
+writeFileSync(OUT_PLACE_FIXED, placeXml, "utf8");
+writeFileSync(OUT_MODEL_FIXED, modelXml, "utf8");
 console.log(`Wrote ${OUT_PLACE}`);
 console.log(`Wrote ${OUT_MODEL}`);
 console.log(`Wrote ${OUT_PLACE_UPDATED}`);
@@ -280,3 +284,5 @@ console.log(`Wrote ${OUT_PLACE_UICOMPLETE}`);
 console.log(`Wrote ${OUT_MODEL_UICOMPLETE}`);
 console.log(`Wrote ${OUT_PLACE_SHOP_UX}`);
 console.log(`Wrote ${OUT_MODEL_SHOP_UX}`);
+console.log(`Wrote ${OUT_PLACE_FIXED}`);
+console.log(`Wrote ${OUT_MODEL_FIXED}`);

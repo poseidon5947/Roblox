@@ -11,6 +11,7 @@ White futuristic flip-phone sidebar and six `.exe`-style feature windows for Rob
 | `SoftPhoneUI_Demo_v2_7_DressUp.rbxlx` | Previous sample-geometry dress-up experiment. |
 | `SoftPhoneUI_Demo_v2_8_UIComplete.rbxlx` | Previous UI-complete demo; exact 3D wearables can be connected later. |
 | `SoftPhoneUI_Demo_v2_9_ShopUX.rbxlx` | Latest demo with searchable, filterable shop browsing. |
+| `SoftPhoneUI_Demo_v2_10_WindowFix.rbxlx` | Latest fixed demo with working feature windows. |
 | `SoftPhoneUI_Package.rbxmx` | Insertable model package with modules and ScreenGui. |
 | `src/` | Rojo-style source tree. |
 | `assets/icons/*.svg` | Editable vector icon sources. |
@@ -32,7 +33,7 @@ White futuristic flip-phone sidebar and six `.exe`-style feature windows for Rob
 
 ## Studio Install
 
-1. Insert the latest `SoftPhoneUI_Package_v2_9_ShopUX.rbxmx` into your existing place.
+1. Insert the latest `SoftPhoneUI_Package_v2_10_WindowFix.rbxmx` into your existing place.
 2. Move `SoftPhoneModules` into `ReplicatedStorage`.
 3. Move `SoftPhoneUI` into `StarterGui`.
 4. Delete the wrapper `SoftPhonePackage` folder.

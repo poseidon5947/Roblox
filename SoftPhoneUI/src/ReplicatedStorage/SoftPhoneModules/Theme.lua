@@ -6,7 +6,7 @@
 local Theme = {}
 
 Theme.Side = "Right"
-Theme.Version = "2.9"
+Theme.Version = "2.10"
 Theme.EnableSample3DTryOn = false
 
 Theme.Colors = {

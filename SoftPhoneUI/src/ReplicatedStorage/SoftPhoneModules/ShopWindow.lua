@@ -737,7 +737,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 
 		slot.Activated:Connect(function()
 			selectItem(item)
-		end
+		end)
 	end
 	updateFilters()
 
