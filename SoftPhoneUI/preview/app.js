@@ -8,12 +8,12 @@ const BUTTONS = [
 ];
 
 const ITEMS = [
-  { key: "pixel_bow_jacket", name: "Pixel Bow Jacket", price: 120, tag: "NEW", image: "../assets/generated/shop_items/pixel_bow_jacket.png" },
-  { key: "starline_skirt", name: "Starline Skirt", price: 90, tag: "RARE", image: "../assets/generated/shop_items/starline_skirt.png" },
-  { key: "bubble_boots", name: "Bubble Boots", price: 150, tag: "TRENDING", image: "../assets/generated/shop_items/bubble_boots.png" },
-  { key: "ribbon_satchel", name: "Ribbon Satchel", price: 75, tag: "CUTE", image: "../assets/generated/shop_items/ribbon_satchel.png" },
-  { key: "mint_sleeve_set", name: "Mint Sleeve Set", price: 40, tag: "SET", image: "../assets/generated/shop_items/mint_sleeve_set.png" },
-  { key: "glow_hairclip", name: "Glow Hairclip", price: 55, tag: "LIMITED", image: "../assets/generated/shop_items/glow_hairclip.png" },
+  { key: "pixel_bow_jacket", name: "Pixel Bow Jacket", price: 120, tag: "NEW", category: "clothes", image: "../assets/generated/shop_items/pixel_bow_jacket.png" },
+  { key: "starline_skirt", name: "Starline Skirt", price: 90, tag: "RARE", category: "clothes", image: "../assets/generated/shop_items/starline_skirt.png" },
+  { key: "bubble_boots", name: "Bubble Boots", price: 150, tag: "TRENDING", category: "clothes", image: "../assets/generated/shop_items/bubble_boots.png" },
+  { key: "ribbon_satchel", name: "Ribbon Satchel", price: 75, tag: "CUTE", category: "accessories", image: "../assets/generated/shop_items/ribbon_satchel.png" },
+  { key: "mint_sleeve_set", name: "Mint Sleeve Set", price: 40, tag: "SET", category: "clothes", image: "../assets/generated/shop_items/mint_sleeve_set.png" },
+  { key: "glow_hairclip", name: "Glow Hairclip", price: 55, tag: "LIMITED", category: "accessories", image: "../assets/generated/shop_items/glow_hairclip.png" },
 ];
 
 const SHELLS = {
@@ -28,6 +28,7 @@ const SHELLS = {
     body: "Pastel halos, ribbon trails, and one limited aura.",
     reward: "150 GEMS",
     action: "Preview Pool",
+    actionDone: "POOL READY",
     cards: [["Daily Wish", "Use one free pull", "READY", 100], ["Star Collector", "Collect 3 capsule stars", "2 / 3", 66]],
     footer: ["Pull x1", "Pull x10", "History"],
   },
@@ -42,6 +43,7 @@ const SHELLS = {
     body: "Shopping, gacha kiosks, and the evening fountain show.",
     reward: "240m AWAY",
     action: "Set Route",
+    actionDone: "ROUTE SET",
     cards: [["Cafe Lumi", "New seasonal menu", "OPEN", 80], ["Job Hub", "Two bonus shifts", "+20%", 55]],
     footer: ["Zoom", "Pins", "Home"],
   },
@@ -56,6 +58,7 @@ const SHELLS = {
     body: "The fountain event begins tonight. Bring a friend for a bonus.",
     reward: "2m AGO",
     action: "Open Message",
+    actionDone: "OPENED",
     cards: [["Mika", "Meet me by the boutique!", "NEW", 92], ["Furu System", "Daily reward delivered", "READ", 100]],
     footer: ["Compose", "Inbox", "Clear"],
   },
@@ -70,6 +73,7 @@ const SHELLS = {
     body: "The fastest route to shops, events, and daily rewards.",
     reward: "INSTANT",
     action: "Teleport",
+    actionDone: "DESTINATION SET",
     cards: [["Fashion Mall", "Boutiques and salon", "ONLINE", 100], ["Job Hub", "Careers and shifts", "ONLINE", 100]],
     footer: ["Plaza", "Mall", "Job Hub"],
   },
@@ -84,6 +88,7 @@ const SHELLS = {
     body: "Organize documents, assist staff, and complete daily tasks.",
     reward: "150 GEMS",
     action: "Start Job",
+    actionDone: "SHIFT READY",
     cards: [["File Documents", "Complete ten files", "6 / 10", 60], ["Morning Delivery", "Deliver three orders", "1 / 3", 33]],
     footer: ["Apply", "Shifts", "Pay"],
   },
@@ -159,6 +164,15 @@ function makeChrome(id, titleText, bodyEl, footerLabels) {
     footer.appendChild(b);
   });
   win.querySelector(".close").addEventListener("click", () => closeWindow(id));
+  win.querySelector(".min").addEventListener("click", () => {
+    if (id !== "Gacha") win.classList.toggle("minimized");
+  });
+  win.querySelector(".max").addEventListener("click", () => {
+    if (id !== "Gacha") {
+      win.classList.remove("minimized");
+      win.classList.toggle("maximized");
+    }
+  });
   host.appendChild(win);
   windows[id] = win;
 }
@@ -167,8 +181,23 @@ function buildShop() {
   const body = document.createElement("div");
   body.className = "shop-layout";
 
+  const toolbar = document.createElement("div");
+  toolbar.className = "shop-toolbar";
+  toolbar.innerHTML = `
+    <input class="shop-search" type="search" placeholder="Search items" aria-label="Search shop items" />
+    <div class="shop-filters">
+      <button type="button" class="active" data-category="all">ALL</button>
+      <button type="button" data-category="clothes">CLOTHES</button>
+      <button type="button" data-category="accessories">ACCESS.</button>
+    </div>
+  `;
+
   const grid = document.createElement("div");
   grid.className = "item-grid";
+
+  const empty = document.createElement("div");
+  empty.className = "empty-results";
+  empty.textContent = "No matching items";
 
   const stageTry = document.createElement("div");
   stageTry.className = "stage-tryon";
@@ -190,13 +219,15 @@ function buildShop() {
   selected.innerHTML = `
     <h3 id="selectedName">Select an item</h3>
     <p id="selectedPrice">GEMS --</p>
-    <p id="selectedNote">Tap an item to preview its sample 3D style on your avatar.</p>
+    <p id="selectedNote">Select an item here. Connect its wearable asset ID later for an exact 3D fit.</p>
   `;
 
   ITEMS.forEach((item) => {
     const el = document.createElement("button");
     el.type = "button";
     el.className = "item";
+    el.dataset.category = item.category;
+    el.dataset.search = `${item.name} ${item.tag}`.toLowerCase();
     el.innerHTML = `
       <div class="swatch" style="background-image:url('${item.image}')"></div>
       <div class="name">${item.name}</div>
@@ -207,18 +238,42 @@ function buildShop() {
     el.addEventListener("click", () => {
       grid.querySelectorAll(".item").forEach((slot) => slot.classList.remove("selected-item"));
       el.classList.add("selected-item");
-      document.getElementById("tryonCaption").textContent = `Trying: ${item.name}`;
-      document.getElementById("previewStatus").textContent = `${item.tag} PREVIEW`;
-      document.getElementById("previewAvatar").dataset.item = item.key;
+      document.getElementById("tryonCaption").textContent = `Selected: ${item.name}`;
+      document.getElementById("previewStatus").textContent = "2D ITEM PREVIEW";
+      document.getElementById("previewAvatar").dataset.item = "";
       document.getElementById("selectedName").textContent = item.name;
       document.getElementById("selectedPrice").textContent = `GEMS ${item.price}`;
-      document.getElementById("selectedNote").textContent = "Sample 3D try-on active. Add a catalog ID later for the final wearable asset.";
+      document.getElementById("selectedNote").textContent = "Product selected. Connect its wearable asset ID to enable an exact 3D fit.";
     });
     grid.appendChild(el);
   });
 
-  body.append(grid, stageTry, selected);
-  makeChrome("Shop", "shop.exe", body, ["Reset Look", "Rotate", "Apply Preview"]);
+  grid.appendChild(empty);
+
+  let activeCategory = "all";
+  const updateFilters = () => {
+    const query = toolbar.querySelector(".shop-search").value.trim().toLowerCase();
+    let visible = 0;
+    grid.querySelectorAll(".item").forEach((item) => {
+      const matchesCategory = activeCategory === "all" || item.dataset.category === activeCategory;
+      const matchesSearch = !query || item.dataset.search.includes(query);
+      item.hidden = !(matchesCategory && matchesSearch);
+      if (!item.hidden) visible += 1;
+    });
+    empty.classList.toggle("show", visible === 0);
+  };
+
+  toolbar.querySelector(".shop-search").addEventListener("input", updateFilters);
+  toolbar.querySelectorAll(".shop-filters button").forEach((button) => {
+    button.addEventListener("click", () => {
+      activeCategory = button.dataset.category;
+      toolbar.querySelectorAll(".shop-filters button").forEach((item) => item.classList.toggle("active", item === button));
+      updateFilters();
+    });
+  });
+
+  body.append(toolbar, grid, stageTry, selected);
+  makeChrome("Shop", "shop.exe", body, ["Reset Look", "Rotate", "Save Selection"]);
 
   const shopWindow = body.parentElement.parentElement;
   const footerButtons = shopWindow.querySelectorAll(".footer button");
@@ -233,7 +288,7 @@ function buildShop() {
     document.getElementById("previewAvatar").style.transform = "rotateY(0deg)";
     document.getElementById("selectedName").textContent = "Select an item";
     document.getElementById("selectedPrice").textContent = "GEMS --";
-    document.getElementById("selectedNote").textContent = "Tap an item to preview its sample 3D style on your avatar.";
+    document.getElementById("selectedNote").textContent = "Select an item here. Connect its wearable asset ID later for an exact 3D fit.";
   });
 
   footerButtons[1].addEventListener("click", () => {
@@ -244,8 +299,8 @@ function buildShop() {
   footerButtons[2].addEventListener("click", () => {
     const name = document.getElementById("selectedName").textContent;
     const hasSelection = name && name !== "Select an item";
-    document.getElementById("tryonCaption").textContent = hasSelection ? `Preview locked: ${name}` : "Pick an item first";
-    document.getElementById("previewStatus").textContent = hasSelection ? "PREVIEW LOCKED" : "PICK ITEM";
+    document.getElementById("tryonCaption").textContent = hasSelection ? `Saved: ${name}` : "Pick an item first";
+    document.getElementById("previewStatus").textContent = hasSelection ? "SELECTION SAVED" : "PICK ITEM";
   });
 
   grid.querySelector(".item")?.click();
@@ -275,7 +330,7 @@ function buildShells() {
     const action = body.querySelector(".primary-action");
     action.addEventListener("click", () => {
       const original = spec.action;
-      action.textContent = "SELECTED";
+      action.textContent = spec.actionDone || "DONE";
       window.setTimeout(() => { action.textContent = original; }, 1000);
     });
     makeChrome(id, spec.title, body, spec.footer);
@@ -296,6 +351,9 @@ function openWindow(id) {
   });
   activeApp.textContent = `OPEN: ${id.toUpperCase()}`;
   activeApp.classList.add("has-window");
+  if (id === "Messages") {
+    document.querySelector('.nav-btn[data-id="Messages"] .notice-badge')?.remove();
+  }
   activeWindow = id;
 }
 

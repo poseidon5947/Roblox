@@ -23,7 +23,8 @@ local SPECS = {
 		Featured = "Celestial Ribbon",
 		Description = "Pastel halos, ribbon trails, and one limited aura.",
 		Reward = "150 GEMS",
-		Action = "Preview Pool",
+			Action = "Preview Pool",
+			ActionDone = "POOL READY",
 		Tasks = {
 			{ "Daily Wish", "Use one free pull", "READY", 1 },
 			{ "Star Collector", "Collect 3 capsule stars", "2 / 3", 0.66 },
@@ -43,7 +44,8 @@ local SPECS = {
 		Featured = "Moonlight Plaza",
 		Description = "Shopping, gacha kiosks, and the evening fountain show.",
 		Reward = "240m AWAY",
-		Action = "Set Route",
+			Action = "Set Route",
+			ActionDone = "ROUTE SET",
 		Tasks = {
 			{ "Cafe Lumi", "New seasonal menu", "OPEN", 0.8 },
 			{ "Job Hub", "Two bonus shifts", "+20%", 0.55 },
@@ -63,7 +65,8 @@ local SPECS = {
 		Featured = "Welcome to Moonlight Plaza",
 		Description = "The fountain event begins tonight. Bring a friend for a bonus.",
 		Reward = "2m AGO",
-		Action = "Open Message",
+			Action = "Open Message",
+			ActionDone = "OPENED",
 		Tasks = {
 			{ "Mika", "Meet me by the boutique!", "NEW", 0.92 },
 			{ "Furu System", "Daily reward delivered", "READ", 1 },
@@ -83,7 +86,8 @@ local SPECS = {
 		Featured = "Furu Central Plaza",
 		Description = "The fastest route to shops, events, and daily rewards.",
 		Reward = "INSTANT",
-		Action = "Teleport",
+			Action = "Teleport",
+			ActionDone = "DESTINATION SET",
 		Tasks = {
 			{ "Fashion Mall", "Boutiques and salon", "ONLINE", 1 },
 			{ "Job Hub", "Careers and shifts", "ONLINE", 1 },
@@ -103,7 +107,8 @@ local SPECS = {
 		Featured = "Office Assistant",
 		Description = "Organize documents, assist staff, and complete daily tasks.",
 		Reward = "150 GEMS",
-		Action = "Start Job",
+			Action = "Start Job",
+			ActionDone = "SHIFT READY",
 		Tasks = {
 			{ "File Documents", "Complete ten files", "6 / 10", 0.6 },
 			{ "Morning Delivery", "Deliver three orders", "1 / 3", 0.33 },
@@ -371,7 +376,7 @@ local function paintDashboard(content: Frame, spec)
 	corner(action, 7)
 	stroke(action, Theme.Colors.ButtonStroke, 1, 0.18)
 	action.Activated:Connect(function()
-		action.Text = "SELECTED"
+		action.Text = spec.ActionDone or "DONE"
 		task.delay(1.1, function()
 			if action.Parent then
 				action.Text = spec.Action

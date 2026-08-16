@@ -443,7 +443,7 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	menuLabel.Position = UDim2.fromOffset(22, 0)
 	menuLabel.Size = UDim2.new(1, -138, 1, 0)
 
-	local buildLabel = makeText(menuBar, "Build", "FURU OS " .. (Theme.Version or "2.6"), Theme.Fonts.Title, 9, Theme.Colors.AccentPinkDeep, 43)
+	local buildLabel = makeText(menuBar, "Build", "FURU OS " .. (Theme.Version or "2.8"), Theme.Fonts.Title, 9, Theme.Colors.AccentPinkDeep, 43)
 	buildLabel.AnchorPoint = Vector2.new(1, 0)
 	buildLabel.Position = UDim2.new(1, -14, 0, 0)
 	buildLabel.Size = UDim2.fromOffset(100, 28)
@@ -527,8 +527,8 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 		content.Visible = not minimized
 		menuBar.Visible = not minimized
 		footer.Visible = not minimized
-		sizeConstraint.MinSize = minimized and Vector2.new(300, 48) or Vector2.new(300, 300)
-		local targetSize = minimized and UDim2.new(normalSize.X.Scale, normalSize.X.Offset, 0, 48) or normalSize
+		sizeConstraint.MinSize = minimized and Vector2.new(300, 56) or Vector2.new(300, 300)
+		local targetSize = minimized and UDim2.new(normalSize.X.Scale, normalSize.X.Offset, 0, 56) or normalSize
 		TweenUtil.play(root, { Size = targetSize }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
 	end
 
@@ -608,7 +608,7 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	local startPosition = root.Position
 
 	titleBar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		if not fullScreen and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
 			dragging = true
 			dragStart = input.Position
 			startPosition = root.Position
@@ -622,7 +622,19 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	UserInputService.InputChanged:Connect(function(input)
 		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 			local delta = input.Position - dragStart
-			root.Position = UDim2.new(startPosition.X.Scale, startPosition.X.Offset + delta.X, startPosition.Y.Scale, startPosition.Y.Offset + delta.Y)
+			local parentSize = root.Parent.AbsoluteSize
+			local targetX = startPosition.X.Scale * parentSize.X + startPosition.X.Offset + delta.X
+			local targetY = startPosition.Y.Scale * parentSize.Y + startPosition.Y.Offset + delta.Y
+			local halfWidth = math.min(root.AbsoluteSize.X * 0.5, math.max(0, parentSize.X * 0.5 - 8))
+			local halfHeight = math.min(root.AbsoluteSize.Y * 0.5, math.max(0, parentSize.Y * 0.5 - 8))
+			local minX = halfWidth + 8
+			local minY = halfHeight + 8
+			local maxX = math.max(minX, parentSize.X - halfWidth - 8)
+			local maxY = math.max(minY, parentSize.Y - halfHeight - 8)
+			root.Position = UDim2.fromOffset(
+				math.clamp(targetX, minX, maxX),
+				math.clamp(targetY, minY, maxY)
+			)
 		end
 	end)
 

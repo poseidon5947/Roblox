@@ -10,12 +10,12 @@ local WindowChrome = require(script.Parent.WindowChrome)
 local ShopWindow = {}
 
 local SAMPLE_ITEMS = {
-	{ Key = "pixel_bow_jacket", Name = "Pixel Bow Jacket", Price = 120, Color = Theme.Colors.AccentPink, Tag = "NEW" },
-	{ Key = "starline_skirt", Name = "Starline Skirt", Price = 90, Color = Theme.Colors.AccentLavender, Tag = "RARE" },
-	{ Key = "bubble_boots", Name = "Bubble Boots", Price = 150, Color = Theme.Colors.AccentBlue, Tag = "TRENDING" },
-	{ Key = "ribbon_satchel", Name = "Ribbon Satchel", Price = 75, Color = Theme.Colors.AccentPinkDeep, Tag = "CUTE" },
-	{ Key = "mint_sleeve_set", Name = "Mint Sleeve Set", Price = 40, Color = Theme.Colors.AccentMint, Tag = "SET" },
-	{ Key = "glow_hairclip", Name = "Glow Hairclip", Price = 55, Color = Theme.Colors.AccentLavender, Tag = "LIMITED" },
+	{ Key = "pixel_bow_jacket", Name = "Pixel Bow Jacket", Price = 120, Color = Theme.Colors.AccentPink, Tag = "NEW", Category = "CLOTHES" },
+	{ Key = "starline_skirt", Name = "Starline Skirt", Price = 90, Color = Theme.Colors.AccentLavender, Tag = "RARE", Category = "CLOTHES" },
+	{ Key = "bubble_boots", Name = "Bubble Boots", Price = 150, Color = Theme.Colors.AccentBlue, Tag = "TRENDING", Category = "CLOTHES" },
+	{ Key = "ribbon_satchel", Name = "Ribbon Satchel", Price = 75, Color = Theme.Colors.AccentPinkDeep, Tag = "CUTE", Category = "ACCESSORIES" },
+	{ Key = "mint_sleeve_set", Name = "Mint Sleeve Set", Price = 40, Color = Theme.Colors.AccentMint, Tag = "SET", Category = "CLOTHES" },
+	{ Key = "glow_hairclip", Name = "Glow Hairclip", Price = 55, Color = Theme.Colors.AccentLavender, Tag = "LIMITED", Category = "ACCESSORIES" },
 }
 
 local function corner(parent: Instance, radius: number)
@@ -256,13 +256,78 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 	local content = handle.Content
 	local footer = handle.Footer
 
+	local toolbar = Instance.new("Frame")
+	toolbar.Name = "ShopToolbar"
+	toolbar.BackgroundTransparency = 1
+	toolbar.Position = UDim2.fromOffset(6, 4)
+	toolbar.Size = UDim2.new(0.34, -8, 0, 64)
+	toolbar.ZIndex = 44
+	toolbar.Parent = content
+
+	local searchBox = Instance.new("TextBox")
+	searchBox.Name = "SearchBox"
+	searchBox.BackgroundColor3 = Theme.Colors.AccentCream
+	searchBox.BorderSizePixel = 0
+	searchBox.Size = UDim2.new(1, 0, 0, 30)
+	searchBox.ClearTextOnFocus = false
+	searchBox.Font = Theme.Fonts.Body
+	searchBox.PlaceholderText = "Search items"
+	searchBox.PlaceholderColor3 = Theme.Colors.TextMuted
+	searchBox.Text = ""
+	searchBox.TextColor3 = Theme.Colors.TextPrimary
+	searchBox.TextSize = 11
+	searchBox.TextXAlignment = Enum.TextXAlignment.Left
+	searchBox.ZIndex = 45
+	searchBox.Parent = toolbar
+	corner(searchBox, 8)
+	stroke(searchBox, Theme.Colors.ButtonStroke, 1, 0.35)
+	local searchPadding = Instance.new("UIPadding")
+	searchPadding.PaddingLeft = UDim.new(0, 10)
+	searchPadding.PaddingRight = UDim.new(0, 8)
+	searchPadding.Parent = searchBox
+
+	local categoryBar = Instance.new("Frame")
+	categoryBar.Name = "CategoryBar"
+	categoryBar.BackgroundTransparency = 1
+	categoryBar.Position = UDim2.fromOffset(0, 36)
+	categoryBar.Size = UDim2.new(1, 0, 0, 26)
+	categoryBar.ZIndex = 44
+	categoryBar.Parent = toolbar
+
+	local categoryLayout = Instance.new("UIListLayout")
+	categoryLayout.FillDirection = Enum.FillDirection.Horizontal
+	categoryLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	categoryLayout.Padding = UDim.new(0, 4)
+	categoryLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	categoryLayout.Parent = categoryBar
+
+	local categoryButtons = {}
+	for index, category in ipairs({ "ALL", "CLOTHES", "ACCESSORIES" }) do
+		local button = Instance.new("TextButton")
+		button.Name = category .. "Filter"
+		button.AutoButtonColor = false
+		button.BackgroundColor3 = index == 1 and Theme.Colors.ButtonFillHover or Theme.Colors.AccentCream
+		button.BorderSizePixel = 0
+		button.Size = UDim2.new(0.32, -2, 1, 0)
+		button.LayoutOrder = index
+		button.Font = Theme.Fonts.Title
+		button.Text = category == "ACCESSORIES" and "ACCESS." or category
+		button.TextColor3 = index == 1 and Theme.Colors.TextPrimary or Theme.Colors.AccentPinkDeep
+		button.TextSize = 8
+		button.ZIndex = 45
+		button.Parent = categoryBar
+		corner(button, 7)
+		local buttonStroke = stroke(button, Theme.Colors.ButtonStroke, index == 1 and 1.5 or 1, index == 1 and 0.05 or 0.42)
+		categoryButtons[category] = { Button = button, Stroke = buttonStroke }
+	end
+
 	local itemGrid = Instance.new("ScrollingFrame")
 	itemGrid.Name = "ItemGrid"
 	itemGrid.BackgroundColor3 = Color3.fromRGB(255, 247, 253)
 	itemGrid.BackgroundTransparency = 0
 	itemGrid.BorderSizePixel = 0
-	itemGrid.Size = UDim2.new(0.34, -8, 1, -8)
-	itemGrid.Position = UDim2.fromOffset(6, 4)
+	itemGrid.Size = UDim2.new(0.34, -8, 1, -76)
+	itemGrid.Position = UDim2.fromOffset(6, 72)
 	itemGrid.ScrollBarThickness = 4
 	itemGrid.ScrollBarImageColor3 = Theme.Colors.Scrollbar
 	itemGrid.CanvasSize = UDim2.fromOffset(0, 0)
@@ -291,6 +356,19 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 	gridLayout.Padding = UDim.new(0, 8)
 	gridLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	gridLayout.Parent = itemGrid
+
+	local emptyLabel = Instance.new("TextLabel")
+	emptyLabel.Name = "EmptyResults"
+	emptyLabel.BackgroundTransparency = 1
+	emptyLabel.Size = UDim2.new(1, -4, 0, 56)
+	emptyLabel.LayoutOrder = 100
+	emptyLabel.Font = Theme.Fonts.Body
+	emptyLabel.Text = "No matching items"
+	emptyLabel.TextColor3 = Theme.Colors.TextMuted
+	emptyLabel.TextSize = 11
+	emptyLabel.Visible = false
+	emptyLabel.ZIndex = 44
+	emptyLabel.Parent = itemGrid
 
 	local stage = Instance.new("Frame")
 	stage.Name = "TryOnStage"
@@ -448,7 +526,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 	detailNote.TextXAlignment = Enum.TextXAlignment.Left
 	detailNote.TextYAlignment = Enum.TextYAlignment.Top
 	detailNote.TextColor3 = Theme.Colors.TextMuted
-	detailNote.Text = "Tap an item to preview its sample 3D style on your avatar."
+	detailNote.Text = "Select an item here. Connect its wearable asset ID later for an exact 3D fit."
 	detailNote.ZIndex = 44
 	detailNote.Parent = detail
 
@@ -482,7 +560,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		stripScripts(clone)
 		clone.Name = "PreviewAvatar"
 		clone.Parent = world
-		if selectedItem then
+		if selectedItem and Theme.EnableSample3DTryOn then
 			applySampleTryOn(clone, selectedItem)
 		end
 
@@ -496,16 +574,49 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		end
 
 		setupCamera(viewport, clone)
-		caption.Text = selectedItem and ("Trying: " .. selectedItem.Name) or "Your look - pick an item"
+		caption.Text = selectedItem and ("Selected: " .. selectedItem.Name) or "Your look - pick an item"
+	end
+
+	local activeCategory = "ALL"
+	local function updateFilters()
+		local query = string.lower(searchBox.Text)
+		local visibleCount = 0
+		for _, state in ipairs(slotStates) do
+			local searchable = string.lower(state.Item.Name .. " " .. state.Item.Tag)
+			local matchesSearch = query == "" or string.find(searchable, query, 1, true) ~= nil
+			local matchesCategory = activeCategory == "ALL" or state.Item.Category == activeCategory
+			state.Button.Visible = matchesSearch and matchesCategory
+			if state.Button.Visible then
+				visibleCount += 1
+			end
+		end
+		emptyLabel.Visible = visibleCount == 0
+
+		for category, state in pairs(categoryButtons) do
+			local active = category == activeCategory
+			state.Button.BackgroundColor3 = active and Theme.Colors.ButtonFillHover or Theme.Colors.AccentCream
+			state.Button.TextColor3 = active and Theme.Colors.TextPrimary or Theme.Colors.AccentPinkDeep
+			state.Stroke.Thickness = active and 1.5 or 1
+			state.Stroke.Transparency = active and 0.05 or 0.42
+		end
+	end
+
+	searchBox:GetPropertyChangedSignal("Text"):Connect(updateFilters)
+	for category, state in pairs(categoryButtons) do
+		local selectedCategory = category
+		state.Button.Activated:Connect(function()
+			activeCategory = selectedCategory
+			updateFilters()
+		end)
 	end
 
 	local function selectItem(item)
 		selectedItem = item
-		caption.Text = "Trying: " .. item.Name
-		previewStatusText.Text = string.upper(item.Tag) .. " PREVIEW"
+		caption.Text = "Selected: " .. item.Name
+		previewStatusText.Text = "2D ITEM PREVIEW"
 		detailTitle.Text = item.Name
 		detailPrice.Text = "GEMS " .. tostring(item.Price)
-		detailNote.Text = item.Tag .. " ITEM\n\nSample 3D try-on active. Add a catalog ID later for the final wearable asset."
+		detailNote.Text = item.Tag .. " ITEM\n\nProduct selected. Connect its wearable asset ID to enable an exact 3D fit."
 		renderItemArt(detailArt, item)
 
 		for _, state in ipairs(slotStates) do
@@ -626,18 +737,23 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 
 		slot.Activated:Connect(function()
 			selectItem(item)
-		end)
+		end
 	end
+	updateFilters()
 
 	local function updateResponsiveLayout()
 		local compact = content.AbsoluteSize.X > 0 and content.AbsoluteSize.X < 520
 		detail.Visible = not compact
 		if compact then
-			itemGrid.Size = UDim2.new(0.4, -5, 1, -8)
+			toolbar.Size = UDim2.new(0.4, -5, 0, 64)
+			itemGrid.Position = UDim2.fromOffset(6, 72)
+			itemGrid.Size = UDim2.new(0.4, -5, 1, -76)
 			stage.Position = UDim2.new(0.41, 0, 0, 4)
 			stage.Size = UDim2.new(0.59, -6, 1, -8)
 		else
-			itemGrid.Size = UDim2.new(0.34, -8, 1, -8)
+			toolbar.Size = UDim2.new(0.34, -8, 0, 64)
+			itemGrid.Position = UDim2.fromOffset(6, 72)
+			itemGrid.Size = UDim2.new(0.34, -8, 1, -76)
 			stage.Position = UDim2.new(0.35, 0, 0, 4)
 			stage.Size = UDim2.new(0.38, 0, 1, -8)
 		end
@@ -661,7 +777,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 			previewStatusText.Text = "PREVIEW MODE"
 			detailTitle.Text = "Select an item"
 			detailPrice.Text = "GEMS --"
-			detailNote.Text = "Tap an item to preview its sample 3D style on your avatar."
+			detailNote.Text = "Select an item here. Connect its wearable asset ID later for an exact 3D fit."
 			for _, state in ipairs(slotStates) do
 				state.Button.BackgroundColor3 = Theme.Colors.AccentCream
 				state.Stroke.Color = Theme.Colors.AccentPink
@@ -681,9 +797,9 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 			previewAngle = (previewAngle + 35) % 360
 			refreshAvatar()
 		end)
-		WindowChrome.addFooterButton(footer, "Apply Preview", 3, function()
-			caption.Text = selectedItem and ("Preview locked: " .. selectedItem.Name) or "Pick an item first"
-			previewStatusText.Text = selectedItem and "PREVIEW LOCKED" or "PICK ITEM"
+		WindowChrome.addFooterButton(footer, "Save Selection", 3, function()
+			caption.Text = selectedItem and ("Saved: " .. selectedItem.Name) or "Pick an item first"
+			previewStatusText.Text = selectedItem and "SELECTION SAVED" or "PICK ITEM"
 		end)
 	end
 

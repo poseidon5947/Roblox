@@ -657,6 +657,12 @@ end
 
 function Sidebar:setActive(id: string?)
 	self._active = id
+	if id == "Messages" then
+		local messageState = self.ButtonStates and self.ButtonStates.Messages
+		if messageState and messageState.Badge then
+			messageState.Badge.Visible = false
+		end
+	end
 	if self.ActiveLabel then
 		self.ActiveLabel.Text = id and ("OPEN: " .. string.upper(id)) or "OPEN: NONE"
 		self.ActiveLabel.TextColor3 = id and Theme.Colors.AccentPinkDeep or Theme.Colors.TextMuted
