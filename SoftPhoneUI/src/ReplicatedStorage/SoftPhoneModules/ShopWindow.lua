@@ -4,6 +4,7 @@
 ]]
 
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Theme = require(script.Parent.Theme)
 local WindowChrome = require(script.Parent.WindowChrome)
 
@@ -164,17 +165,63 @@ local function stripScripts(root: Instance)
 end
 
 local function setupCamera(viewport: ViewportFrame, model: Model)
-	local camera = Instance.new("Camera")
-	camera.Parent = viewport
+	local camera = viewport:FindFirstChild("PreviewCamera")
+	if not camera or not camera:IsA("Camera") then
+		camera = Instance.new("Camera")
+		camera.Name = "PreviewCamera"
+		camera.FieldOfView = 38
+		camera.Parent = viewport
+	end
 	viewport.CurrentCamera = camera
 
-	local hrp = model:FindFirstChild("HumanoidRootPart") :: BasePart?
-	if hrp then
-		camera.CFrame = CFrame.new(hrp.Position + Vector3.new(0, 1.5, 6), hrp.Position + Vector3.new(0, 1.2, 0))
-	else
-		local cf, size = model:GetBoundingBox()
-		camera.CFrame = CFrame.new(cf.Position + Vector3.new(0, size.Y * 0.2, size.Magnitude), cf.Position)
+	local cf, size = model:GetBoundingBox()
+	local viewportSize = viewport.AbsoluteSize
+	local aspect = viewportSize.X > 0 and viewportSize.Y > 0 and viewportSize.X / viewportSize.Y or 1
+	aspect = math.max(aspect, 0.5)
+	local verticalFov = math.rad(camera.FieldOfView)
+	local horizontalFov = 2 * math.atan(math.tan(verticalFov * 0.5) * aspect)
+	local verticalDistance = size.Y * 0.5 / math.tan(verticalFov * 0.5)
+	local horizontalDistance = size.X * 0.5 / math.tan(horizontalFov * 0.5)
+	local distance = math.max(verticalDistance, horizontalDistance, 4) + size.Z * 0.65
+	local focus = cf.Position + Vector3.new(0, size.Y * 0.03, 0)
+	camera.CFrame = CFrame.new(focus + Vector3.new(0, 0, distance), focus)
+end
+
+local function findWearableTemplate(itemKey: string): Accessory?
+	local folderName = Theme.WearablesFolder or "SoftPhoneWearables"
+	local folder = ReplicatedStorage:FindFirstChild(folderName)
+	if not folder then
+		return nil
 	end
+
+	local candidate = folder:FindFirstChild(itemKey)
+	if not candidate then
+		return nil
+	end
+	if candidate:IsA("Accessory") then
+		return candidate
+	end
+	return candidate:FindFirstChildWhichIsA("Accessory", true)
+end
+
+local function applyExactTryOn(model: Model, item): boolean
+	local template = findWearableTemplate(item.Key)
+	local humanoid = model:FindFirstChildOfClass("Humanoid")
+	if not template or not humanoid then
+		return false
+	end
+
+	local accessory = template:Clone()
+	stripScripts(accessory)
+	local ok, message = pcall(function()
+		humanoid:AddAccessory(accessory)
+	end)
+	if not ok then
+		accessory:Destroy()
+		warn("[SoftPhoneUI] Could not preview wearable " .. item.Key .. ": " .. tostring(message))
+		return false
+	end
+	return true
 end
 
 local function bodyPart(model: Model, names: { string }): BasePart?
@@ -560,8 +607,14 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		stripScripts(clone)
 		clone.Name = "PreviewAvatar"
 		clone.Parent = world
-		if selectedItem and Theme.EnableSample3DTryOn then
-			applySampleTryOn(clone, selectedItem)
+		local exactTryOn = false
+		local sampleTryOn = false
+		if selectedItem then
+			exactTryOn = applyExactTryOn(clone, selectedItem)
+			if not exactTryOn and Theme.EnableSample3DTryOn then
+				applySampleTryOn(clone, selectedItem)
+				sampleTryOn = true
+			end
 		end
 
 		for _, part in ipairs(clone:GetDescendants()) do
@@ -574,7 +627,22 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		end
 
 		setupCamera(viewport, clone)
-		caption.Text = selectedItem and ("Selected: " .. selectedItem.Name) or "Your look - pick an item"
+		if exactTryOn then
+			previewStatusText.Text = "3D TRY-ON"
+			caption.Text = "Trying: " .. selectedItem.Name
+			detailNote.Text = selectedItem.Tag .. " ITEM\n\nLive layered-clothing preview available."
+		elseif sampleTryOn then
+			previewStatusText.Text = "SAMPLE TRY-ON"
+			caption.Text = "Sample: " .. selectedItem.Name
+			detailNote.Text = selectedItem.Tag .. " ITEM\n\nTemporary sample geometry preview."
+		elseif selectedItem then
+			previewStatusText.Text = "2D PREVIEW"
+			caption.Text = "Selected: " .. selectedItem.Name
+			detailNote.Text = selectedItem.Tag .. " ITEM\n\n3D fitting pending."
+		else
+			previewStatusText.Text = "PREVIEW MODE"
+			caption.Text = "Your look - pick an item"
+		end
 	end
 
 	local activeCategory = "ALL"
@@ -613,10 +681,10 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 	local function selectItem(item)
 		selectedItem = item
 		caption.Text = "Selected: " .. item.Name
-		previewStatusText.Text = "2D ITEM PREVIEW"
+		previewStatusText.Text = "LOADING PREVIEW"
 		detailTitle.Text = item.Name
 		detailPrice.Text = "GEMS " .. tostring(item.Price)
-		detailNote.Text = item.Tag .. " ITEM\n\nProduct selected. Connect its wearable asset ID to enable an exact 3D fit."
+		detailNote.Text = item.Tag .. " ITEM\n\nPreparing preview."
 		renderItemArt(detailArt, item)
 
 		for _, state in ipairs(slotStates) do
@@ -797,9 +865,14 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 			previewAngle = (previewAngle + 35) % 360
 			refreshAvatar()
 		end)
-		WindowChrome.addFooterButton(footer, "Save Selection", 3, function()
-			caption.Text = selectedItem and ("Saved: " .. selectedItem.Name) or "Pick an item first"
-			previewStatusText.Text = selectedItem and "SELECTION SAVED" or "PICK ITEM"
+		WindowChrome.addFooterButton(footer, "Apply Preview", 3, function()
+			if selectedItem then
+				previewStatusText.Text = "LOADING PREVIEW"
+				refreshAvatar()
+			else
+				caption.Text = "Pick an item first"
+				previewStatusText.Text = "PICK ITEM"
+			end
 		end)
 	end
 

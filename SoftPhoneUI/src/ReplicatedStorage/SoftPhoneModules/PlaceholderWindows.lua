@@ -194,6 +194,8 @@ local function addMetric(parent: Instance, metric: { string }, order: number)
 	name.Size = UDim2.new(1, -8, 0, 16)
 	name.TextXAlignment = Enum.TextXAlignment.Center
 	name.TextTruncate = Enum.TextTruncate.AtEnd
+
+	return value
 end
 
 local function addProgress(parent: Instance, amount: number, position: UDim2, size: UDim2)
@@ -265,7 +267,7 @@ local function addTask(parent: Instance, task: { any }, order: number, iconName:
 	return taskPanel
 end
 
-local function paintDashboard(content: Frame, spec)
+local function paintDashboard(content: Frame, spec, id: string)
 	local scroll = Instance.new("ScrollingFrame")
 	scroll.Name = "Dashboard"
 	scroll.BackgroundTransparency = 1
@@ -314,8 +316,9 @@ local function paintDashboard(content: Frame, spec)
 	subline.Size = UDim2.new(1, -242, 0, 18)
 	subline.TextTruncate = Enum.TextTruncate.AtEnd
 
+	local metricValues = {}
 	for i, metric in ipairs(spec.Metrics) do
-		addMetric(profile, metric, i)
+		metricValues[i] = addMetric(profile, metric, i)
 	end
 
 	local section = label(scroll, "SectionTitle", spec.Section, 11, Theme.Fonts.Title, Theme.Colors.TextPrimary, 46)
@@ -375,8 +378,129 @@ local function paintDashboard(content: Frame, spec)
 	action.Parent = featured
 	corner(action, 7)
 	stroke(action, Theme.Colors.ButtonStroke, 1, 0.18)
+
+	local state = {
+		Pity = 42,
+		Tokens = 8,
+		PullIndex = 0,
+		Unread = 3,
+		MessageOpened = false,
+		Zoomed = false,
+		Destination = "Furu Central Plaza",
+		Applied = false,
+	}
+	local pullRewards = { "Moon Bow Pin", "Crystal Socks", "Starlight Ribbon" }
+
+	local function setMetric(index: number, text: string)
+		local metric = metricValues[index]
+		if metric then
+			metric.Text = text
+		end
+	end
+
+	local function showFeedback(titleText: string, sublineText: string, rewardText: string?)
+		headline.Text = titleText
+		subline.Text = sublineText
+		if rewardText then
+			reward.Text = rewardText
+		end
+	end
+
+	local function runCommand(command: string): string
+		if id == "Gacha" then
+			if command == "Pull x1" then
+				if state.Tokens <= 0 then
+					showFeedback("No tokens available", "Daily Wish refreshes tomorrow.", "0 TOKENS")
+					return "EMPTY"
+				end
+				state.Tokens -= 1
+				state.Pity += 1
+				state.PullIndex = (state.PullIndex % #pullRewards) + 1
+				local prize = pullRewards[state.PullIndex]
+				setMetric(1, tostring(state.Pity) .. " / 80")
+				setMetric(2, tostring(state.Tokens))
+				featuredTitle.Text = prize
+				showFeedback("Capsule opened", prize .. " joined your collection.", "NEW ITEM")
+				return "OPENED"
+			elseif command == "Pull x10" then
+				if state.Tokens < 10 then
+					local needed = 10 - state.Tokens
+					showFeedback("More tokens needed", tostring(needed) .. " more required for ten pulls.", tostring(state.Tokens) .. " / 10")
+					return "LOCKED"
+				end
+			elseif command == "History" then
+				local last = state.PullIndex > 0 and pullRewards[state.PullIndex] or "No pulls this session"
+				showFeedback("Recent pulls", last, tostring(state.Pity) .. " PITY")
+				return "VIEWING"
+			end
+			showFeedback("Celestial Ribbon pool", "Six items plus one limited aura.", "POOL READY")
+			return "POOL READY"
+		elseif id == "Map" then
+			if command == "Zoom" then
+				state.Zoomed = not state.Zoomed
+				showFeedback(state.Zoomed and "Street view" or "District view", state.Zoomed and "Moonlight Plaza details visible." or "All nearby activities visible.", state.Zoomed and "2x ZOOM" or "1x ZOOM")
+				return state.Zoomed and "2x" or "1x"
+			elseif command == "Pins" then
+				showFeedback("All pins visible", "12 saved places are shown on the map.", "12 PINS")
+				return "12 PINS"
+			elseif command == "Home" then
+				showFeedback("Home route selected", "Fast travel route is ready.", "ROUTE SET")
+				return "ROUTED"
+			end
+			showFeedback("Route ready", "Moonlight Plaza is now highlighted.", "240m AWAY")
+			return "ROUTE SET"
+		elseif id == "Messages" then
+			if command == "Compose" then
+				showFeedback("New message", "Draft opened for your next message.", "DRAFT")
+				return "DRAFT"
+			elseif command == "Inbox" then
+				showFeedback("Inbox", tostring(state.Unread) .. " unread messages remaining.", tostring(state.Unread) .. " UNREAD")
+				return "INBOX"
+			elseif command == "Archive" then
+				showFeedback("Archive", "Saved announcements and conversations.", "8 SAVED")
+				return "OPEN"
+			end
+			if not state.MessageOpened then
+				state.MessageOpened = true
+				state.Unread = math.max(0, state.Unread - 1)
+				setMetric(1, tostring(state.Unread))
+			end
+			showFeedback("Message opened", "Welcome to Moonlight Plaza", tostring(state.Unread) .. " UNREAD")
+			return "OPENED"
+		elseif id == "Teleport" then
+			if command == "Plaza" then
+				state.Destination = "Furu Central Plaza"
+			elseif command == "Mall" then
+				state.Destination = "Fashion Mall"
+			elseif command == "Job Hub" then
+				state.Destination = "Job Hub"
+			else
+				showFeedback("Destination ready", state.Destination .. " is selected.", "READY")
+				return "READY"
+			end
+			featuredTitle.Text = state.Destination
+			showFeedback("Destination selected", state.Destination .. " is ready for travel.", "FREE")
+			return "SELECTED"
+		elseif id == "Job" then
+			if command == "Apply" or command == "__PRIMARY__" then
+				state.Applied = true
+				showFeedback("Application ready", "Office Assistant is added to your career list.", "150 GEMS")
+				return "APPLIED"
+			elseif command == "Shifts" then
+				showFeedback("Available shifts", "Morning and evening shifts have openings.", "2 OPEN")
+				return "2 OPEN"
+			elseif command == "Pay" then
+				showFeedback("Pay summary", "Next reward unlocks after one completed shift.", "150 GEMS")
+				return "VIEWING"
+			end
+		end
+
+		showFeedback(spec.Headline, spec.Subline, spec.Reward)
+		return spec.ActionDone or "DONE"
+	end
+
 	action.Activated:Connect(function()
-		action.Text = spec.ActionDone or "DONE"
+		action.Text = runCommand("__PRIMARY__")
 		task.delay(1.1, function()
 			if action.Parent then
 				action.Text = spec.Action
@@ -444,18 +568,22 @@ local function paintDashboard(content: Frame, spec)
 
 	task.defer(updateTaskLayout)
 	scroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateTaskLayout)
+
+	return {
+		RunCommand = runCommand,
+	}
 end
 
 function PlaceholderWindows.mountAll(parent: Instance, onCloseFactory: (id: string) -> (() -> ()))
 	local windows = {}
 	for id, spec in pairs(SPECS) do
 		local handle = WindowChrome.create(parent, id, spec.Title, onCloseFactory(id))
-		paintDashboard(handle.Content, spec)
+		local dashboard = paintDashboard(handle.Content, spec, id)
 		for i, footerLabel in ipairs(spec.Footer) do
 			local button
 			button = WindowChrome.addFooterButton(handle.Footer, footerLabel, i, function()
 				local original = footerLabel
-				button.Text = "DONE"
+				button.Text = dashboard.RunCommand(footerLabel)
 				task.delay(1, function()
 					if button.Parent then
 						button.Text = original

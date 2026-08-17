@@ -49,6 +49,16 @@ local function closedPosition(): UDim2
 	return UDim2.fromScale(-0.22, 0.5)
 end
 
+local function defaultWindowSize(fullScreen: boolean?): UDim2
+	if fullScreen then
+		return UDim2.fromScale(1, 1)
+	end
+	if viewportWidth() < 720 then
+		return UDim2.fromScale(0.94, 0.88)
+	end
+	return UDim2.fromScale(0.62, 0.72)
+end
+
 local function addCorner(parent: Instance, radius: number)
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0, radius)
@@ -299,7 +309,7 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	root.Name = id .. "Window"
 	root.AnchorPoint = Vector2.new(0.5, 0.5)
 	root.Position = closedPosition()
-	root.Size = fullScreen and UDim2.fromScale(1, 1) or UDim2.fromScale(0.62, 0.72)
+	root.Size = defaultWindowSize(fullScreen)
 	root.BackgroundColor3 = Theme.Colors.WindowChrome
 	root.BorderSizePixel = 0
 	root.ClipsDescendants = false
@@ -429,6 +439,8 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	local minimizeButton = makeSystemButton("Minimize", Theme.Colors.Minimize, 2, "_")
 	local maximizeButton = makeSystemButton("Maximize", Theme.Colors.Maximize, 1, "[]")
 	local closeButton = makeSystemButton("Close", Theme.Colors.CloseRed, 0, "X")
+	minimizeButton.Visible = not fullScreen
+	maximizeButton.Visible = not fullScreen
 
 	local menuBar = Instance.new("Frame")
 	menuBar.Name = "MenuBar"
@@ -510,6 +522,17 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	local normalSize = root.Size
 	local normalPosition = openPosition(fullScreen)
 
+	local function updateViewportLayout()
+		if not handle._minimized and not handle._maximized then
+			normalSize = defaultWindowSize(fullScreen)
+			root.Size = normalSize
+			if handle._open then
+				normalPosition = openPosition(fullScreen)
+				root.Position = normalPosition
+			end
+		end
+	end
+
 	local function updateResponsiveChrome()
 		local width = root.AbsoluteSize.X
 		local compact = width > 0 and width < 520
@@ -521,6 +544,7 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 
 	task.defer(updateResponsiveChrome)
 	root:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateResponsiveChrome)
+	parent:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateViewportLayout)
 
 	local function setMinimized(minimized: boolean)
 		handle._minimized = minimized

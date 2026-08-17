@@ -73,43 +73,6 @@ for _ = 1, 120 do
 	task.wait()
 end
 
-local sidebar
-local okSidebar, sidebarOrError = pcall(function()
-	local modules = ReplicatedStorage:WaitForChild("SoftPhoneModules", 10)
-	assert(modules, "ReplicatedStorage.SoftPhoneModules was not found")
-	local sidebarModule = modules:WaitForChild("Sidebar", 10)
-	assert(sidebarModule, "SoftPhoneModules.Sidebar was not found")
-	local Sidebar = require(sidebarModule)
-	return Sidebar.new(screenGui, function(id: string)
-		if sidebar and not sidebar:isExpanded() then
-			sidebar:setExpanded(true, false)
-		end
-		local windows = screenGui:FindFirstChild("SoftPhoneWindowManager")
-		if windows and windows:IsA("BindableFunction") then
-			local activeId = windows:Invoke(id)
-			if sidebar then
-				sidebar:setActive(activeId)
-			end
-		else
-			warn("[SoftPhoneUI] Window manager is not ready yet:", id)
-		end
-	end)
-end)
-
-if okSidebar then
-	sidebar = sidebarOrError
-	if staticLauncher then
-		staticLauncher:Destroy()
-		staticLauncher = nil
-	end
-else
-	local errorLabel = staticLauncher :: GuiButton
-	errorLabel.Name = "SoftPhoneError"
-	errorLabel.Text = "UI ERROR\nCHECK OUTPUT"
-	errorLabel.ZIndex = 999
-	warn("[SoftPhoneUI] Sidebar failed:", sidebarOrError)
-end
-
 local windowHost = Instance.new("Frame")
 windowHost.Name = "WindowHost"
 windowHost.BackgroundTransparency = 1
@@ -117,26 +80,47 @@ windowHost.Size = UDim2.fromScale(1, 1)
 windowHost.ZIndex = 250
 windowHost.Parent = screenGui
 
-task.spawn(function()
-	local ok, err = pcall(function()
-		local modules = ReplicatedStorage:WaitForChild("SoftPhoneModules", 10)
-		assert(modules, "ReplicatedStorage.SoftPhoneModules was not found")
-		local WindowManager = require(modules:WaitForChild("WindowManager"))
-		local manager = WindowManager.new(windowHost, function(activeId: string?)
-			if sidebar then
-				sidebar:setActive(activeId)
-			end
-		end)
-		local bridge = Instance.new("BindableFunction")
-		bridge.Name = "SoftPhoneWindowManager"
-		bridge.OnInvoke = function(id: string)
-			return manager:open(id)
+local sidebar
+local manager
+local ok, initError = pcall(function()
+	local modules = ReplicatedStorage:WaitForChild("SoftPhoneModules", 10)
+	assert(modules, "ReplicatedStorage.SoftPhoneModules was not found")
+	local sidebarModule = modules:WaitForChild("Sidebar", 10)
+	assert(sidebarModule, "SoftPhoneModules.Sidebar was not found")
+	local Sidebar = require(sidebarModule)
+	local windowManagerModule = modules:WaitForChild("WindowManager", 10)
+	assert(windowManagerModule, "SoftPhoneModules.WindowManager was not found")
+	local WindowManager = require(windowManagerModule)
+
+	manager = WindowManager.new(windowHost, function(activeId: string?)
+		if sidebar then
+			sidebar:setActive(activeId)
 		end
-		bridge.Parent = screenGui
 	end)
-	if not ok then
-		warn("[SoftPhoneUI] Window manager failed:", err)
+
+	sidebar = Sidebar.new(screenGui, function(id: string)
+		manager:open(id)
+	end)
+
+	local bridge = Instance.new("BindableFunction")
+	bridge.Name = "SoftPhoneWindowManager"
+	bridge.OnInvoke = function(id: string)
+		return manager:open(id)
 	end
+	bridge.Parent = screenGui
 end)
 
-print("[SoftPhoneUI] Ready - click the gem on the edge tab to open Furu Phone.")
+if ok then
+	if staticLauncher then
+		staticLauncher:Destroy()
+		staticLauncher = nil
+	end
+	print("[SoftPhoneUI] Ready - click the gem on the edge tab to open Furu Phone.")
+else
+	windowHost:Destroy()
+	local errorLabel = staticLauncher :: GuiButton
+	errorLabel.Name = "SoftPhoneError"
+	errorLabel.Text = "UI ERROR\nCHECK OUTPUT"
+	errorLabel.ZIndex = 999
+	warn("[SoftPhoneUI] Initialization failed:", initError)
+end

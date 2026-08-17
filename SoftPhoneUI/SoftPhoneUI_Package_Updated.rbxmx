@@ -15,8 +15,9 @@
 local Theme = {}
 
 Theme.Side = "Right"
-Theme.Version = "2.10"
+Theme.Version = "2.12"
 Theme.EnableSample3DTryOn = false
+Theme.WearablesFolder = "SoftPhoneWearables"
 
 Theme.Colors = {
 	PanelFill = Color3.fromRGB(255, 255, 255),
@@ -1206,6 +1207,7 @@ function Sidebar:setExpanded(expanded: boolean, instant: boolean?)
 	if instant then
 		self.Panel.Position = target
 		self.Panel.Rotation = expanded and 0 or closedRotation
+		self.GemButton.Rotation = expanded and 45 or 0
 		self._tweening = false
 		return
 	end
@@ -1214,6 +1216,9 @@ function Sidebar:setExpanded(expanded: boolean, instant: boolean?)
 	local tw = TweenUtil.play(self.Panel, {
 		Position = target,
 		Rotation = expanded and 0 or closedRotation,
+	}, Theme.Tween.SlideTime, Theme.Tween.SlideStyle, Theme.Tween.SlideDir)
+	TweenUtil.play(self.GemButton, {
+		Rotation = expanded and 45 or 0,
 	}, Theme.Tween.SlideTime, Theme.Tween.SlideStyle, Theme.Tween.SlideDir)
 	tw.Completed:Connect(function()
 		self._tweening = false
@@ -1342,6 +1347,16 @@ local function closedPosition(): UDim2
 		return UDim2.fromScale(1.2, 0.5)
 	end
 	return UDim2.fromScale(-0.22, 0.5)
+end
+
+local function defaultWindowSize(fullScreen: boolean?): UDim2
+	if fullScreen then
+		return UDim2.fromScale(1, 1)
+	end
+	if viewportWidth() < 720 then
+		return UDim2.fromScale(0.94, 0.88)
+	end
+	return UDim2.fromScale(0.62, 0.72)
 end
 
 local function addCorner(parent: Instance, radius: number)
@@ -1594,7 +1609,7 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	root.Name = id .. "Window"
 	root.AnchorPoint = Vector2.new(0.5, 0.5)
 	root.Position = closedPosition()
-	root.Size = fullScreen and UDim2.fromScale(1, 1) or UDim2.fromScale(0.62, 0.72)
+	root.Size = defaultWindowSize(fullScreen)
 	root.BackgroundColor3 = Theme.Colors.WindowChrome
 	root.BorderSizePixel = 0
 	root.ClipsDescendants = false
@@ -1724,6 +1739,8 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	local minimizeButton = makeSystemButton("Minimize", Theme.Colors.Minimize, 2, "_")
 	local maximizeButton = makeSystemButton("Maximize", Theme.Colors.Maximize, 1, "[]")
 	local closeButton = makeSystemButton("Close", Theme.Colors.CloseRed, 0, "X")
+	minimizeButton.Visible = not fullScreen
+	maximizeButton.Visible = not fullScreen
 
 	local menuBar = Instance.new("Frame")
 	menuBar.Name = "MenuBar"
@@ -1805,6 +1822,17 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	local normalSize = root.Size
 	local normalPosition = openPosition(fullScreen)
 
+	local function updateViewportLayout()
+		if not handle._minimized and not handle._maximized then
+			normalSize = defaultWindowSize(fullScreen)
+			root.Size = normalSize
+			if handle._open then
+				normalPosition = openPosition(fullScreen)
+				root.Position = normalPosition
+			end
+		end
+	end
+
 	local function updateResponsiveChrome()
 		local width = root.AbsoluteSize.X
 		local compact = width > 0 and width < 520
@@ -1816,6 +1844,7 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 
 	task.defer(updateResponsiveChrome)
 	root:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateResponsiveChrome)
+	parent:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateViewportLayout)
 
 	local function setMinimized(minimized: boolean)
 		handle._minimized = minimized
@@ -1983,6 +2012,7 @@ return WindowChrome
 ]]
 
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Theme = require(script.Parent.Theme)
 local WindowChrome = require(script.Parent.WindowChrome)
 
@@ -2143,17 +2173,63 @@ local function stripScripts(root: Instance)
 end
 
 local function setupCamera(viewport: ViewportFrame, model: Model)
-	local camera = Instance.new("Camera")
-	camera.Parent = viewport
+	local camera = viewport:FindFirstChild("PreviewCamera")
+	if not camera or not camera:IsA("Camera") then
+		camera = Instance.new("Camera")
+		camera.Name = "PreviewCamera"
+		camera.FieldOfView = 38
+		camera.Parent = viewport
+	end
 	viewport.CurrentCamera = camera
 
-	local hrp = model:FindFirstChild("HumanoidRootPart") :: BasePart?
-	if hrp then
-		camera.CFrame = CFrame.new(hrp.Position + Vector3.new(0, 1.5, 6), hrp.Position + Vector3.new(0, 1.2, 0))
-	else
-		local cf, size = model:GetBoundingBox()
-		camera.CFrame = CFrame.new(cf.Position + Vector3.new(0, size.Y * 0.2, size.Magnitude), cf.Position)
+	local cf, size = model:GetBoundingBox()
+	local viewportSize = viewport.AbsoluteSize
+	local aspect = viewportSize.X > 0 and viewportSize.Y > 0 and viewportSize.X / viewportSize.Y or 1
+	aspect = math.max(aspect, 0.5)
+	local verticalFov = math.rad(camera.FieldOfView)
+	local horizontalFov = 2 * math.atan(math.tan(verticalFov * 0.5) * aspect)
+	local verticalDistance = size.Y * 0.5 / math.tan(verticalFov * 0.5)
+	local horizontalDistance = size.X * 0.5 / math.tan(horizontalFov * 0.5)
+	local distance = math.max(verticalDistance, horizontalDistance, 4) + size.Z * 0.65
+	local focus = cf.Position + Vector3.new(0, size.Y * 0.03, 0)
+	camera.CFrame = CFrame.new(focus + Vector3.new(0, 0, distance), focus)
+end
+
+local function findWearableTemplate(itemKey: string): Accessory?
+	local folderName = Theme.WearablesFolder or "SoftPhoneWearables"
+	local folder = ReplicatedStorage:FindFirstChild(folderName)
+	if not folder then
+		return nil
 	end
+
+	local candidate = folder:FindFirstChild(itemKey)
+	if not candidate then
+		return nil
+	end
+	if candidate:IsA("Accessory") then
+		return candidate
+	end
+	return candidate:FindFirstChildWhichIsA("Accessory", true)
+end
+
+local function applyExactTryOn(model: Model, item): boolean
+	local template = findWearableTemplate(item.Key)
+	local humanoid = model:FindFirstChildOfClass("Humanoid")
+	if not template or not humanoid then
+		return false
+	end
+
+	local accessory = template:Clone()
+	stripScripts(accessory)
+	local ok, message = pcall(function()
+		humanoid:AddAccessory(accessory)
+	end)
+	if not ok then
+		accessory:Destroy()
+		warn("[SoftPhoneUI] Could not preview wearable " .. item.Key .. ": " .. tostring(message))
+		return false
+	end
+	return true
 end
 
 local function bodyPart(model: Model, names: { string }): BasePart?
@@ -2539,8 +2615,14 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		stripScripts(clone)
 		clone.Name = "PreviewAvatar"
 		clone.Parent = world
-		if selectedItem and Theme.EnableSample3DTryOn then
-			applySampleTryOn(clone, selectedItem)
+		local exactTryOn = false
+		local sampleTryOn = false
+		if selectedItem then
+			exactTryOn = applyExactTryOn(clone, selectedItem)
+			if not exactTryOn and Theme.EnableSample3DTryOn then
+				applySampleTryOn(clone, selectedItem)
+				sampleTryOn = true
+			end
 		end
 
 		for _, part in ipairs(clone:GetDescendants()) do
@@ -2553,7 +2635,22 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		end
 
 		setupCamera(viewport, clone)
-		caption.Text = selectedItem and ("Selected: " .. selectedItem.Name) or "Your look - pick an item"
+		if exactTryOn then
+			previewStatusText.Text = "3D TRY-ON"
+			caption.Text = "Trying: " .. selectedItem.Name
+			detailNote.Text = selectedItem.Tag .. " ITEM\n\nLive layered-clothing preview available."
+		elseif sampleTryOn then
+			previewStatusText.Text = "SAMPLE TRY-ON"
+			caption.Text = "Sample: " .. selectedItem.Name
+			detailNote.Text = selectedItem.Tag .. " ITEM\n\nTemporary sample geometry preview."
+		elseif selectedItem then
+			previewStatusText.Text = "2D PREVIEW"
+			caption.Text = "Selected: " .. selectedItem.Name
+			detailNote.Text = selectedItem.Tag .. " ITEM\n\n3D fitting pending."
+		else
+			previewStatusText.Text = "PREVIEW MODE"
+			caption.Text = "Your look - pick an item"
+		end
 	end
 
 	local activeCategory = "ALL"
@@ -2592,10 +2689,10 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 	local function selectItem(item)
 		selectedItem = item
 		caption.Text = "Selected: " .. item.Name
-		previewStatusText.Text = "2D ITEM PREVIEW"
+		previewStatusText.Text = "LOADING PREVIEW"
 		detailTitle.Text = item.Name
 		detailPrice.Text = "GEMS " .. tostring(item.Price)
-		detailNote.Text = item.Tag .. " ITEM\n\nProduct selected. Connect its wearable asset ID to enable an exact 3D fit."
+		detailNote.Text = item.Tag .. " ITEM\n\nPreparing preview."
 		renderItemArt(detailArt, item)
 
 		for _, state in ipairs(slotStates) do
@@ -2776,9 +2873,14 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 			previewAngle = (previewAngle + 35) % 360
 			refreshAvatar()
 		end)
-		WindowChrome.addFooterButton(footer, "Save Selection", 3, function()
-			caption.Text = selectedItem and ("Saved: " .. selectedItem.Name) or "Pick an item first"
-			previewStatusText.Text = selectedItem and "SELECTION SAVED" or "PICK ITEM"
+		WindowChrome.addFooterButton(footer, "Apply Preview", 3, function()
+			if selectedItem then
+				previewStatusText.Text = "LOADING PREVIEW"
+				refreshAvatar()
+			else
+				caption.Text = "Pick an item first"
+				previewStatusText.Text = "PICK ITEM"
+			end
 		end)
 	end
 
@@ -3010,6 +3112,8 @@ local function addMetric(parent: Instance, metric: { string }, order: number)
 	name.Size = UDim2.new(1, -8, 0, 16)
 	name.TextXAlignment = Enum.TextXAlignment.Center
 	name.TextTruncate = Enum.TextTruncate.AtEnd
+
+	return value
 end
 
 local function addProgress(parent: Instance, amount: number, position: UDim2, size: UDim2)
@@ -3081,7 +3185,7 @@ local function addTask(parent: Instance, task: { any }, order: number, iconName:
 	return taskPanel
 end
 
-local function paintDashboard(content: Frame, spec)
+local function paintDashboard(content: Frame, spec, id: string)
 	local scroll = Instance.new("ScrollingFrame")
 	scroll.Name = "Dashboard"
 	scroll.BackgroundTransparency = 1
@@ -3130,8 +3234,9 @@ local function paintDashboard(content: Frame, spec)
 	subline.Size = UDim2.new(1, -242, 0, 18)
 	subline.TextTruncate = Enum.TextTruncate.AtEnd
 
+	local metricValues = {}
 	for i, metric in ipairs(spec.Metrics) do
-		addMetric(profile, metric, i)
+		metricValues[i] = addMetric(profile, metric, i)
 	end
 
 	local section = label(scroll, "SectionTitle", spec.Section, 11, Theme.Fonts.Title, Theme.Colors.TextPrimary, 46)
@@ -3191,8 +3296,129 @@ local function paintDashboard(content: Frame, spec)
 	action.Parent = featured
 	corner(action, 7)
 	stroke(action, Theme.Colors.ButtonStroke, 1, 0.18)
+
+	local state = {
+		Pity = 42,
+		Tokens = 8,
+		PullIndex = 0,
+		Unread = 3,
+		MessageOpened = false,
+		Zoomed = false,
+		Destination = "Furu Central Plaza",
+		Applied = false,
+	}
+	local pullRewards = { "Moon Bow Pin", "Crystal Socks", "Starlight Ribbon" }
+
+	local function setMetric(index: number, text: string)
+		local metric = metricValues[index]
+		if metric then
+			metric.Text = text
+		end
+	end
+
+	local function showFeedback(titleText: string, sublineText: string, rewardText: string?)
+		headline.Text = titleText
+		subline.Text = sublineText
+		if rewardText then
+			reward.Text = rewardText
+		end
+	end
+
+	local function runCommand(command: string): string
+		if id == "Gacha" then
+			if command == "Pull x1" then
+				if state.Tokens <= 0 then
+					showFeedback("No tokens available", "Daily Wish refreshes tomorrow.", "0 TOKENS")
+					return "EMPTY"
+				end
+				state.Tokens -= 1
+				state.Pity += 1
+				state.PullIndex = (state.PullIndex % #pullRewards) + 1
+				local prize = pullRewards[state.PullIndex]
+				setMetric(1, tostring(state.Pity) .. " / 80")
+				setMetric(2, tostring(state.Tokens))
+				featuredTitle.Text = prize
+				showFeedback("Capsule opened", prize .. " joined your collection.", "NEW ITEM")
+				return "OPENED"
+			elseif command == "Pull x10" then
+				if state.Tokens < 10 then
+					local needed = 10 - state.Tokens
+					showFeedback("More tokens needed", tostring(needed) .. " more required for ten pulls.", tostring(state.Tokens) .. " / 10")
+					return "LOCKED"
+				end
+			elseif command == "History" then
+				local last = state.PullIndex > 0 and pullRewards[state.PullIndex] or "No pulls this session"
+				showFeedback("Recent pulls", last, tostring(state.Pity) .. " PITY")
+				return "VIEWING"
+			end
+			showFeedback("Celestial Ribbon pool", "Six items plus one limited aura.", "POOL READY")
+			return "POOL READY"
+		elseif id == "Map" then
+			if command == "Zoom" then
+				state.Zoomed = not state.Zoomed
+				showFeedback(state.Zoomed and "Street view" or "District view", state.Zoomed and "Moonlight Plaza details visible." or "All nearby activities visible.", state.Zoomed and "2x ZOOM" or "1x ZOOM")
+				return state.Zoomed and "2x" or "1x"
+			elseif command == "Pins" then
+				showFeedback("All pins visible", "12 saved places are shown on the map.", "12 PINS")
+				return "12 PINS"
+			elseif command == "Home" then
+				showFeedback("Home route selected", "Fast travel route is ready.", "ROUTE SET")
+				return "ROUTED"
+			end
+			showFeedback("Route ready", "Moonlight Plaza is now highlighted.", "240m AWAY")
+			return "ROUTE SET"
+		elseif id == "Messages" then
+			if command == "Compose" then
+				showFeedback("New message", "Draft opened for your next message.", "DRAFT")
+				return "DRAFT"
+			elseif command == "Inbox" then
+				showFeedback("Inbox", tostring(state.Unread) .. " unread messages remaining.", tostring(state.Unread) .. " UNREAD")
+				return "INBOX"
+			elseif command == "Archive" then
+				showFeedback("Archive", "Saved announcements and conversations.", "8 SAVED")
+				return "OPEN"
+			end
+			if not state.MessageOpened then
+				state.MessageOpened = true
+				state.Unread = math.max(0, state.Unread - 1)
+				setMetric(1, tostring(state.Unread))
+			end
+			showFeedback("Message opened", "Welcome to Moonlight Plaza", tostring(state.Unread) .. " UNREAD")
+			return "OPENED"
+		elseif id == "Teleport" then
+			if command == "Plaza" then
+				state.Destination = "Furu Central Plaza"
+			elseif command == "Mall" then
+				state.Destination = "Fashion Mall"
+			elseif command == "Job Hub" then
+				state.Destination = "Job Hub"
+			else
+				showFeedback("Destination ready", state.Destination .. " is selected.", "READY")
+				return "READY"
+			end
+			featuredTitle.Text = state.Destination
+			showFeedback("Destination selected", state.Destination .. " is ready for travel.", "FREE")
+			return "SELECTED"
+		elseif id == "Job" then
+			if command == "Apply" or command == "__PRIMARY__" then
+				state.Applied = true
+				showFeedback("Application ready", "Office Assistant is added to your career list.", "150 GEMS")
+				return "APPLIED"
+			elseif command == "Shifts" then
+				showFeedback("Available shifts", "Morning and evening shifts have openings.", "2 OPEN")
+				return "2 OPEN"
+			elseif command == "Pay" then
+				showFeedback("Pay summary", "Next reward unlocks after one completed shift.", "150 GEMS")
+				return "VIEWING"
+			end
+		end
+
+		showFeedback(spec.Headline, spec.Subline, spec.Reward)
+		return spec.ActionDone or "DONE"
+	end
+
 	action.Activated:Connect(function()
-		action.Text = spec.ActionDone or "DONE"
+		action.Text = runCommand("__PRIMARY__")
 		task.delay(1.1, function()
 			if action.Parent then
 				action.Text = spec.Action
@@ -3260,18 +3486,22 @@ local function paintDashboard(content: Frame, spec)
 
 	task.defer(updateTaskLayout)
 	scroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateTaskLayout)
+
+	return {
+		RunCommand = runCommand,
+	}
 end
 
 function PlaceholderWindows.mountAll(parent: Instance, onCloseFactory: (id: string) -> (() -> ()))
 	local windows = {}
 	for id, spec in pairs(SPECS) do
 		local handle = WindowChrome.create(parent, id, spec.Title, onCloseFactory(id))
-		paintDashboard(handle.Content, spec)
+		local dashboard = paintDashboard(handle.Content, spec, id)
 		for i, footerLabel in ipairs(spec.Footer) do
 			local button
 			button = WindowChrome.addFooterButton(handle.Footer, footerLabel, i, function()
 				local original = footerLabel
-				button.Text = "DONE"
+				button.Text = dashboard.RunCommand(footerLabel)
 				task.delay(1, function()
 					if button.Parent then
 						button.Text = original
@@ -3381,6 +3611,9 @@ return WindowManager
       </Properties>
     </Item>
 
+    </Item>
+    <Item class="Folder" referent="SoftPhoneWearables">
+      <Properties><string name="Name">SoftPhoneWearables</string></Properties>
     </Item>
     <Item class="ScreenGui" referent="SoftPhoneUI">
       <Properties>
@@ -3502,43 +3735,6 @@ for _ = 1, 120 do
 	task.wait()
 end
 
-local sidebar
-local okSidebar, sidebarOrError = pcall(function()
-	local modules = ReplicatedStorage:WaitForChild("SoftPhoneModules", 10)
-	assert(modules, "ReplicatedStorage.SoftPhoneModules was not found")
-	local sidebarModule = modules:WaitForChild("Sidebar", 10)
-	assert(sidebarModule, "SoftPhoneModules.Sidebar was not found")
-	local Sidebar = require(sidebarModule)
-	return Sidebar.new(screenGui, function(id: string)
-		if sidebar and not sidebar:isExpanded() then
-			sidebar:setExpanded(true, false)
-		end
-		local windows = screenGui:FindFirstChild("SoftPhoneWindowManager")
-		if windows and windows:IsA("BindableFunction") then
-			local activeId = windows:Invoke(id)
-			if sidebar then
-				sidebar:setActive(activeId)
-			end
-		else
-			warn("[SoftPhoneUI] Window manager is not ready yet:", id)
-		end
-	end)
-end)
-
-if okSidebar then
-	sidebar = sidebarOrError
-	if staticLauncher then
-		staticLauncher:Destroy()
-		staticLauncher = nil
-	end
-else
-	local errorLabel = staticLauncher :: GuiButton
-	errorLabel.Name = "SoftPhoneError"
-	errorLabel.Text = "UI ERROR\nCHECK OUTPUT"
-	errorLabel.ZIndex = 999
-	warn("[SoftPhoneUI] Sidebar failed:", sidebarOrError)
-end
-
 local windowHost = Instance.new("Frame")
 windowHost.Name = "WindowHost"
 windowHost.BackgroundTransparency = 1
@@ -3546,29 +3742,50 @@ windowHost.Size = UDim2.fromScale(1, 1)
 windowHost.ZIndex = 250
 windowHost.Parent = screenGui
 
-task.spawn(function()
-	local ok, err = pcall(function()
-		local modules = ReplicatedStorage:WaitForChild("SoftPhoneModules", 10)
-		assert(modules, "ReplicatedStorage.SoftPhoneModules was not found")
-		local WindowManager = require(modules:WaitForChild("WindowManager"))
-		local manager = WindowManager.new(windowHost, function(activeId: string?)
-			if sidebar then
-				sidebar:setActive(activeId)
-			end
-		end)
-		local bridge = Instance.new("BindableFunction")
-		bridge.Name = "SoftPhoneWindowManager"
-		bridge.OnInvoke = function(id: string)
-			return manager:open(id)
+local sidebar
+local manager
+local ok, initError = pcall(function()
+	local modules = ReplicatedStorage:WaitForChild("SoftPhoneModules", 10)
+	assert(modules, "ReplicatedStorage.SoftPhoneModules was not found")
+	local sidebarModule = modules:WaitForChild("Sidebar", 10)
+	assert(sidebarModule, "SoftPhoneModules.Sidebar was not found")
+	local Sidebar = require(sidebarModule)
+	local windowManagerModule = modules:WaitForChild("WindowManager", 10)
+	assert(windowManagerModule, "SoftPhoneModules.WindowManager was not found")
+	local WindowManager = require(windowManagerModule)
+
+	manager = WindowManager.new(windowHost, function(activeId: string?)
+		if sidebar then
+			sidebar:setActive(activeId)
 		end
-		bridge.Parent = screenGui
 	end)
-	if not ok then
-		warn("[SoftPhoneUI] Window manager failed:", err)
+
+	sidebar = Sidebar.new(screenGui, function(id: string)
+		manager:open(id)
+	end)
+
+	local bridge = Instance.new("BindableFunction")
+	bridge.Name = "SoftPhoneWindowManager"
+	bridge.OnInvoke = function(id: string)
+		return manager:open(id)
 	end
+	bridge.Parent = screenGui
 end)
 
-print("[SoftPhoneUI] Ready - click the gem on the edge tab to open Furu Phone.")
+if ok then
+	if staticLauncher then
+		staticLauncher:Destroy()
+		staticLauncher = nil
+	end
+	print("[SoftPhoneUI] Ready - click the gem on the edge tab to open Furu Phone.")
+else
+	windowHost:Destroy()
+	local errorLabel = staticLauncher :: GuiButton
+	errorLabel.Name = "SoftPhoneError"
+	errorLabel.Text = "UI ERROR\nCHECK OUTPUT"
+	errorLabel.ZIndex = 999
+	warn("[SoftPhoneUI] Initialization failed:", initError)
+end
 ]]></ProtectedString>
           <bool name="Disabled">false</bool>
         </Properties>
@@ -3581,9 +3798,10 @@ print("[SoftPhoneUI] Ready - click the gem on the edge tab to open Furu Phone.")
         <bool name="Disabled">true</bool>
         <ProtectedString name="Source"><![CDATA[-- SoftPhoneUI install
 -- 1. Move SoftPhoneModules into ReplicatedStorage
--- 2. Move SoftPhoneUI ScreenGui into StarterGui
--- 3. Delete this SoftPhonePackage folder
--- 4. Play (F5) - click the gem on the edge tab
+-- 2. Move SoftPhoneWearables into ReplicatedStorage
+-- 3. Move SoftPhoneUI ScreenGui into StarterGui
+-- 4. Delete this SoftPhonePackage folder
+-- 5. Play (F5) - click the gem on the edge tab
 ]]></ProtectedString>
       </Properties>
     </Item>

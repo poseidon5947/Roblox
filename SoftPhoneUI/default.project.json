@@ -6,6 +6,9 @@
       "$className": "ReplicatedStorage",
       "SoftPhoneModules": {
         "$path": "src/ReplicatedStorage/SoftPhoneModules"
+      },
+      "SoftPhoneWearables": {
+        "$className": "Folder"
       }
     },
     "StarterGui": {

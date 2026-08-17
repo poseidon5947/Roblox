@@ -6,8 +6,9 @@
 local Theme = {}
 
 Theme.Side = "Right"
-Theme.Version = "2.10"
+Theme.Version = "2.12"
 Theme.EnableSample3DTryOn = false
+Theme.WearablesFolder = "SoftPhoneWearables"
 
 Theme.Colors = {
 	PanelFill = Color3.fromRGB(255, 255, 255),

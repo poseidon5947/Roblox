@@ -10,26 +10,8 @@ const OUT_PLACE = join(ROOT, "SoftPhoneUI_Demo.rbxlx");
 const OUT_MODEL = join(ROOT, "SoftPhoneUI_Package.rbxmx");
 const OUT_PLACE_UPDATED = join(ROOT, "SoftPhoneUI_Demo_Updated.rbxlx");
 const OUT_MODEL_UPDATED = join(ROOT, "SoftPhoneUI_Package_Updated.rbxmx");
-const OUT_PLACE_ICONS = join(ROOT, "SoftPhoneUI_Demo_IconsV2.rbxlx");
-const OUT_MODEL_ICONS = join(ROOT, "SoftPhoneUI_Package_IconsV2.rbxmx");
-const OUT_PLACE_ASSETS = join(ROOT, "SoftPhoneUI_Demo_v2_2.rbxlx");
-const OUT_MODEL_ASSETS = join(ROOT, "SoftPhoneUI_Package_v2_2.rbxmx");
-const OUT_PLACE_CIRCLES = join(ROOT, "SoftPhoneUI_Demo_v2_3_CircleIcons.rbxlx");
-const OUT_MODEL_CIRCLES = join(ROOT, "SoftPhoneUI_Package_v2_3_CircleIcons.rbxmx");
-const OUT_PLACE_SHOP = join(ROOT, "SoftPhoneUI_Demo_v2_4_ShopItems.rbxlx");
-const OUT_MODEL_SHOP = join(ROOT, "SoftPhoneUI_Package_v2_4_ShopItems.rbxmx");
-const OUT_PLACE_SHOP_ASSETS = join(ROOT, "SoftPhoneUI_Demo_v2_5_ShopAssets.rbxlx");
-const OUT_MODEL_SHOP_ASSETS = join(ROOT, "SoftPhoneUI_Package_v2_5_ShopAssets.rbxmx");
-const OUT_PLACE_COMPLETE = join(ROOT, "SoftPhoneUI_Demo_v2_6_Complete.rbxlx");
-const OUT_MODEL_COMPLETE = join(ROOT, "SoftPhoneUI_Package_v2_6_Complete.rbxmx");
-const OUT_PLACE_DRESSUP = join(ROOT, "SoftPhoneUI_Demo_v2_7_DressUp.rbxlx");
-const OUT_MODEL_DRESSUP = join(ROOT, "SoftPhoneUI_Package_v2_7_DressUp.rbxmx");
-const OUT_PLACE_UICOMPLETE = join(ROOT, "SoftPhoneUI_Demo_v2_8_UIComplete.rbxlx");
-const OUT_MODEL_UICOMPLETE = join(ROOT, "SoftPhoneUI_Package_v2_8_UIComplete.rbxmx");
-const OUT_PLACE_SHOP_UX = join(ROOT, "SoftPhoneUI_Demo_v2_9_ShopUX.rbxlx");
-const OUT_MODEL_SHOP_UX = join(ROOT, "SoftPhoneUI_Package_v2_9_ShopUX.rbxmx");
-const OUT_PLACE_FIXED = join(ROOT, "SoftPhoneUI_Demo_v2_10_WindowFix.rbxlx");
-const OUT_MODEL_FIXED = join(ROOT, "SoftPhoneUI_Package_v2_10_WindowFix.rbxmx");
+const OUT_PLACE_LATEST = join(ROOT, "SoftPhoneUI_Demo_v2_12_AppPolish.rbxlx");
+const OUT_MODEL_LATEST = join(ROOT, "SoftPhoneUI_Package_v2_12_AppPolish.rbxmx");
 
 const MODULE_FILES = [
   "Theme.lua",
@@ -163,6 +145,9 @@ function buildPlace(modulesXml, bootstrap) {
       <Properties><string name="Name">SoftPhoneModules</string></Properties>
 ${modulesXml}
     </Item>
+    <Item class="Folder" referent="SoftPhoneWearables">
+      <Properties><string name="Name">SoftPhoneWearables</string></Properties>
+    </Item>
   </Item>
   <Item class="StarterGui" referent="StarterGui">
     <Properties><string name="Name">StarterGui</string></Properties>
@@ -198,9 +183,10 @@ ${localScriptItem("SoftPhoneBootstrap", bootstrap)}
 function buildModel(modulesXml, bootstrap) {
   const note = `-- SoftPhoneUI install
 -- 1. Move SoftPhoneModules into ReplicatedStorage
--- 2. Move SoftPhoneUI ScreenGui into StarterGui
--- 3. Delete this SoftPhonePackage folder
--- 4. Play (F5) - click the gem on the edge tab
+-- 2. Move SoftPhoneWearables into ReplicatedStorage
+-- 3. Move SoftPhoneUI ScreenGui into StarterGui
+-- 4. Delete this SoftPhonePackage folder
+-- 5. Play (F5) - click the gem on the edge tab
 `;
   return `<?xml version="1.0" encoding="utf-8"?>
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
@@ -209,6 +195,9 @@ function buildModel(modulesXml, bootstrap) {
     <Item class="Folder" referent="SoftPhoneModules">
       <Properties><string name="Name">SoftPhoneModules</string></Properties>
 ${modulesXml}
+    </Item>
+    <Item class="Folder" referent="SoftPhoneWearables">
+      <Properties><string name="Name">SoftPhoneWearables</string></Properties>
     </Item>
     <Item class="ScreenGui" referent="SoftPhoneUI">
       <Properties>
@@ -242,47 +231,11 @@ writeFileSync(OUT_PLACE, placeXml, "utf8");
 writeFileSync(OUT_MODEL, modelXml, "utf8");
 writeFileSync(OUT_PLACE_UPDATED, placeXml, "utf8");
 writeFileSync(OUT_MODEL_UPDATED, modelXml, "utf8");
-writeFileSync(OUT_PLACE_ICONS, placeXml, "utf8");
-writeFileSync(OUT_MODEL_ICONS, modelXml, "utf8");
-writeFileSync(OUT_PLACE_ASSETS, placeXml, "utf8");
-writeFileSync(OUT_MODEL_ASSETS, modelXml, "utf8");
-writeFileSync(OUT_PLACE_CIRCLES, placeXml, "utf8");
-writeFileSync(OUT_MODEL_CIRCLES, modelXml, "utf8");
-writeFileSync(OUT_PLACE_SHOP, placeXml, "utf8");
-writeFileSync(OUT_MODEL_SHOP, modelXml, "utf8");
-writeFileSync(OUT_PLACE_SHOP_ASSETS, placeXml, "utf8");
-writeFileSync(OUT_MODEL_SHOP_ASSETS, modelXml, "utf8");
-writeFileSync(OUT_PLACE_COMPLETE, placeXml, "utf8");
-writeFileSync(OUT_MODEL_COMPLETE, modelXml, "utf8");
-writeFileSync(OUT_PLACE_DRESSUP, placeXml, "utf8");
-writeFileSync(OUT_MODEL_DRESSUP, modelXml, "utf8");
-writeFileSync(OUT_PLACE_UICOMPLETE, placeXml, "utf8");
-writeFileSync(OUT_MODEL_UICOMPLETE, modelXml, "utf8");
-writeFileSync(OUT_PLACE_SHOP_UX, placeXml, "utf8");
-writeFileSync(OUT_MODEL_SHOP_UX, modelXml, "utf8");
-writeFileSync(OUT_PLACE_FIXED, placeXml, "utf8");
-writeFileSync(OUT_MODEL_FIXED, modelXml, "utf8");
+writeFileSync(OUT_PLACE_LATEST, placeXml, "utf8");
+writeFileSync(OUT_MODEL_LATEST, modelXml, "utf8");
 console.log(`Wrote ${OUT_PLACE}`);
 console.log(`Wrote ${OUT_MODEL}`);
 console.log(`Wrote ${OUT_PLACE_UPDATED}`);
 console.log(`Wrote ${OUT_MODEL_UPDATED}`);
-console.log(`Wrote ${OUT_PLACE_ICONS}`);
-console.log(`Wrote ${OUT_MODEL_ICONS}`);
-console.log(`Wrote ${OUT_PLACE_ASSETS}`);
-console.log(`Wrote ${OUT_MODEL_ASSETS}`);
-console.log(`Wrote ${OUT_PLACE_CIRCLES}`);
-console.log(`Wrote ${OUT_MODEL_CIRCLES}`);
-console.log(`Wrote ${OUT_PLACE_SHOP}`);
-console.log(`Wrote ${OUT_MODEL_SHOP}`);
-console.log(`Wrote ${OUT_PLACE_SHOP_ASSETS}`);
-console.log(`Wrote ${OUT_MODEL_SHOP_ASSETS}`);
-console.log(`Wrote ${OUT_PLACE_COMPLETE}`);
-console.log(`Wrote ${OUT_MODEL_COMPLETE}`);
-console.log(`Wrote ${OUT_PLACE_DRESSUP}`);
-console.log(`Wrote ${OUT_MODEL_DRESSUP}`);
-console.log(`Wrote ${OUT_PLACE_UICOMPLETE}`);
-console.log(`Wrote ${OUT_MODEL_UICOMPLETE}`);
-console.log(`Wrote ${OUT_PLACE_SHOP_UX}`);
-console.log(`Wrote ${OUT_MODEL_SHOP_UX}`);
-console.log(`Wrote ${OUT_PLACE_FIXED}`);
-console.log(`Wrote ${OUT_MODEL_FIXED}`);
+console.log(`Wrote ${OUT_PLACE_LATEST}`);
+console.log(`Wrote ${OUT_MODEL_LATEST}`);

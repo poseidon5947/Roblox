@@ -16,16 +16,8 @@ OUT_PLACE = ROOT / "SoftPhoneUI_Demo.rbxlx"
 OUT_MODEL = ROOT / "SoftPhoneUI_Package.rbxmx"
 OUT_PLACE_UPDATED = ROOT / "SoftPhoneUI_Demo_Updated.rbxlx"
 OUT_MODEL_UPDATED = ROOT / "SoftPhoneUI_Package_Updated.rbxmx"
-OUT_PLACE_ICONS = ROOT / "SoftPhoneUI_Demo_IconsV2.rbxlx"
-OUT_MODEL_ICONS = ROOT / "SoftPhoneUI_Package_IconsV2.rbxmx"
-OUT_PLACE_ASSETS = ROOT / "SoftPhoneUI_Demo_v2_2.rbxlx"
-OUT_MODEL_ASSETS = ROOT / "SoftPhoneUI_Package_v2_2.rbxmx"
-OUT_PLACE_CIRCLES = ROOT / "SoftPhoneUI_Demo_v2_3_CircleIcons.rbxlx"
-OUT_MODEL_CIRCLES = ROOT / "SoftPhoneUI_Package_v2_3_CircleIcons.rbxmx"
-OUT_PLACE_SHOP = ROOT / "SoftPhoneUI_Demo_v2_4_ShopItems.rbxlx"
-OUT_MODEL_SHOP = ROOT / "SoftPhoneUI_Package_v2_4_ShopItems.rbxmx"
-OUT_PLACE_SHOP_ASSETS = ROOT / "SoftPhoneUI_Demo_v2_5_ShopAssets.rbxlx"
-OUT_MODEL_SHOP_ASSETS = ROOT / "SoftPhoneUI_Package_v2_5_ShopAssets.rbxmx"
+OUT_PLACE_LATEST = ROOT / "SoftPhoneUI_Demo_v2_12_AppPolish.rbxlx"
+OUT_MODEL_LATEST = ROOT / "SoftPhoneUI_Package_v2_12_AppPolish.rbxmx"
 
 MODULE_FILES = [
     "Theme.lua",
@@ -168,6 +160,11 @@ def build_place(modules_xml: str, bootstrap: str) -> str:
       </Properties>
 {modules_xml}
     </Item>
+    <Item class="Folder" referent="SoftPhoneWearables">
+      <Properties>
+        <string name="Name">SoftPhoneWearables</string>
+      </Properties>
+    </Item>
   </Item>
   <Item class="StarterGui" referent="StarterGui">
     <Properties>
@@ -219,6 +216,11 @@ def build_model(modules_xml: str, bootstrap: str) -> str:
       </Properties>
 {modules_xml}
     </Item>
+    <Item class="Folder" referent="SoftPhoneWearables">
+      <Properties>
+        <string name="Name">SoftPhoneWearables</string>
+      </Properties>
+    </Item>
     <Item class="ScreenGui" referent="SoftPhoneUI">
       <Properties>
         <string name="Name">SoftPhoneUI</string>
@@ -237,9 +239,10 @@ def build_model(modules_xml: str, bootstrap: str) -> str:
         <bool name="Disabled">true</bool>
         <ProtectedString name="Source">{cdata('''-- SoftPhoneUI install
 -- 1. Move SoftPhoneModules into ReplicatedStorage
--- 2. Move SoftPhoneUI ScreenGui into StarterGui
--- 3. Delete this SoftPhonePackage folder
--- 4. Play (F5) - click the gem on the edge tab
+-- 2. Move SoftPhoneWearables into ReplicatedStorage
+-- 3. Move SoftPhoneUI ScreenGui into StarterGui
+-- 4. Delete this SoftPhonePackage folder
+-- 5. Play (F5) - click the gem on the edge tab
 ''')}</ProtectedString>
       </Properties>
     </Item>
@@ -257,30 +260,14 @@ def main():
     OUT_MODEL.write_text(model_xml, encoding="utf-8")
     OUT_PLACE_UPDATED.write_text(place_xml, encoding="utf-8")
     OUT_MODEL_UPDATED.write_text(model_xml, encoding="utf-8")
-    OUT_PLACE_ICONS.write_text(place_xml, encoding="utf-8")
-    OUT_MODEL_ICONS.write_text(model_xml, encoding="utf-8")
-    OUT_PLACE_ASSETS.write_text(place_xml, encoding="utf-8")
-    OUT_MODEL_ASSETS.write_text(model_xml, encoding="utf-8")
-    OUT_PLACE_CIRCLES.write_text(place_xml, encoding="utf-8")
-    OUT_MODEL_CIRCLES.write_text(model_xml, encoding="utf-8")
-    OUT_PLACE_SHOP.write_text(place_xml, encoding="utf-8")
-    OUT_MODEL_SHOP.write_text(model_xml, encoding="utf-8")
-    OUT_PLACE_SHOP_ASSETS.write_text(place_xml, encoding="utf-8")
-    OUT_MODEL_SHOP_ASSETS.write_text(model_xml, encoding="utf-8")
+    OUT_PLACE_LATEST.write_text(place_xml, encoding="utf-8")
+    OUT_MODEL_LATEST.write_text(model_xml, encoding="utf-8")
     print(f"Wrote {OUT_PLACE}")
     print(f"Wrote {OUT_MODEL}")
     print(f"Wrote {OUT_PLACE_UPDATED}")
     print(f"Wrote {OUT_MODEL_UPDATED}")
-    print(f"Wrote {OUT_PLACE_ICONS}")
-    print(f"Wrote {OUT_MODEL_ICONS}")
-    print(f"Wrote {OUT_PLACE_ASSETS}")
-    print(f"Wrote {OUT_MODEL_ASSETS}")
-    print(f"Wrote {OUT_PLACE_CIRCLES}")
-    print(f"Wrote {OUT_MODEL_CIRCLES}")
-    print(f"Wrote {OUT_PLACE_SHOP}")
-    print(f"Wrote {OUT_MODEL_SHOP}")
-    print(f"Wrote {OUT_PLACE_SHOP_ASSETS}")
-    print(f"Wrote {OUT_MODEL_SHOP_ASSETS}")
+    print(f"Wrote {OUT_PLACE_LATEST}")
+    print(f"Wrote {OUT_MODEL_LATEST}")
 
 
 if __name__ == "__main__":

@@ -630,6 +630,7 @@ function Sidebar:setExpanded(expanded: boolean, instant: boolean?)
 	if instant then
 		self.Panel.Position = target
 		self.Panel.Rotation = expanded and 0 or closedRotation
+		self.GemButton.Rotation = expanded and 45 or 0
 		self._tweening = false
 		return
 	end
@@ -638,6 +639,9 @@ function Sidebar:setExpanded(expanded: boolean, instant: boolean?)
 	local tw = TweenUtil.play(self.Panel, {
 		Position = target,
 		Rotation = expanded and 0 or closedRotation,
+	}, Theme.Tween.SlideTime, Theme.Tween.SlideStyle, Theme.Tween.SlideDir)
+	TweenUtil.play(self.GemButton, {
+		Rotation = expanded and 45 or 0,
 	}, Theme.Tween.SlideTime, Theme.Tween.SlideStyle, Theme.Tween.SlideDir)
 	tw.Completed:Connect(function()
 		self._tweening = false
