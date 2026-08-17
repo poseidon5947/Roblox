@@ -96,10 +96,17 @@ local ok, initError = pcall(function()
 		if sidebar then
 			sidebar:setActive(activeId)
 		end
+	end, function(eventName: string, value)
+		if sidebar and eventName == "MessagesUnread" then
+			sidebar:setBadge("Messages", tostring(value))
+		end
 	end)
 
 	sidebar = Sidebar.new(screenGui, function(id: string)
-		manager:open(id)
+		local activeId = manager:open(id)
+		if activeId == "Gacha" and sidebar:isExpanded() then
+			sidebar:setExpanded(false, false)
+		end
 	end)
 
 	local bridge = Instance.new("BindableFunction")

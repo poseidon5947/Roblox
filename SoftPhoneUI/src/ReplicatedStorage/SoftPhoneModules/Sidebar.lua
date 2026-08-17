@@ -661,12 +661,6 @@ end
 
 function Sidebar:setActive(id: string?)
 	self._active = id
-	if id == "Messages" then
-		local messageState = self.ButtonStates and self.ButtonStates.Messages
-		if messageState and messageState.Badge then
-			messageState.Badge.Visible = false
-		end
-	end
 	if self.ActiveLabel then
 		self.ActiveLabel.Text = id and ("OPEN: " .. string.upper(id)) or "OPEN: NONE"
 		self.ActiveLabel.TextColor3 = id and Theme.Colors.AccentPinkDeep or Theme.Colors.TextMuted
@@ -684,6 +678,19 @@ function Sidebar:setActive(id: string?)
 			state.Badge.TextColor3 = active and Theme.Colors.TextOnPink or Theme.Colors.AccentPinkDeep
 		end
 	end
+end
+
+function Sidebar:setBadge(id: string, value: string?)
+	local state = self.ButtonStates and self.ButtonStates[id]
+	local badge = state and state.Badge
+	if not badge then
+		return
+	end
+
+	local text = value and tostring(value) or ""
+	badge.Visible = text ~= "" and text ~= "0"
+	badge.Text = text
+	badge.Size = UDim2.fromOffset(#text > 2 and 40 or 24, 20)
 end
 
 function Sidebar:_bindResize()

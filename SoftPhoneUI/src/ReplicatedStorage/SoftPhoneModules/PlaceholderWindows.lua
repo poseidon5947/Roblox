@@ -267,7 +267,7 @@ local function addTask(parent: Instance, task: { any }, order: number, iconName:
 	return taskPanel
 end
 
-local function paintDashboard(content: Frame, spec, id: string)
+local function paintDashboard(content: Frame, spec, id: string, onStateChanged: ((string, any) -> ())?)
 	local scroll = Instance.new("ScrollingFrame")
 	scroll.Name = "Dashboard"
 	scroll.BackgroundTransparency = 1
@@ -464,6 +464,9 @@ local function paintDashboard(content: Frame, spec, id: string)
 				state.MessageOpened = true
 				state.Unread = math.max(0, state.Unread - 1)
 				setMetric(1, tostring(state.Unread))
+				if onStateChanged then
+					onStateChanged("MessagesUnread", state.Unread)
+				end
 			end
 			showFeedback("Message opened", "Welcome to Moonlight Plaza", tostring(state.Unread) .. " UNREAD")
 			return "OPENED"
@@ -574,11 +577,11 @@ local function paintDashboard(content: Frame, spec, id: string)
 	}
 end
 
-function PlaceholderWindows.mountAll(parent: Instance, onCloseFactory: (id: string) -> (() -> ()))
+function PlaceholderWindows.mountAll(parent: Instance, onCloseFactory: (id: string) -> (() -> ()), onStateChanged: ((string, any) -> ())?)
 	local windows = {}
 	for id, spec in pairs(SPECS) do
 		local handle = WindowChrome.create(parent, id, spec.Title, onCloseFactory(id))
-		local dashboard = paintDashboard(handle.Content, spec, id)
+		local dashboard = paintDashboard(handle.Content, spec, id, onStateChanged)
 		for i, footerLabel in ipairs(spec.Footer) do
 			local button
 			button = WindowChrome.addFooterButton(handle.Footer, footerLabel, i, function()

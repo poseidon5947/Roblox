@@ -11,12 +11,12 @@ local WindowChrome = require(script.Parent.WindowChrome)
 local ShopWindow = {}
 
 local SAMPLE_ITEMS = {
-	{ Key = "pixel_bow_jacket", Name = "Pixel Bow Jacket", Price = 120, Color = Theme.Colors.AccentPink, Tag = "NEW", Category = "CLOTHES" },
-	{ Key = "starline_skirt", Name = "Starline Skirt", Price = 90, Color = Theme.Colors.AccentLavender, Tag = "RARE", Category = "CLOTHES" },
-	{ Key = "bubble_boots", Name = "Bubble Boots", Price = 150, Color = Theme.Colors.AccentBlue, Tag = "TRENDING", Category = "CLOTHES" },
-	{ Key = "ribbon_satchel", Name = "Ribbon Satchel", Price = 75, Color = Theme.Colors.AccentPinkDeep, Tag = "CUTE", Category = "ACCESSORIES" },
-	{ Key = "mint_sleeve_set", Name = "Mint Sleeve Set", Price = 40, Color = Theme.Colors.AccentMint, Tag = "SET", Category = "CLOTHES" },
-	{ Key = "glow_hairclip", Name = "Glow Hairclip", Price = 55, Color = Theme.Colors.AccentLavender, Tag = "LIMITED", Category = "ACCESSORIES" },
+	{ Key = "pixel_bow_jacket", Name = "Pixel Bow Jacket", Price = 120, Color = Theme.Colors.AccentPink, Tag = "NEW", Category = "CLOTHES", Description = "A plush cropped jacket finished with a heart-gem bow." },
+	{ Key = "starline_skirt", Name = "Starline Skirt", Price = 90, Color = Theme.Colors.AccentLavender, Tag = "RARE", Category = "CLOTHES", Description = "Layered lavender tulle with a soft constellation shimmer." },
+	{ Key = "bubble_boots", Name = "Bubble Boots", Price = 150, Color = Theme.Colors.AccentBlue, Tag = "TRENDING", Category = "CLOTHES", Description = "Glossy platform boots with cloud-blue translucent soles." },
+	{ Key = "ribbon_satchel", Name = "Ribbon Satchel", Price = 75, Color = Theme.Colors.AccentPinkDeep, Tag = "CUTE", Category = "ACCESSORIES", Description = "A compact pearl-handle bag with a satin ribbon clasp." },
+	{ Key = "mint_sleeve_set", Name = "Mint Sleeve Set", Price = 40, Color = Theme.Colors.AccentMint, Tag = "SET", Category = "CLOTHES", Description = "Mint puff sleeves with polished cuffs and a soft sheen." },
+	{ Key = "glow_hairclip", Name = "Glow Hairclip", Price = 55, Color = Theme.Colors.AccentLavender, Tag = "LIMITED", Category = "ACCESSORIES", Description = "A tiny crystal clip with dangling pastel star charms." },
 }
 
 local function corner(parent: Instance, radius: number)
@@ -330,8 +330,29 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 	stroke(searchBox, Theme.Colors.ButtonStroke, 1, 0.35)
 	local searchPadding = Instance.new("UIPadding")
 	searchPadding.PaddingLeft = UDim.new(0, 10)
-	searchPadding.PaddingRight = UDim.new(0, 8)
+	searchPadding.PaddingRight = UDim.new(0, 32)
 	searchPadding.Parent = searchBox
+
+	local clearSearch = Instance.new("TextButton")
+	clearSearch.Name = "ClearSearch"
+	clearSearch.AnchorPoint = Vector2.new(1, 0.5)
+	clearSearch.Position = UDim2.new(1, -5, 0, 15)
+	clearSearch.Size = UDim2.fromOffset(22, 22)
+	clearSearch.BackgroundColor3 = Theme.Colors.ButtonFill
+	clearSearch.BorderSizePixel = 0
+	clearSearch.AutoButtonColor = false
+	clearSearch.Font = Theme.Fonts.Title
+	clearSearch.Text = "X"
+	clearSearch.TextColor3 = Theme.Colors.AccentPinkDeep
+	clearSearch.TextSize = 9
+	clearSearch.Visible = false
+	clearSearch.ZIndex = 47
+	clearSearch.Parent = toolbar
+	corner(clearSearch, 7)
+	clearSearch.Activated:Connect(function()
+		searchBox.Text = ""
+		searchBox:ReleaseFocus()
+	end)
 
 	local categoryBar = Instance.new("Frame")
 	categoryBar.Name = "CategoryBar"
@@ -573,7 +594,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 	detailNote.TextXAlignment = Enum.TextXAlignment.Left
 	detailNote.TextYAlignment = Enum.TextYAlignment.Top
 	detailNote.TextColor3 = Theme.Colors.TextMuted
-	detailNote.Text = "Select an item here. Connect its wearable asset ID later for an exact 3D fit."
+	detailNote.Text = "Fresh arrivals from Furu Boutique."
 	detailNote.ZIndex = 44
 	detailNote.Parent = detail
 
@@ -630,15 +651,15 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		if exactTryOn then
 			previewStatusText.Text = "3D TRY-ON"
 			caption.Text = "Trying: " .. selectedItem.Name
-			detailNote.Text = selectedItem.Tag .. " ITEM\n\nLive layered-clothing preview available."
+			detailNote.Text = selectedItem.Tag .. " ITEM\n\n" .. selectedItem.Description
 		elseif sampleTryOn then
 			previewStatusText.Text = "SAMPLE TRY-ON"
 			caption.Text = "Sample: " .. selectedItem.Name
-			detailNote.Text = selectedItem.Tag .. " ITEM\n\nTemporary sample geometry preview."
+			detailNote.Text = selectedItem.Tag .. " ITEM\n\n" .. selectedItem.Description
 		elseif selectedItem then
 			previewStatusText.Text = "2D PREVIEW"
 			caption.Text = "Selected: " .. selectedItem.Name
-			detailNote.Text = selectedItem.Tag .. " ITEM\n\n3D fitting pending."
+			detailNote.Text = selectedItem.Tag .. " ITEM\n\n" .. selectedItem.Description
 		else
 			previewStatusText.Text = "PREVIEW MODE"
 			caption.Text = "Your look - pick an item"
@@ -648,6 +669,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 	local activeCategory = "ALL"
 	local function updateFilters()
 		local query = string.lower(searchBox.Text)
+		clearSearch.Visible = query ~= ""
 		local visibleCount = 0
 		for _, state in ipairs(slotStates) do
 			local searchable = string.lower(state.Item.Name .. " " .. state.Item.Tag)
@@ -684,7 +706,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		previewStatusText.Text = "LOADING PREVIEW"
 		detailTitle.Text = item.Name
 		detailPrice.Text = "GEMS " .. tostring(item.Price)
-		detailNote.Text = item.Tag .. " ITEM\n\nPreparing preview."
+		detailNote.Text = item.Tag .. " ITEM\n\n" .. item.Description
 		renderItemArt(detailArt, item)
 
 		for _, state in ipairs(slotStates) do
@@ -792,6 +814,23 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		selectedBadge.Parent = preview
 		corner(selectedBadge, 8)
 
+		local compactPrice = Instance.new("TextLabel")
+		compactPrice.Name = "CompactPrice"
+		compactPrice.AnchorPoint = Vector2.new(1, 0)
+		compactPrice.Position = UDim2.new(1, -5, 0, 5)
+		compactPrice.Size = UDim2.fromOffset(48, 17)
+		compactPrice.BackgroundColor3 = Theme.Colors.AccentCream
+		compactPrice.BorderSizePixel = 0
+		compactPrice.Font = Theme.Fonts.Title
+		compactPrice.Text = tostring(item.Price) .. " G"
+		compactPrice.TextColor3 = Theme.Colors.AccentPinkDeep
+		compactPrice.TextSize = 8
+		compactPrice.Visible = false
+		compactPrice.ZIndex = 47
+		compactPrice.Parent = preview
+		corner(compactPrice, 8)
+		stroke(compactPrice, Theme.Colors.ButtonStroke, 1, 0.25)
+
 		table.insert(slotStates, {
 			Item = item,
 			Button = slot,
@@ -801,6 +840,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 			Price = price,
 			Swatch = preview,
 			SelectedBadge = selectedBadge,
+			CompactPrice = compactPrice,
 		})
 
 		slot.Activated:Connect(function()
@@ -830,6 +870,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 			state.Name.Visible = not compact
 			state.Price.Visible = not compact
 			state.Tag.Visible = not compact
+			state.CompactPrice.Visible = compact
 			state.Swatch.AnchorPoint = compact and Vector2.new(0.5, 0) or Vector2.zero
 			state.Swatch.Position = compact and UDim2.new(0.5, 0, 0, 9) or UDim2.fromOffset(8, 9)
 		end
@@ -845,7 +886,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 			previewStatusText.Text = "PREVIEW MODE"
 			detailTitle.Text = "Select an item"
 			detailPrice.Text = "GEMS --"
-			detailNote.Text = "Select an item here. Connect its wearable asset ID later for an exact 3D fit."
+			detailNote.Text = "Fresh arrivals from Furu Boutique."
 			for _, state in ipairs(slotStates) do
 				state.Button.BackgroundColor3 = Theme.Colors.AccentCream
 				state.Stroke.Color = Theme.Colors.AccentPink

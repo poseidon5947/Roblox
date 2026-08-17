@@ -13,7 +13,8 @@ White futuristic flip-phone sidebar and six `.exe`-style feature windows for Rob
 | `SoftPhoneUI_Demo_v2_9_ShopUX.rbxlx` | Previous demo with searchable, filterable shop browsing. |
 | `SoftPhoneUI_Demo_v2_10_WindowFix.rbxlx` | Previous fixed demo with working feature windows. |
 | `SoftPhoneUI_Demo_v2_11_WearableReady.rbxlx` | Previous demo with exact Accessory try-on integration. |
-| `SoftPhoneUI_Demo_v2_12_AppPolish.rbxlx` | Latest demo with reliable startup and stateful feature apps. |
+| `SoftPhoneUI_Demo_v2_12_AppPolish.rbxlx` | Previous demo with reliable startup and stateful feature apps. |
+| `SoftPhoneUI_Demo_v2_13_FinalPolish.rbxlx` | Latest client-facing polish, compact Shop pricing, and synchronized badges. |
 | `SoftPhoneUI_Package.rbxmx` | Insertable model package with modules and ScreenGui. |
 | `src/` | Rojo-style source tree. |
 | `assets/icons/*.svg` | Editable vector icon sources. |
@@ -34,10 +35,12 @@ White futuristic flip-phone sidebar and six `.exe`-style feature windows for Rob
 - Shop shows the local player's R15 avatar in a centered `ViewportFrame`.
 - Gacha, Map, Messages, Teleport, and Job keep useful local interaction state.
 - Mobile windows expand to use available space while Gacha remains full-screen.
+- Opening Gacha retracts the sidebar, and message reads update its unread badge.
+- Shop search has a clear control and compact item cards retain their prices.
 
 ## Studio Install
 
-1. Insert the latest `SoftPhoneUI_Package_v2_12_AppPolish.rbxmx` into your existing place.
+1. Insert the latest `SoftPhoneUI_Package_v2_13_FinalPolish.rbxmx` into your existing place.
 2. Move `SoftPhoneModules` into `ReplicatedStorage`.
 3. Move `SoftPhoneWearables` into `ReplicatedStorage`.
 4. Move `SoftPhoneUI` into `StarterGui`.

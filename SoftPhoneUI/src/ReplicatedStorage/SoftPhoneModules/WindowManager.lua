@@ -8,7 +8,7 @@ local PlaceholderWindows = require(script.Parent.PlaceholderWindows)
 local WindowManager = {}
 WindowManager.__index = WindowManager
 
-function WindowManager.new(host: Frame, onActiveChanged: ((string?) -> ())?)
+function WindowManager.new(host: Frame, onActiveChanged: ((string?) -> ())?, onStateChanged: ((string, any) -> ())?)
 	local self = setmetatable({}, WindowManager)
 	self._host = host
 	self._windows = {}
@@ -27,7 +27,7 @@ function WindowManager.new(host: Frame, onActiveChanged: ((string?) -> ())?)
 	end
 
 	self._windows.Shop = ShopWindow.mount(host, closer("Shop"))
-	local placeholders = PlaceholderWindows.mountAll(host, closer)
+	local placeholders = PlaceholderWindows.mountAll(host, closer, onStateChanged)
 	for id, handle in pairs(placeholders) do
 		self._windows[id] = handle
 	end
