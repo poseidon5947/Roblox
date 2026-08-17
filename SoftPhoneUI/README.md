@@ -15,7 +15,9 @@ White futuristic flip-phone sidebar and six `.exe`-style feature windows for Rob
 | `SoftPhoneUI_Demo_v2_11_WearableReady.rbxlx` | Previous demo with exact Accessory try-on integration. |
 | `SoftPhoneUI_Demo_v2_12_AppPolish.rbxlx` | Previous demo with reliable startup and stateful feature apps. |
 | `SoftPhoneUI_Demo_v2_13_FinalPolish.rbxlx` | Previous client-facing polish, compact Shop pricing, and synchronized badges. |
-| `SoftPhoneUI_Demo_v2_14_ReleasePolish.rbxlx` | Latest resilient build with player-stat integration and isolated app loading. |
+| `SoftPhoneUI_Demo_v2_14_ReleasePolish.rbxlx` | Previous resilient build with player-stat integration and isolated app loading. |
+| `SoftPhoneUI_Demo_v2_15_IntegrationReady.rbxlx` | Previous build with public action events and per-feature failure isolation. |
+| `SoftPhoneUI_Demo_v2_16_ControllerReady.rbxlx` | Latest build with structured action payloads and explicit controller commands. |
 | `SoftPhoneUI_Package.rbxmx` | Insertable model package with modules and ScreenGui. |
 | `src/` | Rojo-style source tree. |
 | `assets/icons/*.svg` | Editable vector icon sources. |
@@ -40,10 +42,13 @@ White futuristic flip-phone sidebar and six `.exe`-style feature windows for Rob
 - Shop search has a clear control and compact item cards retain their prices.
 - One failed feature module no longer prevents the rest of the phone from loading.
 - Sidebar gems, level, and XP read matching player attributes or `leaderstats` values.
+- Every app action is published through `PlayerGui.SoftPhoneUI.SoftPhoneAction`.
+- Job display name, level, and XP stay synchronized with player data.
+- External LocalScripts can explicitly open, close, query, or toggle windows and the phone panel.
 
 ## Studio Install
 
-1. Insert the latest `SoftPhoneUI_Package_v2_14_ReleasePolish.rbxmx` into your existing place.
+1. Insert the latest `SoftPhoneUI_Package_v2_16_ControllerReady.rbxmx` into your existing place.
 2. Move `SoftPhoneModules` into `ReplicatedStorage`.
 3. Move `SoftPhoneWearables` into `ReplicatedStorage`.
 4. Move `SoftPhoneUI` into `StarterGui`.
@@ -138,6 +143,43 @@ The sidebar automatically reads these numeric player attributes or `leaderstats`
 - `XPToNext`
 
 Without game-provided values, the polished demo values remain visible. The Job app also displays `Players.LocalPlayer.DisplayName`.
+
+Gacha also reads optional numeric `GachaTokens` and `GachaPity` values when the dashboard is created.
+
+## Action Integration
+
+`SoftPhoneAction` is a `BindableEvent` created under the player's `SoftPhoneUI` ScreenGui. It emits `appId`, `actionName`, and an optional payload.
+
+```lua
+local playerGui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+local phone = playerGui:WaitForChild("SoftPhoneUI")
+local actions = phone:WaitForChild("SoftPhoneAction")
+
+actions.Event:Connect(function(appId, actionName, payload)
+	print(appId, actionName, payload)
+end)
+```
+
+Shop emits item keys or preview angles as payloads. Other apps emit structured tables containing values such as tokens, pity, rewards, routes, unread counts, destinations, and job state. A game-specific LocalScript should validate any action before forwarding it to the server.
+
+## Window Controller
+
+`SoftPhoneWindowManager` is a `BindableFunction` under the same ScreenGui:
+
+```lua
+local controller = phone:WaitForChild("SoftPhoneWindowManager")
+
+controller:Invoke("Open", "Shop")
+controller:Invoke("Close", "Shop")
+controller:Invoke("Toggle", "Messages")
+controller:Invoke("CloseAll")
+local activeApp = controller:Invoke("GetActive")
+local hasMap = controller:Invoke("IsAvailable", "Map")
+controller:Invoke("SetPhoneExpanded", true)
+controller:Invoke("TogglePhone")
+```
+
+For backward compatibility, `controller:Invoke("Shop")` still toggles the Shop window.
 
 ## Notes
 

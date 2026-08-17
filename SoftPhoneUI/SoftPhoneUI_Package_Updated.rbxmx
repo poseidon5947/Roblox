@@ -15,7 +15,7 @@
 local Theme = {}
 
 Theme.Side = "Right"
-Theme.Version = "2.14"
+Theme.Version = "2.16"
 Theme.EnableSample3DTryOn = false
 Theme.WearablesFolder = "SoftPhoneWearables"
 
@@ -2390,7 +2390,7 @@ local function applySampleTryOn(model: Model, item)
 	end
 end
 
-function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
+function ShopWindow.mount(parent: Instance, onClose: (() -> ())?, onAction: ((string, string, any?) -> ())?)
 	local handle = WindowChrome.create(parent, "Shop", "shop", onClose)
 	local content = handle.Content
 	local footer = handle.Footer
@@ -2806,7 +2806,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		end)
 	end
 
-	local function selectItem(item)
+	local function selectItem(item, silent: boolean?)
 		selectedItem = item
 		caption.Text = "Selected: " .. item.Name
 		previewStatusText.Text = "LOADING PREVIEW"
@@ -2823,6 +2823,9 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 			state.Stroke.Transparency = selected and 0 or 0.4
 			state.Tag.BackgroundColor3 = selected and Theme.Colors.ButtonFillHover or Color3.fromRGB(255, 231, 247)
 			state.SelectedBadge.Visible = selected
+		end
+		if not silent and onAction then
+			onAction("Shop", "SelectItem", item.Key)
 		end
 		task.defer(refreshAvatar)
 	end
@@ -3006,14 +3009,23 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 					child:Destroy()
 				end
 			end
+			if onAction then
+				onAction("Shop", "ResetLook", nil)
+			end
 			refreshAvatar()
 		end)
 		WindowChrome.addFooterButton(footer, "Rotate", 2, function()
 			previewAngle = (previewAngle + 35) % 360
+			if onAction then
+				onAction("Shop", "RotatePreview", previewAngle)
+			end
 			refreshAvatar()
 		end)
 		WindowChrome.addFooterButton(footer, "Apply Preview", 3, function()
 			if selectedItem then
+				if onAction then
+					onAction("Shop", "ApplyPreview", selectedItem.Key)
+				end
 				previewStatusText.Text = "LOADING PREVIEW"
 				refreshAvatar()
 			else
@@ -3023,7 +3035,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		end)
 	end
 
-	selectItem(SAMPLE_ITEMS[1])
+	selectItem(SAMPLE_ITEMS[1], true)
 
 	local player = Players.LocalPlayer
 	if player.Character then
@@ -3066,6 +3078,19 @@ local IconDraw = require(script.Parent.IconDraw)
 local WindowChrome = require(script.Parent.WindowChrome)
 
 local PlaceholderWindows = {}
+
+local function playerStat(player: Player, name: string, fallback: number): number
+	local attribute = player:GetAttribute(name)
+	if typeof(attribute) == "number" then
+		return attribute
+	end
+	local leaderstats = player:FindFirstChild("leaderstats")
+	local value = leaderstats and leaderstats:FindFirstChild(name)
+	if value and (value:IsA("IntValue") or value:IsA("NumberValue")) then
+		return value.Value
+	end
+	return fallback
+end
 
 local SPECS = {
 	Gacha = {
@@ -3325,7 +3350,7 @@ local function addTask(parent: Instance, task: { any }, order: number, iconName:
 	return taskPanel
 end
 
-local function paintDashboard(content: Frame, spec, id: string, onStateChanged: ((string, any) -> ())?)
+local function paintDashboard(content: Frame, spec, id: string, onStateChanged: ((string, any) -> ())?, onAction: ((string, string, any?) -> ())?)
 	local scroll = Instance.new("ScrollingFrame")
 	scroll.Name = "Dashboard"
 	scroll.BackgroundTransparency = 1
@@ -3368,14 +3393,57 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 	headline.Position = UDim2.fromOffset(82, 25)
 	headline.Size = UDim2.new(1, -242, 0, 24)
 	headline.TextTruncate = Enum.TextTruncate.AtEnd
-	if id == "Job" then
-		headline.Text = Players.LocalPlayer.DisplayName
-	end
 
 	local subline = label(profile, "Subline", spec.Subline, 10, Theme.Fonts.Body, Theme.Colors.TextMuted, 47)
 	subline.Position = UDim2.fromOffset(82, 51)
 	subline.Size = UDim2.new(1, -242, 0, 18)
 	subline.TextTruncate = Enum.TextTruncate.AtEnd
+
+	if id == "Job" then
+		local player = Players.LocalPlayer
+		local boundValues = {}
+		local function refreshJobProfile()
+			local level = math.floor(playerStat(player, "Level", 1))
+			local xp = math.floor(playerStat(player, "XP", 120))
+			local xpToNext = math.floor(math.max(1, playerStat(player, "XPToNext", 500)))
+			headline.Text = player.DisplayName
+			subline.Text = "Intern  |  Level " .. tostring(level) .. "  |  " .. tostring(xp) .. " / " .. tostring(xpToNext) .. " XP"
+		end
+		local function bindValue(value: Instance)
+			if boundValues[value] or not (value:IsA("IntValue") or value:IsA("NumberValue")) then
+				return
+			end
+			if value.Name ~= "Level" and value.Name ~= "XP" and value.Name ~= "XPToNext" then
+				return
+			end
+			boundValues[value] = true
+			value.Changed:Connect(refreshJobProfile)
+		end
+		local function bindLeaderstats(folder: Instance)
+			for _, child in ipairs(folder:GetChildren()) do
+				bindValue(child)
+			end
+			folder.ChildAdded:Connect(function(child)
+				bindValue(child)
+				refreshJobProfile()
+			end)
+			folder.ChildRemoved:Connect(refreshJobProfile)
+		end
+		for _, name in ipairs({ "Level", "XP", "XPToNext" }) do
+			player:GetAttributeChangedSignal(name):Connect(refreshJobProfile)
+		end
+		local leaderstats = player:FindFirstChild("leaderstats")
+		if leaderstats then
+			bindLeaderstats(leaderstats)
+		end
+		player.ChildAdded:Connect(function(child)
+			if child.Name == "leaderstats" then
+				bindLeaderstats(child)
+				refreshJobProfile()
+			end
+		end)
+		refreshJobProfile()
+	end
 
 	local metricValues = {}
 	for i, metric in ipairs(spec.Metrics) do
@@ -3441,8 +3509,8 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 	stroke(action, Theme.Colors.ButtonStroke, 1, 0.18)
 
 	local state = {
-		Pity = 42,
-		Tokens = 8,
+		Pity = math.floor(playerStat(Players.LocalPlayer, "GachaPity", 42)),
+		Tokens = math.floor(playerStat(Players.LocalPlayer, "GachaTokens", 8)),
 		PullIndex = 0,
 		Unread = 3,
 		MessageOpened = false,
@@ -3458,6 +3526,10 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 			metric.Text = text
 		end
 	end
+	if id == "Gacha" then
+		setMetric(1, tostring(state.Pity) .. " / 80")
+		setMetric(2, tostring(state.Tokens))
+	end
 
 	local function showFeedback(titleText: string, sublineText: string, rewardText: string?)
 		headline.Text = titleText
@@ -3467,12 +3539,12 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 		end
 	end
 
-	local function runCommand(command: string): string
+	local function executeCommand(command: string)
 		if id == "Gacha" then
 			if command == "Pull x1" then
 				if state.Tokens <= 0 then
 					showFeedback("No tokens available", "Daily Wish refreshes tomorrow.", "0 TOKENS")
-					return "EMPTY"
+					return "EMPTY", { Tokens = state.Tokens, Pity = state.Pity }
 				end
 				state.Tokens -= 1
 				state.Pity += 1
@@ -3482,44 +3554,53 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 				setMetric(2, tostring(state.Tokens))
 				featuredTitle.Text = prize
 				showFeedback("Capsule opened", prize .. " joined your collection.", "NEW ITEM")
-				return "OPENED"
+				return "OPENED", { Count = 1, Tokens = state.Tokens, Pity = state.Pity, Prize = prize }
 			elseif command == "Pull x10" then
 				if state.Tokens < 10 then
 					local needed = 10 - state.Tokens
 					showFeedback("More tokens needed", tostring(needed) .. " more required for ten pulls.", tostring(state.Tokens) .. " / 10")
-					return "LOCKED"
+					return "LOCKED", { Tokens = state.Tokens, Required = 10, Pity = state.Pity }
 				end
+				state.Tokens -= 10
+				state.Pity += 10
+				state.PullIndex = (state.PullIndex % #pullRewards) + 1
+				local prize = pullRewards[state.PullIndex]
+				setMetric(1, tostring(state.Pity) .. " / 80")
+				setMetric(2, tostring(state.Tokens))
+				featuredTitle.Text = prize
+				showFeedback("Ten capsules opened", prize .. " was the featured reward.", "10 ITEMS")
+				return "OPENED", { Count = 10, Tokens = state.Tokens, Pity = state.Pity, FeaturedPrize = prize }
 			elseif command == "History" then
 				local last = state.PullIndex > 0 and pullRewards[state.PullIndex] or "No pulls this session"
 				showFeedback("Recent pulls", last, tostring(state.Pity) .. " PITY")
-				return "VIEWING"
+				return "VIEWING", { LastPrize = last, Pity = state.Pity }
 			end
 			showFeedback("Celestial Ribbon pool", "Six items plus one limited aura.", "POOL READY")
-			return "POOL READY"
+			return "POOL READY", { Pool = "Celestial Ribbon", Tokens = state.Tokens, Pity = state.Pity }
 		elseif id == "Map" then
 			if command == "Zoom" then
 				state.Zoomed = not state.Zoomed
 				showFeedback(state.Zoomed and "Street view" or "District view", state.Zoomed and "Moonlight Plaza details visible." or "All nearby activities visible.", state.Zoomed and "2x ZOOM" or "1x ZOOM")
-				return state.Zoomed and "2x" or "1x"
+				return state.Zoomed and "2x" or "1x", { Zoom = state.Zoomed and 2 or 1 }
 			elseif command == "Pins" then
 				showFeedback("All pins visible", "12 saved places are shown on the map.", "12 PINS")
-				return "12 PINS"
+				return "12 PINS", { Pins = 12 }
 			elseif command == "Home" then
 				showFeedback("Home route selected", "Fast travel route is ready.", "ROUTE SET")
-				return "ROUTED"
+				return "ROUTED", { Destination = "Home" }
 			end
 			showFeedback("Route ready", "Moonlight Plaza is now highlighted.", "240m AWAY")
-			return "ROUTE SET"
+			return "ROUTE SET", { Destination = "Moonlight Plaza", Distance = 240 }
 		elseif id == "Messages" then
 			if command == "Compose" then
 				showFeedback("New message", "Draft opened for your next message.", "DRAFT")
-				return "DRAFT"
+				return "DRAFT", { View = "Compose", Unread = state.Unread }
 			elseif command == "Inbox" then
 				showFeedback("Inbox", tostring(state.Unread) .. " unread messages remaining.", tostring(state.Unread) .. " UNREAD")
-				return "INBOX"
+				return "INBOX", { View = "Inbox", Unread = state.Unread }
 			elseif command == "Archive" then
 				showFeedback("Archive", "Saved announcements and conversations.", "8 SAVED")
-				return "OPEN"
+				return "OPEN", { View = "Archive", Saved = 8 }
 			end
 			if not state.MessageOpened then
 				state.MessageOpened = true
@@ -3530,7 +3611,7 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 				end
 			end
 			showFeedback("Message opened", "Welcome to Moonlight Plaza", tostring(state.Unread) .. " UNREAD")
-			return "OPENED"
+			return "OPENED", { Message = "Welcome to Moonlight Plaza", Unread = state.Unread }
 		elseif id == "Teleport" then
 			if command == "Plaza" then
 				state.Destination = "Furu Central Plaza"
@@ -3540,27 +3621,35 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 				state.Destination = "Job Hub"
 			else
 				showFeedback("Destination ready", state.Destination .. " is selected.", "READY")
-				return "READY"
+				return "READY", { Destination = state.Destination }
 			end
 			featuredTitle.Text = state.Destination
 			showFeedback("Destination selected", state.Destination .. " is ready for travel.", "FREE")
-			return "SELECTED"
+			return "SELECTED", { Destination = state.Destination }
 		elseif id == "Job" then
 			if command == "Apply" or command == "__PRIMARY__" then
 				state.Applied = true
 				showFeedback("Application ready", "Office Assistant is added to your career list.", "150 GEMS")
-				return "APPLIED"
+				return "APPLIED", { Job = "Office Assistant", Applied = true, Reward = 150 }
 			elseif command == "Shifts" then
 				showFeedback("Available shifts", "Morning and evening shifts have openings.", "2 OPEN")
-				return "2 OPEN"
+				return "2 OPEN", { OpenShifts = 2 }
 			elseif command == "Pay" then
 				showFeedback("Pay summary", "Next reward unlocks after one completed shift.", "150 GEMS")
-				return "VIEWING"
+				return "VIEWING", { NextPay = 150 }
 			end
 		end
 
 		showFeedback(spec.Headline, spec.Subline, spec.Reward)
-		return spec.ActionDone or "DONE"
+		return spec.ActionDone or "DONE", {}
+	end
+
+	local function runCommand(command: string): string
+		local result, payload = executeCommand(command)
+		if onAction then
+			onAction(id, command == "__PRIMARY__" and spec.Action or command, payload)
+		end
+		return result
 	end
 
 	action.Activated:Connect(function()
@@ -3638,11 +3727,15 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 	}
 end
 
-function PlaceholderWindows.mountAll(parent: Instance, onCloseFactory: (id: string) -> (() -> ()), onStateChanged: ((string, any) -> ())?)
-	local windows = {}
-	for id, spec in pairs(SPECS) do
-		local handle = WindowChrome.create(parent, id, spec.Title, onCloseFactory(id))
-		local dashboard = paintDashboard(handle.Content, spec, id, onStateChanged)
+function PlaceholderWindows.mount(parent: Instance, id: string, onClose: (() -> ())?, onStateChanged: ((string, any) -> ())?, onAction: ((string, string, any?) -> ())?)
+	local spec = SPECS[id]
+	if not spec then
+		error("Unknown feature window: " .. id)
+	end
+
+	local handle = WindowChrome.create(parent, id, spec.Title, onClose)
+	local setupOk, setupError = pcall(function()
+		local dashboard = paintDashboard(handle.Content, spec, id, onStateChanged, onAction)
 		for i, footerLabel in ipairs(spec.Footer) do
 			local button
 			button = WindowChrome.addFooterButton(handle.Footer, footerLabel, i, function()
@@ -3655,7 +3748,23 @@ function PlaceholderWindows.mountAll(parent: Instance, onCloseFactory: (id: stri
 				end)
 			end)
 		end
-		windows[id] = handle
+	end)
+	if not setupOk then
+		handle.Root:Destroy()
+		error(setupError)
+	end
+	return handle
+end
+
+function PlaceholderWindows.mountAll(parent: Instance, onCloseFactory: (id: string) -> (() -> ()), onStateChanged: ((string, any) -> ())?, onAction: ((string, string, any?) -> ())?)
+	local windows = {}
+	for id in pairs(SPECS) do
+		local ok, handle = pcall(PlaceholderWindows.mount, parent, id, onCloseFactory(id), onStateChanged, onAction)
+		if ok then
+			windows[id] = handle
+		else
+			warn("[SoftPhoneUI] Could not mount " .. id .. ":", handle)
+		end
 	end
 	return windows
 end
@@ -3690,7 +3799,7 @@ local function loadModule(name: string)
 	return result
 end
 
-function WindowManager.new(host: Frame, onActiveChanged: ((string?) -> ())?, onStateChanged: ((string, any) -> ())?)
+function WindowManager.new(host: Frame, onActiveChanged: ((string?) -> ())?, onStateChanged: ((string, any) -> ())?, onAction: ((string, string, any?) -> ())?)
 	local self = setmetatable({}, WindowManager)
 	self._host = host
 	self._windows = {}
@@ -3710,7 +3819,7 @@ function WindowManager.new(host: Frame, onActiveChanged: ((string?) -> ())?, onS
 
 	local ShopWindow = loadModule("ShopWindow")
 	if ShopWindow then
-		local ok, handle = pcall(ShopWindow.mount, host, closer("Shop"))
+		local ok, handle = pcall(ShopWindow.mount, host, closer("Shop"), onAction)
 		if ok then
 			self._windows.Shop = handle
 		else
@@ -3720,7 +3829,7 @@ function WindowManager.new(host: Frame, onActiveChanged: ((string?) -> ())?, onS
 
 	local PlaceholderWindows = loadModule("PlaceholderWindows")
 	if PlaceholderWindows then
-		local ok, placeholders = pcall(PlaceholderWindows.mountAll, host, closer, onStateChanged)
+		local ok, placeholders = pcall(PlaceholderWindows.mountAll, host, closer, onStateChanged, onAction)
 		if ok then
 			for id, handle in pairs(placeholders) do
 				self._windows[id] = handle
@@ -3740,6 +3849,19 @@ function WindowManager:open(id: string)
 		return
 	end
 
+	if self._active == id and target:isOpen() then
+		return self:hide(id)
+	end
+	return self:show(id)
+end
+
+function WindowManager:show(id: string)
+	local target = self._windows[id]
+	if not target then
+		warn("[SoftPhoneUI] Unknown window:", id)
+		return
+	end
+
 	if self._active and self._active ~= id then
 		local current = self._windows[self._active]
 		if current then
@@ -3747,19 +3869,30 @@ function WindowManager:open(id: string)
 		end
 	end
 
-	if self._active == id and target:isOpen() then
+	if not target:isOpen() then
+		target:setVisible(true, false)
+	end
+	self._active = id
+	if self._onActiveChanged then
+		self._onActiveChanged(self._active)
+	end
+	return self._active
+end
+
+function WindowManager:hide(id: string)
+	local target = self._windows[id]
+	if not target then
+		warn("[SoftPhoneUI] Unknown window:", id)
+		return self._active
+	end
+	if target:isOpen() then
 		target:setVisible(false, false)
+	end
+	if self._active == id then
 		self._active = nil
 		if self._onActiveChanged then
 			self._onActiveChanged(nil)
 		end
-		return self._active
-	end
-
-	target:setVisible(true, false)
-	self._active = id
-	if self._onActiveChanged then
-		self._onActiveChanged(self._active)
 	end
 	return self._active
 end
@@ -3778,6 +3911,10 @@ end
 
 function WindowManager:getActive(): string?
 	return self._active
+end
+
+function WindowManager:isAvailable(id: string): boolean
+	return self._windows[id] ~= nil
 end
 
 return WindowManager
@@ -3918,6 +4055,14 @@ windowHost.Parent = screenGui
 
 local sidebar
 local manager
+local oldActionEvent = screenGui:FindFirstChild("SoftPhoneAction")
+if oldActionEvent then
+	oldActionEvent:Destroy()
+end
+local actionEvent = Instance.new("BindableEvent")
+actionEvent.Name = "SoftPhoneAction"
+actionEvent.Parent = screenGui
+
 local ok, initError = pcall(function()
 	local modules = ReplicatedStorage:WaitForChild("SoftPhoneModules", 10)
 	assert(modules, "ReplicatedStorage.SoftPhoneModules was not found")
@@ -3936,6 +4081,8 @@ local ok, initError = pcall(function()
 		if sidebar and eventName == "MessagesUnread" then
 			sidebar:setBadge("Messages", tostring(value))
 		end
+	end, function(appId: string, actionName: string, payload)
+		actionEvent:Fire(appId, actionName, payload)
 	end)
 
 	sidebar = Sidebar.new(screenGui, function(id: string)
@@ -3947,8 +4094,30 @@ local ok, initError = pcall(function()
 
 	local bridge = Instance.new("BindableFunction")
 	bridge.Name = "SoftPhoneWindowManager"
-	bridge.OnInvoke = function(id: string)
-		return manager:open(id)
+	bridge.OnInvoke = function(commandOrId: string, targetOrValue, value)
+		local id = typeof(targetOrValue) == "string" and targetOrValue or nil
+		if commandOrId == "Open" then
+			return manager:show(id)
+		elseif commandOrId == "Close" then
+			return manager:hide(id)
+		elseif commandOrId == "Toggle" then
+			return manager:open(id)
+		elseif commandOrId == "CloseAll" then
+			manager:closeAll(false)
+			return nil
+		elseif commandOrId == "GetActive" then
+			return manager:getActive()
+		elseif commandOrId == "IsAvailable" then
+			return manager:isAvailable(id)
+		elseif commandOrId == "SetPhoneExpanded" then
+			local expanded = typeof(targetOrValue) == "boolean" and targetOrValue or value == true
+			sidebar:setExpanded(expanded, false)
+			return sidebar:isExpanded()
+		elseif commandOrId == "TogglePhone" then
+			sidebar:toggle()
+			return sidebar:isExpanded()
+		end
+		return manager:open(commandOrId)
 	end
 	bridge.Parent = screenGui
 end)
@@ -3961,6 +4130,7 @@ if ok then
 	print("[SoftPhoneUI] Ready - click the gem on the edge tab to open Furu Phone.")
 else
 	windowHost:Destroy()
+	actionEvent:Destroy()
 	local errorLabel = staticLauncher :: GuiButton
 	errorLabel.Name = "SoftPhoneError"
 	errorLabel.Text = "UI ERROR\nCHECK OUTPUT"

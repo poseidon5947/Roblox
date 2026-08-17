@@ -298,7 +298,7 @@ local function applySampleTryOn(model: Model, item)
 	end
 end
 
-function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
+function ShopWindow.mount(parent: Instance, onClose: (() -> ())?, onAction: ((string, string, any?) -> ())?)
 	local handle = WindowChrome.create(parent, "Shop", "shop", onClose)
 	local content = handle.Content
 	local footer = handle.Footer
@@ -714,7 +714,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		end)
 	end
 
-	local function selectItem(item)
+	local function selectItem(item, silent: boolean?)
 		selectedItem = item
 		caption.Text = "Selected: " .. item.Name
 		previewStatusText.Text = "LOADING PREVIEW"
@@ -731,6 +731,9 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 			state.Stroke.Transparency = selected and 0 or 0.4
 			state.Tag.BackgroundColor3 = selected and Theme.Colors.ButtonFillHover or Color3.fromRGB(255, 231, 247)
 			state.SelectedBadge.Visible = selected
+		end
+		if not silent and onAction then
+			onAction("Shop", "SelectItem", item.Key)
 		end
 		task.defer(refreshAvatar)
 	end
@@ -914,14 +917,23 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 					child:Destroy()
 				end
 			end
+			if onAction then
+				onAction("Shop", "ResetLook", nil)
+			end
 			refreshAvatar()
 		end)
 		WindowChrome.addFooterButton(footer, "Rotate", 2, function()
 			previewAngle = (previewAngle + 35) % 360
+			if onAction then
+				onAction("Shop", "RotatePreview", previewAngle)
+			end
 			refreshAvatar()
 		end)
 		WindowChrome.addFooterButton(footer, "Apply Preview", 3, function()
 			if selectedItem then
+				if onAction then
+					onAction("Shop", "ApplyPreview", selectedItem.Key)
+				end
 				previewStatusText.Text = "LOADING PREVIEW"
 				refreshAvatar()
 			else
@@ -931,7 +943,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		end)
 	end
 
-	selectItem(SAMPLE_ITEMS[1])
+	selectItem(SAMPLE_ITEMS[1], true)
 
 	local player = Players.LocalPlayer
 	if player.Character then

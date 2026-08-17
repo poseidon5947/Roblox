@@ -15,7 +15,7 @@
 local Theme = {}
 
 Theme.Side = "Right"
-Theme.Version = "2.16"
+Theme.Version = "2.15"
 Theme.EnableSample3DTryOn = false
 Theme.WearablesFolder = "SoftPhoneWearables"
 
@@ -3509,8 +3509,8 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 	stroke(action, Theme.Colors.ButtonStroke, 1, 0.18)
 
 	local state = {
-		Pity = math.floor(playerStat(Players.LocalPlayer, "GachaPity", 42)),
-		Tokens = math.floor(playerStat(Players.LocalPlayer, "GachaTokens", 8)),
+		Pity = 42,
+		Tokens = 8,
 		PullIndex = 0,
 		Unread = 3,
 		MessageOpened = false,
@@ -3526,10 +3526,6 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 			metric.Text = text
 		end
 	end
-	if id == "Gacha" then
-		setMetric(1, tostring(state.Pity) .. " / 80")
-		setMetric(2, tostring(state.Tokens))
-	end
 
 	local function showFeedback(titleText: string, sublineText: string, rewardText: string?)
 		headline.Text = titleText
@@ -3539,12 +3535,15 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 		end
 	end
 
-	local function executeCommand(command: string)
+	local function runCommand(command: string): string
+		if onAction then
+			onAction(id, command == "__PRIMARY__" and spec.Action or command, nil)
+		end
 		if id == "Gacha" then
 			if command == "Pull x1" then
 				if state.Tokens <= 0 then
 					showFeedback("No tokens available", "Daily Wish refreshes tomorrow.", "0 TOKENS")
-					return "EMPTY", { Tokens = state.Tokens, Pity = state.Pity }
+					return "EMPTY"
 				end
 				state.Tokens -= 1
 				state.Pity += 1
@@ -3554,53 +3553,44 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 				setMetric(2, tostring(state.Tokens))
 				featuredTitle.Text = prize
 				showFeedback("Capsule opened", prize .. " joined your collection.", "NEW ITEM")
-				return "OPENED", { Count = 1, Tokens = state.Tokens, Pity = state.Pity, Prize = prize }
+				return "OPENED"
 			elseif command == "Pull x10" then
 				if state.Tokens < 10 then
 					local needed = 10 - state.Tokens
 					showFeedback("More tokens needed", tostring(needed) .. " more required for ten pulls.", tostring(state.Tokens) .. " / 10")
-					return "LOCKED", { Tokens = state.Tokens, Required = 10, Pity = state.Pity }
+					return "LOCKED"
 				end
-				state.Tokens -= 10
-				state.Pity += 10
-				state.PullIndex = (state.PullIndex % #pullRewards) + 1
-				local prize = pullRewards[state.PullIndex]
-				setMetric(1, tostring(state.Pity) .. " / 80")
-				setMetric(2, tostring(state.Tokens))
-				featuredTitle.Text = prize
-				showFeedback("Ten capsules opened", prize .. " was the featured reward.", "10 ITEMS")
-				return "OPENED", { Count = 10, Tokens = state.Tokens, Pity = state.Pity, FeaturedPrize = prize }
 			elseif command == "History" then
 				local last = state.PullIndex > 0 and pullRewards[state.PullIndex] or "No pulls this session"
 				showFeedback("Recent pulls", last, tostring(state.Pity) .. " PITY")
-				return "VIEWING", { LastPrize = last, Pity = state.Pity }
+				return "VIEWING"
 			end
 			showFeedback("Celestial Ribbon pool", "Six items plus one limited aura.", "POOL READY")
-			return "POOL READY", { Pool = "Celestial Ribbon", Tokens = state.Tokens, Pity = state.Pity }
+			return "POOL READY"
 		elseif id == "Map" then
 			if command == "Zoom" then
 				state.Zoomed = not state.Zoomed
 				showFeedback(state.Zoomed and "Street view" or "District view", state.Zoomed and "Moonlight Plaza details visible." or "All nearby activities visible.", state.Zoomed and "2x ZOOM" or "1x ZOOM")
-				return state.Zoomed and "2x" or "1x", { Zoom = state.Zoomed and 2 or 1 }
+				return state.Zoomed and "2x" or "1x"
 			elseif command == "Pins" then
 				showFeedback("All pins visible", "12 saved places are shown on the map.", "12 PINS")
-				return "12 PINS", { Pins = 12 }
+				return "12 PINS"
 			elseif command == "Home" then
 				showFeedback("Home route selected", "Fast travel route is ready.", "ROUTE SET")
-				return "ROUTED", { Destination = "Home" }
+				return "ROUTED"
 			end
 			showFeedback("Route ready", "Moonlight Plaza is now highlighted.", "240m AWAY")
-			return "ROUTE SET", { Destination = "Moonlight Plaza", Distance = 240 }
+			return "ROUTE SET"
 		elseif id == "Messages" then
 			if command == "Compose" then
 				showFeedback("New message", "Draft opened for your next message.", "DRAFT")
-				return "DRAFT", { View = "Compose", Unread = state.Unread }
+				return "DRAFT"
 			elseif command == "Inbox" then
 				showFeedback("Inbox", tostring(state.Unread) .. " unread messages remaining.", tostring(state.Unread) .. " UNREAD")
-				return "INBOX", { View = "Inbox", Unread = state.Unread }
+				return "INBOX"
 			elseif command == "Archive" then
 				showFeedback("Archive", "Saved announcements and conversations.", "8 SAVED")
-				return "OPEN", { View = "Archive", Saved = 8 }
+				return "OPEN"
 			end
 			if not state.MessageOpened then
 				state.MessageOpened = true
@@ -3611,7 +3601,7 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 				end
 			end
 			showFeedback("Message opened", "Welcome to Moonlight Plaza", tostring(state.Unread) .. " UNREAD")
-			return "OPENED", { Message = "Welcome to Moonlight Plaza", Unread = state.Unread }
+			return "OPENED"
 		elseif id == "Teleport" then
 			if command == "Plaza" then
 				state.Destination = "Furu Central Plaza"
@@ -3621,35 +3611,27 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 				state.Destination = "Job Hub"
 			else
 				showFeedback("Destination ready", state.Destination .. " is selected.", "READY")
-				return "READY", { Destination = state.Destination }
+				return "READY"
 			end
 			featuredTitle.Text = state.Destination
 			showFeedback("Destination selected", state.Destination .. " is ready for travel.", "FREE")
-			return "SELECTED", { Destination = state.Destination }
+			return "SELECTED"
 		elseif id == "Job" then
 			if command == "Apply" or command == "__PRIMARY__" then
 				state.Applied = true
 				showFeedback("Application ready", "Office Assistant is added to your career list.", "150 GEMS")
-				return "APPLIED", { Job = "Office Assistant", Applied = true, Reward = 150 }
+				return "APPLIED"
 			elseif command == "Shifts" then
 				showFeedback("Available shifts", "Morning and evening shifts have openings.", "2 OPEN")
-				return "2 OPEN", { OpenShifts = 2 }
+				return "2 OPEN"
 			elseif command == "Pay" then
 				showFeedback("Pay summary", "Next reward unlocks after one completed shift.", "150 GEMS")
-				return "VIEWING", { NextPay = 150 }
+				return "VIEWING"
 			end
 		end
 
 		showFeedback(spec.Headline, spec.Subline, spec.Reward)
-		return spec.ActionDone or "DONE", {}
-	end
-
-	local function runCommand(command: string): string
-		local result, payload = executeCommand(command)
-		if onAction then
-			onAction(id, command == "__PRIMARY__" and spec.Action or command, payload)
-		end
-		return result
+		return spec.ActionDone or "DONE"
 	end
 
 	action.Activated:Connect(function()
@@ -3849,19 +3831,6 @@ function WindowManager:open(id: string)
 		return
 	end
 
-	if self._active == id and target:isOpen() then
-		return self:hide(id)
-	end
-	return self:show(id)
-end
-
-function WindowManager:show(id: string)
-	local target = self._windows[id]
-	if not target then
-		warn("[SoftPhoneUI] Unknown window:", id)
-		return
-	end
-
 	if self._active and self._active ~= id then
 		local current = self._windows[self._active]
 		if current then
@@ -3869,30 +3838,19 @@ function WindowManager:show(id: string)
 		end
 	end
 
-	if not target:isOpen() then
-		target:setVisible(true, false)
-	end
-	self._active = id
-	if self._onActiveChanged then
-		self._onActiveChanged(self._active)
-	end
-	return self._active
-end
-
-function WindowManager:hide(id: string)
-	local target = self._windows[id]
-	if not target then
-		warn("[SoftPhoneUI] Unknown window:", id)
-		return self._active
-	end
-	if target:isOpen() then
+	if self._active == id and target:isOpen() then
 		target:setVisible(false, false)
-	end
-	if self._active == id then
 		self._active = nil
 		if self._onActiveChanged then
 			self._onActiveChanged(nil)
 		end
+		return self._active
+	end
+
+	target:setVisible(true, false)
+	self._active = id
+	if self._onActiveChanged then
+		self._onActiveChanged(self._active)
 	end
 	return self._active
 end
@@ -3911,10 +3869,6 @@ end
 
 function WindowManager:getActive(): string?
 	return self._active
-end
-
-function WindowManager:isAvailable(id: string): boolean
-	return self._windows[id] ~= nil
 end
 
 return WindowManager
@@ -4094,30 +4048,8 @@ local ok, initError = pcall(function()
 
 	local bridge = Instance.new("BindableFunction")
 	bridge.Name = "SoftPhoneWindowManager"
-	bridge.OnInvoke = function(commandOrId: string, targetOrValue, value)
-		local id = typeof(targetOrValue) == "string" and targetOrValue or nil
-		if commandOrId == "Open" then
-			return manager:show(id)
-		elseif commandOrId == "Close" then
-			return manager:hide(id)
-		elseif commandOrId == "Toggle" then
-			return manager:open(id)
-		elseif commandOrId == "CloseAll" then
-			manager:closeAll(false)
-			return nil
-		elseif commandOrId == "GetActive" then
-			return manager:getActive()
-		elseif commandOrId == "IsAvailable" then
-			return manager:isAvailable(id)
-		elseif commandOrId == "SetPhoneExpanded" then
-			local expanded = typeof(targetOrValue) == "boolean" and targetOrValue or value == true
-			sidebar:setExpanded(expanded, false)
-			return sidebar:isExpanded()
-		elseif commandOrId == "TogglePhone" then
-			sidebar:toggle()
-			return sidebar:isExpanded()
-		end
-		return manager:open(commandOrId)
+	bridge.OnInvoke = function(id: string)
+		return manager:open(id)
 	end
 	bridge.Parent = screenGui
 end)

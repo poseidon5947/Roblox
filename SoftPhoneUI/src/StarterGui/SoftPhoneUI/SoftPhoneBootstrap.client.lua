@@ -82,6 +82,14 @@ windowHost.Parent = screenGui
 
 local sidebar
 local manager
+local oldActionEvent = screenGui:FindFirstChild("SoftPhoneAction")
+if oldActionEvent then
+	oldActionEvent:Destroy()
+end
+local actionEvent = Instance.new("BindableEvent")
+actionEvent.Name = "SoftPhoneAction"
+actionEvent.Parent = screenGui
+
 local ok, initError = pcall(function()
 	local modules = ReplicatedStorage:WaitForChild("SoftPhoneModules", 10)
 	assert(modules, "ReplicatedStorage.SoftPhoneModules was not found")
@@ -100,6 +108,8 @@ local ok, initError = pcall(function()
 		if sidebar and eventName == "MessagesUnread" then
 			sidebar:setBadge("Messages", tostring(value))
 		end
+	end, function(appId: string, actionName: string, payload)
+		actionEvent:Fire(appId, actionName, payload)
 	end)
 
 	sidebar = Sidebar.new(screenGui, function(id: string)
@@ -111,8 +121,30 @@ local ok, initError = pcall(function()
 
 	local bridge = Instance.new("BindableFunction")
 	bridge.Name = "SoftPhoneWindowManager"
-	bridge.OnInvoke = function(id: string)
-		return manager:open(id)
+	bridge.OnInvoke = function(commandOrId: string, targetOrValue, value)
+		local id = typeof(targetOrValue) == "string" and targetOrValue or nil
+		if commandOrId == "Open" then
+			return manager:show(id)
+		elseif commandOrId == "Close" then
+			return manager:hide(id)
+		elseif commandOrId == "Toggle" then
+			return manager:open(id)
+		elseif commandOrId == "CloseAll" then
+			manager:closeAll(false)
+			return nil
+		elseif commandOrId == "GetActive" then
+			return manager:getActive()
+		elseif commandOrId == "IsAvailable" then
+			return manager:isAvailable(id)
+		elseif commandOrId == "SetPhoneExpanded" then
+			local expanded = typeof(targetOrValue) == "boolean" and targetOrValue or value == true
+			sidebar:setExpanded(expanded, false)
+			return sidebar:isExpanded()
+		elseif commandOrId == "TogglePhone" then
+			sidebar:toggle()
+			return sidebar:isExpanded()
+		end
+		return manager:open(commandOrId)
 	end
 	bridge.Parent = screenGui
 end)
@@ -125,6 +157,7 @@ if ok then
 	print("[SoftPhoneUI] Ready - click the gem on the edge tab to open Furu Phone.")
 else
 	windowHost:Destroy()
+	actionEvent:Destroy()
 	local errorLabel = staticLauncher :: GuiButton
 	errorLabel.Name = "SoftPhoneError"
 	errorLabel.Text = "UI ERROR\nCHECK OUTPUT"

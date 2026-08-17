@@ -6,7 +6,7 @@
 local Theme = {}
 
 Theme.Side = "Right"
-Theme.Version = "2.14"
+Theme.Version = "2.16"
 Theme.EnableSample3DTryOn = false
 Theme.WearablesFolder = "SoftPhoneWearables"
 

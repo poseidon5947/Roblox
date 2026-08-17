@@ -10,6 +10,19 @@ local WindowChrome = require(script.Parent.WindowChrome)
 
 local PlaceholderWindows = {}
 
+local function playerStat(player: Player, name: string, fallback: number): number
+	local attribute = player:GetAttribute(name)
+	if typeof(attribute) == "number" then
+		return attribute
+	end
+	local leaderstats = player:FindFirstChild("leaderstats")
+	local value = leaderstats and leaderstats:FindFirstChild(name)
+	if value and (value:IsA("IntValue") or value:IsA("NumberValue")) then
+		return value.Value
+	end
+	return fallback
+end
+
 local SPECS = {
 	Gacha = {
 		Title = "gacha",
@@ -268,7 +281,7 @@ local function addTask(parent: Instance, task: { any }, order: number, iconName:
 	return taskPanel
 end
 
-local function paintDashboard(content: Frame, spec, id: string, onStateChanged: ((string, any) -> ())?)
+local function paintDashboard(content: Frame, spec, id: string, onStateChanged: ((string, any) -> ())?, onAction: ((string, string, any?) -> ())?)
 	local scroll = Instance.new("ScrollingFrame")
 	scroll.Name = "Dashboard"
 	scroll.BackgroundTransparency = 1
@@ -311,14 +324,57 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 	headline.Position = UDim2.fromOffset(82, 25)
 	headline.Size = UDim2.new(1, -242, 0, 24)
 	headline.TextTruncate = Enum.TextTruncate.AtEnd
-	if id == "Job" then
-		headline.Text = Players.LocalPlayer.DisplayName
-	end
 
 	local subline = label(profile, "Subline", spec.Subline, 10, Theme.Fonts.Body, Theme.Colors.TextMuted, 47)
 	subline.Position = UDim2.fromOffset(82, 51)
 	subline.Size = UDim2.new(1, -242, 0, 18)
 	subline.TextTruncate = Enum.TextTruncate.AtEnd
+
+	if id == "Job" then
+		local player = Players.LocalPlayer
+		local boundValues = {}
+		local function refreshJobProfile()
+			local level = math.floor(playerStat(player, "Level", 1))
+			local xp = math.floor(playerStat(player, "XP", 120))
+			local xpToNext = math.floor(math.max(1, playerStat(player, "XPToNext", 500)))
+			headline.Text = player.DisplayName
+			subline.Text = "Intern  |  Level " .. tostring(level) .. "  |  " .. tostring(xp) .. " / " .. tostring(xpToNext) .. " XP"
+		end
+		local function bindValue(value: Instance)
+			if boundValues[value] or not (value:IsA("IntValue") or value:IsA("NumberValue")) then
+				return
+			end
+			if value.Name ~= "Level" and value.Name ~= "XP" and value.Name ~= "XPToNext" then
+				return
+			end
+			boundValues[value] = true
+			value.Changed:Connect(refreshJobProfile)
+		end
+		local function bindLeaderstats(folder: Instance)
+			for _, child in ipairs(folder:GetChildren()) do
+				bindValue(child)
+			end
+			folder.ChildAdded:Connect(function(child)
+				bindValue(child)
+				refreshJobProfile()
+			end)
+			folder.ChildRemoved:Connect(refreshJobProfile)
+		end
+		for _, name in ipairs({ "Level", "XP", "XPToNext" }) do
+			player:GetAttributeChangedSignal(name):Connect(refreshJobProfile)
+		end
+		local leaderstats = player:FindFirstChild("leaderstats")
+		if leaderstats then
+			bindLeaderstats(leaderstats)
+		end
+		player.ChildAdded:Connect(function(child)
+			if child.Name == "leaderstats" then
+				bindLeaderstats(child)
+				refreshJobProfile()
+			end
+		end)
+		refreshJobProfile()
+	end
 
 	local metricValues = {}
 	for i, metric in ipairs(spec.Metrics) do
@@ -384,8 +440,8 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 	stroke(action, Theme.Colors.ButtonStroke, 1, 0.18)
 
 	local state = {
-		Pity = 42,
-		Tokens = 8,
+		Pity = math.floor(playerStat(Players.LocalPlayer, "GachaPity", 42)),
+		Tokens = math.floor(playerStat(Players.LocalPlayer, "GachaTokens", 8)),
 		PullIndex = 0,
 		Unread = 3,
 		MessageOpened = false,
@@ -401,6 +457,10 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 			metric.Text = text
 		end
 	end
+	if id == "Gacha" then
+		setMetric(1, tostring(state.Pity) .. " / 80")
+		setMetric(2, tostring(state.Tokens))
+	end
 
 	local function showFeedback(titleText: string, sublineText: string, rewardText: string?)
 		headline.Text = titleText
@@ -410,12 +470,12 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 		end
 	end
 
-	local function runCommand(command: string): string
+	local function executeCommand(command: string)
 		if id == "Gacha" then
 			if command == "Pull x1" then
 				if state.Tokens <= 0 then
 					showFeedback("No tokens available", "Daily Wish refreshes tomorrow.", "0 TOKENS")
-					return "EMPTY"
+					return "EMPTY", { Tokens = state.Tokens, Pity = state.Pity }
 				end
 				state.Tokens -= 1
 				state.Pity += 1
@@ -425,44 +485,53 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 				setMetric(2, tostring(state.Tokens))
 				featuredTitle.Text = prize
 				showFeedback("Capsule opened", prize .. " joined your collection.", "NEW ITEM")
-				return "OPENED"
+				return "OPENED", { Count = 1, Tokens = state.Tokens, Pity = state.Pity, Prize = prize }
 			elseif command == "Pull x10" then
 				if state.Tokens < 10 then
 					local needed = 10 - state.Tokens
 					showFeedback("More tokens needed", tostring(needed) .. " more required for ten pulls.", tostring(state.Tokens) .. " / 10")
-					return "LOCKED"
+					return "LOCKED", { Tokens = state.Tokens, Required = 10, Pity = state.Pity }
 				end
+				state.Tokens -= 10
+				state.Pity += 10
+				state.PullIndex = (state.PullIndex % #pullRewards) + 1
+				local prize = pullRewards[state.PullIndex]
+				setMetric(1, tostring(state.Pity) .. " / 80")
+				setMetric(2, tostring(state.Tokens))
+				featuredTitle.Text = prize
+				showFeedback("Ten capsules opened", prize .. " was the featured reward.", "10 ITEMS")
+				return "OPENED", { Count = 10, Tokens = state.Tokens, Pity = state.Pity, FeaturedPrize = prize }
 			elseif command == "History" then
 				local last = state.PullIndex > 0 and pullRewards[state.PullIndex] or "No pulls this session"
 				showFeedback("Recent pulls", last, tostring(state.Pity) .. " PITY")
-				return "VIEWING"
+				return "VIEWING", { LastPrize = last, Pity = state.Pity }
 			end
 			showFeedback("Celestial Ribbon pool", "Six items plus one limited aura.", "POOL READY")
-			return "POOL READY"
+			return "POOL READY", { Pool = "Celestial Ribbon", Tokens = state.Tokens, Pity = state.Pity }
 		elseif id == "Map" then
 			if command == "Zoom" then
 				state.Zoomed = not state.Zoomed
 				showFeedback(state.Zoomed and "Street view" or "District view", state.Zoomed and "Moonlight Plaza details visible." or "All nearby activities visible.", state.Zoomed and "2x ZOOM" or "1x ZOOM")
-				return state.Zoomed and "2x" or "1x"
+				return state.Zoomed and "2x" or "1x", { Zoom = state.Zoomed and 2 or 1 }
 			elseif command == "Pins" then
 				showFeedback("All pins visible", "12 saved places are shown on the map.", "12 PINS")
-				return "12 PINS"
+				return "12 PINS", { Pins = 12 }
 			elseif command == "Home" then
 				showFeedback("Home route selected", "Fast travel route is ready.", "ROUTE SET")
-				return "ROUTED"
+				return "ROUTED", { Destination = "Home" }
 			end
 			showFeedback("Route ready", "Moonlight Plaza is now highlighted.", "240m AWAY")
-			return "ROUTE SET"
+			return "ROUTE SET", { Destination = "Moonlight Plaza", Distance = 240 }
 		elseif id == "Messages" then
 			if command == "Compose" then
 				showFeedback("New message", "Draft opened for your next message.", "DRAFT")
-				return "DRAFT"
+				return "DRAFT", { View = "Compose", Unread = state.Unread }
 			elseif command == "Inbox" then
 				showFeedback("Inbox", tostring(state.Unread) .. " unread messages remaining.", tostring(state.Unread) .. " UNREAD")
-				return "INBOX"
+				return "INBOX", { View = "Inbox", Unread = state.Unread }
 			elseif command == "Archive" then
 				showFeedback("Archive", "Saved announcements and conversations.", "8 SAVED")
-				return "OPEN"
+				return "OPEN", { View = "Archive", Saved = 8 }
 			end
 			if not state.MessageOpened then
 				state.MessageOpened = true
@@ -473,7 +542,7 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 				end
 			end
 			showFeedback("Message opened", "Welcome to Moonlight Plaza", tostring(state.Unread) .. " UNREAD")
-			return "OPENED"
+			return "OPENED", { Message = "Welcome to Moonlight Plaza", Unread = state.Unread }
 		elseif id == "Teleport" then
 			if command == "Plaza" then
 				state.Destination = "Furu Central Plaza"
@@ -483,27 +552,35 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 				state.Destination = "Job Hub"
 			else
 				showFeedback("Destination ready", state.Destination .. " is selected.", "READY")
-				return "READY"
+				return "READY", { Destination = state.Destination }
 			end
 			featuredTitle.Text = state.Destination
 			showFeedback("Destination selected", state.Destination .. " is ready for travel.", "FREE")
-			return "SELECTED"
+			return "SELECTED", { Destination = state.Destination }
 		elseif id == "Job" then
 			if command == "Apply" or command == "__PRIMARY__" then
 				state.Applied = true
 				showFeedback("Application ready", "Office Assistant is added to your career list.", "150 GEMS")
-				return "APPLIED"
+				return "APPLIED", { Job = "Office Assistant", Applied = true, Reward = 150 }
 			elseif command == "Shifts" then
 				showFeedback("Available shifts", "Morning and evening shifts have openings.", "2 OPEN")
-				return "2 OPEN"
+				return "2 OPEN", { OpenShifts = 2 }
 			elseif command == "Pay" then
 				showFeedback("Pay summary", "Next reward unlocks after one completed shift.", "150 GEMS")
-				return "VIEWING"
+				return "VIEWING", { NextPay = 150 }
 			end
 		end
 
 		showFeedback(spec.Headline, spec.Subline, spec.Reward)
-		return spec.ActionDone or "DONE"
+		return spec.ActionDone or "DONE", {}
+	end
+
+	local function runCommand(command: string): string
+		local result, payload = executeCommand(command)
+		if onAction then
+			onAction(id, command == "__PRIMARY__" and spec.Action or command, payload)
+		end
+		return result
 	end
 
 	action.Activated:Connect(function()
@@ -581,11 +658,15 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 	}
 end
 
-function PlaceholderWindows.mountAll(parent: Instance, onCloseFactory: (id: string) -> (() -> ()), onStateChanged: ((string, any) -> ())?)
-	local windows = {}
-	for id, spec in pairs(SPECS) do
-		local handle = WindowChrome.create(parent, id, spec.Title, onCloseFactory(id))
-		local dashboard = paintDashboard(handle.Content, spec, id, onStateChanged)
+function PlaceholderWindows.mount(parent: Instance, id: string, onClose: (() -> ())?, onStateChanged: ((string, any) -> ())?, onAction: ((string, string, any?) -> ())?)
+	local spec = SPECS[id]
+	if not spec then
+		error("Unknown feature window: " .. id)
+	end
+
+	local handle = WindowChrome.create(parent, id, spec.Title, onClose)
+	local setupOk, setupError = pcall(function()
+		local dashboard = paintDashboard(handle.Content, spec, id, onStateChanged, onAction)
 		for i, footerLabel in ipairs(spec.Footer) do
 			local button
 			button = WindowChrome.addFooterButton(handle.Footer, footerLabel, i, function()
@@ -598,7 +679,23 @@ function PlaceholderWindows.mountAll(parent: Instance, onCloseFactory: (id: stri
 				end)
 			end)
 		end
-		windows[id] = handle
+	end)
+	if not setupOk then
+		handle.Root:Destroy()
+		error(setupError)
+	end
+	return handle
+end
+
+function PlaceholderWindows.mountAll(parent: Instance, onCloseFactory: (id: string) -> (() -> ()), onStateChanged: ((string, any) -> ())?, onAction: ((string, string, any?) -> ())?)
+	local windows = {}
+	for id in pairs(SPECS) do
+		local ok, handle = pcall(PlaceholderWindows.mount, parent, id, onCloseFactory(id), onStateChanged, onAction)
+		if ok then
+			windows[id] = handle
+		else
+			warn("[SoftPhoneUI] Could not mount " .. id .. ":", handle)
+		end
 	end
 	return windows
 end
