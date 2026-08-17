@@ -617,13 +617,20 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 			return
 		end
 
+		local originalArchivable = character.Archivable
 		character.Archivable = true
-		local clone = character:Clone()
-		character.Archivable = false
-		if not clone then
+		local cloneOk, cloneOrError = pcall(function()
+			return character:Clone()
+		end)
+		character.Archivable = originalArchivable
+		if not cloneOk or not cloneOrError then
 			caption.Text = "Avatar preview unavailable"
+			if not cloneOk then
+				warn("[SoftPhoneUI] Could not clone avatar preview:", cloneOrError)
+			end
 			return
 		end
+		local clone = cloneOrError :: Model
 
 		stripScripts(clone)
 		clone.Name = "PreviewAvatar"
@@ -666,13 +673,20 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?)
 		end
 	end
 
+	viewport:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+		local preview = world:FindFirstChild("PreviewAvatar")
+		if preview and preview:IsA("Model") then
+			setupCamera(viewport, preview)
+		end
+	end)
+
 	local activeCategory = "ALL"
 	local function updateFilters()
 		local query = string.lower(searchBox.Text)
 		clearSearch.Visible = query ~= ""
 		local visibleCount = 0
 		for _, state in ipairs(slotStates) do
-			local searchable = string.lower(state.Item.Name .. " " .. state.Item.Tag)
+			local searchable = string.lower(state.Item.Name .. " " .. state.Item.Tag .. " " .. state.Item.Category .. " " .. state.Item.Description)
 			local matchesSearch = query == "" or string.find(searchable, query, 1, true) ~= nil
 			local matchesCategory = activeCategory == "ALL" or state.Item.Category == activeCategory
 			state.Button.Visible = matchesSearch and matchesCategory

@@ -6,6 +6,7 @@
 local Theme = require(script.Parent.Theme)
 local TweenUtil = require(script.Parent.TweenUtil)
 local IconDraw = require(script.Parent.IconDraw)
+local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 
 local Sidebar = {}
@@ -33,6 +34,26 @@ local function viewportSize(): Vector2
 		return camera.ViewportSize
 	end
 	return Vector2.new(1280, 720)
+end
+
+local function formatNumber(value: number): string
+	local text = tostring(math.floor(value))
+	local formatted = string.reverse(text):gsub("(%d%d%d)", "%1,")
+	return string.reverse(formatted):gsub("^,", "")
+end
+
+local function playerStat(player: Player, name: string, fallback: number): number
+	local attribute = player:GetAttribute(name)
+	if typeof(attribute) == "number" then
+		return attribute
+	end
+
+	local leaderstats = player:FindFirstChild("leaderstats")
+	local value = leaderstats and leaderstats:FindFirstChild(name)
+	if value and (value:IsA("IntValue") or value:IsA("NumberValue")) then
+		return value.Value
+	end
+	return fallback
 end
 
 local function addStroke(parent: Instance, color: Color3, thickness: number, transparency: number?)
@@ -220,6 +241,7 @@ function Sidebar.new(screenGui: ScreenGui, onButtonClick: (string) -> ())
 
 	self:_build()
 	self:_bindResize()
+	self:_bindPlayerStats()
 	self:setExpanded(false, true)
 
 	return self
@@ -411,6 +433,7 @@ function Sidebar:_build()
 	curLabel.TextXAlignment = Enum.TextXAlignment.Left
 	curLabel.ZIndex = 203
 	curLabel.Parent = currency
+	self.CurrencyLabel = curLabel
 
 	local currencyGem = Instance.new("Frame")
 	currencyGem.Name = "GemIcon"
@@ -582,6 +605,7 @@ function Sidebar:_build()
 	lvLabel.Text = "LEVEL 1"
 	lvLabel.ZIndex = 203
 	lvLabel.Parent = level
+	self.LevelLabel = lvLabel
 
 	local levelTrack = Instance.new("Frame")
 	levelTrack.Name = "LevelProgress"
@@ -602,6 +626,7 @@ function Sidebar:_build()
 	levelFill.ZIndex = 205
 	levelFill.Parent = levelTrack
 	addCorner(levelFill, 4)
+	self.LevelFill = levelFill
 
 	gemHit.Activated:Connect(function()
 		self:toggle()
@@ -691,6 +716,58 @@ function Sidebar:setBadge(id: string, value: string?)
 	badge.Visible = text ~= "" and text ~= "0"
 	badge.Text = text
 	badge.Size = UDim2.fromOffset(#text > 2 and 40 or 24, 20)
+end
+
+function Sidebar:_bindPlayerStats()
+	local player = Players.LocalPlayer
+	local boundValues = {}
+
+	local function refresh()
+		local gems = playerStat(player, "Gems", 12217)
+		local level = playerStat(player, "Level", 1)
+		local xp = playerStat(player, "XP", 120)
+		local xpToNext = math.max(1, playerStat(player, "XPToNext", 500))
+		self.CurrencyLabel.Text = "GEMS " .. formatNumber(gems)
+		self.LevelLabel.Text = "LEVEL " .. tostring(math.floor(level))
+		self.LevelFill.Size = UDim2.new(math.clamp(xp / xpToNext, 0, 1), 0, 1, 0)
+	end
+
+	local function bindValue(value: Instance)
+		if boundValues[value] or not (value:IsA("IntValue") or value:IsA("NumberValue")) then
+			return
+		end
+		if value.Name ~= "Gems" and value.Name ~= "Level" and value.Name ~= "XP" and value.Name ~= "XPToNext" then
+			return
+		end
+		boundValues[value] = true
+		value.Changed:Connect(refresh)
+	end
+
+	local function bindLeaderstats(folder: Instance)
+		for _, child in ipairs(folder:GetChildren()) do
+			bindValue(child)
+		end
+		folder.ChildAdded:Connect(function(child)
+			bindValue(child)
+			refresh()
+		end)
+		folder.ChildRemoved:Connect(refresh)
+		refresh()
+	end
+
+	for _, name in ipairs({ "Gems", "Level", "XP", "XPToNext" }) do
+		player:GetAttributeChangedSignal(name):Connect(refresh)
+	end
+	local leaderstats = player:FindFirstChild("leaderstats")
+	if leaderstats then
+		bindLeaderstats(leaderstats)
+	end
+	player.ChildAdded:Connect(function(child)
+		if child.Name == "leaderstats" then
+			bindLeaderstats(child)
+		end
+	end)
+	refresh()
 end
 
 function Sidebar:_bindResize()

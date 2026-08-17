@@ -3,6 +3,7 @@
 	Each feature owns one dedicated .exe window with a responsive scrolling body.
 ]]
 
+local Players = game:GetService("Players")
 local Theme = require(script.Parent.Theme)
 local IconDraw = require(script.Parent.IconDraw)
 local WindowChrome = require(script.Parent.WindowChrome)
@@ -310,6 +311,9 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 	headline.Position = UDim2.fromOffset(82, 25)
 	headline.Size = UDim2.new(1, -242, 0, 24)
 	headline.TextTruncate = Enum.TextTruncate.AtEnd
+	if id == "Job" then
+		headline.Text = Players.LocalPlayer.DisplayName
+	end
 
 	local subline = label(profile, "Subline", spec.Subline, 10, Theme.Fonts.Body, Theme.Colors.TextMuted, 47)
 	subline.Position = UDim2.fromOffset(82, 51)

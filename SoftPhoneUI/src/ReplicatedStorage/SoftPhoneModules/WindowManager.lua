@@ -2,11 +2,23 @@
 	Central toggle: one feature window open at a time; slide dismiss matches open.
 ]]
 
-local ShopWindow = require(script.Parent.ShopWindow)
-local PlaceholderWindows = require(script.Parent.PlaceholderWindows)
-
 local WindowManager = {}
 WindowManager.__index = WindowManager
+
+local function loadModule(name: string)
+	local moduleScript = script.Parent:FindFirstChild(name)
+	if not moduleScript or not moduleScript:IsA("ModuleScript") then
+		warn("[SoftPhoneUI] Missing module:", name)
+		return nil
+	end
+
+	local ok, result = pcall(require, moduleScript)
+	if not ok then
+		warn("[SoftPhoneUI] Could not load " .. name .. ":", result)
+		return nil
+	end
+	return result
+end
 
 function WindowManager.new(host: Frame, onActiveChanged: ((string?) -> ())?, onStateChanged: ((string, any) -> ())?)
 	local self = setmetatable({}, WindowManager)
@@ -26,10 +38,26 @@ function WindowManager.new(host: Frame, onActiveChanged: ((string?) -> ())?, onS
 		end
 	end
 
-	self._windows.Shop = ShopWindow.mount(host, closer("Shop"))
-	local placeholders = PlaceholderWindows.mountAll(host, closer, onStateChanged)
-	for id, handle in pairs(placeholders) do
-		self._windows[id] = handle
+	local ShopWindow = loadModule("ShopWindow")
+	if ShopWindow then
+		local ok, handle = pcall(ShopWindow.mount, host, closer("Shop"))
+		if ok then
+			self._windows.Shop = handle
+		else
+			warn("[SoftPhoneUI] Could not mount Shop:", handle)
+		end
+	end
+
+	local PlaceholderWindows = loadModule("PlaceholderWindows")
+	if PlaceholderWindows then
+		local ok, placeholders = pcall(PlaceholderWindows.mountAll, host, closer, onStateChanged)
+		if ok then
+			for id, handle in pairs(placeholders) do
+				self._windows[id] = handle
+			end
+		else
+			warn("[SoftPhoneUI] Could not mount feature windows:", placeholders)
+		end
 	end
 
 	return self

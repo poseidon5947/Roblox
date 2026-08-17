@@ -14,7 +14,8 @@ White futuristic flip-phone sidebar and six `.exe`-style feature windows for Rob
 | `SoftPhoneUI_Demo_v2_10_WindowFix.rbxlx` | Previous fixed demo with working feature windows. |
 | `SoftPhoneUI_Demo_v2_11_WearableReady.rbxlx` | Previous demo with exact Accessory try-on integration. |
 | `SoftPhoneUI_Demo_v2_12_AppPolish.rbxlx` | Previous demo with reliable startup and stateful feature apps. |
-| `SoftPhoneUI_Demo_v2_13_FinalPolish.rbxlx` | Latest client-facing polish, compact Shop pricing, and synchronized badges. |
+| `SoftPhoneUI_Demo_v2_13_FinalPolish.rbxlx` | Previous client-facing polish, compact Shop pricing, and synchronized badges. |
+| `SoftPhoneUI_Demo_v2_14_ReleasePolish.rbxlx` | Latest resilient build with player-stat integration and isolated app loading. |
 | `SoftPhoneUI_Package.rbxmx` | Insertable model package with modules and ScreenGui. |
 | `src/` | Rojo-style source tree. |
 | `assets/icons/*.svg` | Editable vector icon sources. |
@@ -37,10 +38,12 @@ White futuristic flip-phone sidebar and six `.exe`-style feature windows for Rob
 - Mobile windows expand to use available space while Gacha remains full-screen.
 - Opening Gacha retracts the sidebar, and message reads update its unread badge.
 - Shop search has a clear control and compact item cards retain their prices.
+- One failed feature module no longer prevents the rest of the phone from loading.
+- Sidebar gems, level, and XP read matching player attributes or `leaderstats` values.
 
 ## Studio Install
 
-1. Insert the latest `SoftPhoneUI_Package_v2_13_FinalPolish.rbxmx` into your existing place.
+1. Insert the latest `SoftPhoneUI_Package_v2_14_ReleasePolish.rbxmx` into your existing place.
 2. Move `SoftPhoneModules` into `ReplicatedStorage`.
 3. Move `SoftPhoneWearables` into `ReplicatedStorage`.
 4. Move `SoftPhoneUI` into `StarterGui`.
@@ -124,6 +127,17 @@ Python equivalents are also included, but this Windows environment currently poi
 5. Open Shop and press `Apply Preview`; the badge changes to `3D TRY-ON` when it loads successfully.
 
 Raw `.obj`, `.fbx`, and `.glb` files in `assets/3D Models` are source files only. Roblox Studio must import and convert them before the runtime UI can use them.
+
+## Player Stats
+
+The sidebar automatically reads these numeric player attributes or `leaderstats` values when available:
+
+- `Gems`
+- `Level`
+- `XP`
+- `XPToNext`
+
+Without game-provided values, the polished demo values remain visible. The Job app also displays `Players.LocalPlayer.DisplayName`.
 
 ## Notes
 
