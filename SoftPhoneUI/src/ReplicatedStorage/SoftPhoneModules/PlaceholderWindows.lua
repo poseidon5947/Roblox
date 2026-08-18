@@ -23,6 +23,49 @@ local function playerStat(player: Player, name: string, fallback: number): numbe
 	return fallback
 end
 
+local function watchPlayerStat(player: Player, name: string, fallback: number, callback: (number) -> ())
+	local boundValues = {}
+	local function refresh()
+		callback(playerStat(player, name, fallback))
+	end
+	local function bindValue(value: Instance)
+		if boundValues[value] or value.Name ~= name or not (value:IsA("IntValue") or value:IsA("NumberValue")) then
+			return
+		end
+		boundValues[value] = true
+		value.Changed:Connect(refresh)
+	end
+	local function bindLeaderstats(folder: Instance)
+		for _, child in ipairs(folder:GetChildren()) do
+			bindValue(child)
+		end
+		folder.ChildAdded:Connect(function(child)
+			if child.Name == name then
+				bindValue(child)
+				refresh()
+			end
+		end)
+		folder.ChildRemoved:Connect(function(child)
+			if child.Name == name then
+				refresh()
+			end
+		end)
+	end
+
+	player:GetAttributeChangedSignal(name):Connect(refresh)
+	local leaderstats = player:FindFirstChild("leaderstats")
+	if leaderstats then
+		bindLeaderstats(leaderstats)
+	end
+	player.ChildAdded:Connect(function(child)
+		if child.Name == "leaderstats" then
+			bindLeaderstats(child)
+			refresh()
+		end
+	end)
+	refresh()
+end
+
 local SPECS = {
 	Gacha = {
 		Title = "gacha",
@@ -443,7 +486,7 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 		Pity = math.floor(playerStat(Players.LocalPlayer, "GachaPity", 42)),
 		Tokens = math.floor(playerStat(Players.LocalPlayer, "GachaTokens", 8)),
 		PullIndex = 0,
-		Unread = 3,
+		Unread = math.max(0, math.floor(playerStat(Players.LocalPlayer, "UnreadMessages", 3))),
 		MessageOpened = false,
 		Zoomed = false,
 		Destination = "Furu Central Plaza",
@@ -460,6 +503,23 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 	if id == "Gacha" then
 		setMetric(1, tostring(state.Pity) .. " / 80")
 		setMetric(2, tostring(state.Tokens))
+		watchPlayerStat(Players.LocalPlayer, "GachaPity", 42, function(value)
+			state.Pity = math.max(0, math.floor(value))
+			setMetric(1, tostring(state.Pity) .. " / 80")
+		end)
+		watchPlayerStat(Players.LocalPlayer, "GachaTokens", 8, function(value)
+			state.Tokens = math.max(0, math.floor(value))
+			setMetric(2, tostring(state.Tokens))
+		end)
+	elseif id == "Messages" then
+		setMetric(1, tostring(state.Unread))
+		watchPlayerStat(Players.LocalPlayer, "UnreadMessages", 3, function(value)
+			state.Unread = math.max(0, math.floor(value))
+			setMetric(1, tostring(state.Unread))
+			if onStateChanged then
+				onStateChanged("MessagesUnread", state.Unread)
+			end
+		end)
 	end
 
 	local function showFeedback(titleText: string, sublineText: string, rewardText: string?)
@@ -577,6 +637,7 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 
 	local function runCommand(command: string): string
 		local result, payload = executeCommand(command)
+		payload.Result = result
 		if onAction then
 			onAction(id, command == "__PRIMARY__" and spec.Action or command, payload)
 		end

@@ -336,8 +336,8 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?, onAction: ((st
 	local clearSearch = Instance.new("TextButton")
 	clearSearch.Name = "ClearSearch"
 	clearSearch.AnchorPoint = Vector2.new(1, 0.5)
-	clearSearch.Position = UDim2.new(1, -5, 0, 15)
-	clearSearch.Size = UDim2.fromOffset(22, 22)
+	clearSearch.Position = UDim2.new(1, -3, 0, 15)
+	clearSearch.Size = UDim2.fromOffset(26, 26)
 	clearSearch.BackgroundColor3 = Theme.Colors.ButtonFill
 	clearSearch.BorderSizePixel = 0
 	clearSearch.AutoButtonColor = false
@@ -733,7 +733,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?, onAction: ((st
 			state.SelectedBadge.Visible = selected
 		end
 		if not silent and onAction then
-			onAction("Shop", "SelectItem", item.Key)
+			onAction("Shop", "SelectItem", { ItemKey = item.Key })
 		end
 		task.defer(refreshAvatar)
 	end
@@ -918,21 +918,21 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?, onAction: ((st
 				end
 			end
 			if onAction then
-				onAction("Shop", "ResetLook", nil)
+				onAction("Shop", "ResetLook", {})
 			end
 			refreshAvatar()
 		end)
 		WindowChrome.addFooterButton(footer, "Rotate", 2, function()
 			previewAngle = (previewAngle + 35) % 360
 			if onAction then
-				onAction("Shop", "RotatePreview", previewAngle)
+				onAction("Shop", "RotatePreview", { Angle = previewAngle })
 			end
 			refreshAvatar()
 		end)
 		WindowChrome.addFooterButton(footer, "Apply Preview", 3, function()
 			if selectedItem then
 				if onAction then
-					onAction("Shop", "ApplyPreview", selectedItem.Key)
+					onAction("Shop", "ApplyPreview", { ItemKey = selectedItem.Key })
 				end
 				previewStatusText.Text = "LOADING PREVIEW"
 				refreshAvatar()

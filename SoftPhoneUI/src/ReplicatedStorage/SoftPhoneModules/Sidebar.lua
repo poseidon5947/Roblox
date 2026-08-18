@@ -648,9 +648,20 @@ function Sidebar:_expandedPos(): UDim2
 end
 
 function Sidebar:setExpanded(expanded: boolean, instant: boolean?)
+	if self._expanded == expanded and not instant then
+		return
+	end
 	self._expanded = expanded
 	local target = expanded and self:_expandedPos() or self:_collapsedPos()
 	local closedRotation = isRightSide() and 4 or -4
+	if self._panelTween then
+		self._panelTween:Cancel()
+		self._panelTween = nil
+	end
+	if self._gemTween then
+		self._gemTween:Cancel()
+		self._gemTween = nil
+	end
 
 	if instant then
 		self.Panel.Position = target
@@ -665,11 +676,16 @@ function Sidebar:setExpanded(expanded: boolean, instant: boolean?)
 		Position = target,
 		Rotation = expanded and 0 or closedRotation,
 	}, Theme.Tween.SlideTime, Theme.Tween.SlideStyle, Theme.Tween.SlideDir)
-	TweenUtil.play(self.GemButton, {
+	self._panelTween = tw
+	self._gemTween = TweenUtil.play(self.GemButton, {
 		Rotation = expanded and 45 or 0,
 	}, Theme.Tween.SlideTime, Theme.Tween.SlideStyle, Theme.Tween.SlideDir)
 	tw.Completed:Connect(function()
-		self._tweening = false
+		if self._panelTween == tw then
+			self._panelTween = nil
+			self._gemTween = nil
+			self._tweening = false
+		end
 	end)
 end
 
@@ -727,16 +743,21 @@ function Sidebar:_bindPlayerStats()
 		local level = playerStat(player, "Level", 1)
 		local xp = playerStat(player, "XP", 120)
 		local xpToNext = math.max(1, playerStat(player, "XPToNext", 500))
+		local unread = math.max(0, math.floor(playerStat(player, "UnreadMessages", 3)))
 		self.CurrencyLabel.Text = "GEMS " .. formatNumber(gems)
 		self.LevelLabel.Text = "LEVEL " .. tostring(math.floor(level))
 		self.LevelFill.Size = UDim2.new(math.clamp(xp / xpToNext, 0, 1), 0, 1, 0)
+		if self._lastUnreadSource ~= unread then
+			self._lastUnreadSource = unread
+			self:setBadge("Messages", tostring(unread))
+		end
 	end
 
 	local function bindValue(value: Instance)
 		if boundValues[value] or not (value:IsA("IntValue") or value:IsA("NumberValue")) then
 			return
 		end
-		if value.Name ~= "Gems" and value.Name ~= "Level" and value.Name ~= "XP" and value.Name ~= "XPToNext" then
+		if value.Name ~= "Gems" and value.Name ~= "Level" and value.Name ~= "XP" and value.Name ~= "XPToNext" and value.Name ~= "UnreadMessages" then
 			return
 		end
 		boundValues[value] = true
@@ -755,7 +776,7 @@ function Sidebar:_bindPlayerStats()
 		refresh()
 	end
 
-	for _, name in ipairs({ "Gems", "Level", "XP", "XPToNext" }) do
+	for _, name in ipairs({ "Gems", "Level", "XP", "XPToNext", "UnreadMessages" }) do
 		player:GetAttributeChangedSignal(name):Connect(refresh)
 	end
 	local leaderstats = player:FindFirstChild("leaderstats")

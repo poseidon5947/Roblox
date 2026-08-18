@@ -16,13 +16,14 @@ OUT_PLACE = ROOT / "SoftPhoneUI_Demo.rbxlx"
 OUT_MODEL = ROOT / "SoftPhoneUI_Package.rbxmx"
 OUT_PLACE_UPDATED = ROOT / "SoftPhoneUI_Demo_Updated.rbxlx"
 OUT_MODEL_UPDATED = ROOT / "SoftPhoneUI_Package_Updated.rbxmx"
-OUT_PLACE_LATEST = ROOT / "SoftPhoneUI_Demo_v2_16_ControllerReady.rbxlx"
-OUT_MODEL_LATEST = ROOT / "SoftPhoneUI_Package_v2_16_ControllerReady.rbxmx"
+OUT_PLACE_LATEST = ROOT / "SoftPhoneUI_Demo_v2_19_FeedbackPolish.rbxlx"
+OUT_MODEL_LATEST = ROOT / "SoftPhoneUI_Package_v2_19_FeedbackPolish.rbxmx"
 
 MODULE_FILES = [
     "Theme.lua",
     "TweenUtil.lua",
     "IconDraw.lua",
+    "NotificationCenter.lua",
     "Sidebar.lua",
     "WindowChrome.lua",
     "ShopWindow.lua",

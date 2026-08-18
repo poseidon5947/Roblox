@@ -1,40 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
-  <Item class="Workspace" referent="Workspace">
-    <Properties>
-      <string name="Name">Workspace</string>
-    </Properties>
-    <Item class="Part" referent="Baseplate">
-      <Properties>
-        <string name="Name">Baseplate</string>
-        <bool name="Anchored">true</bool>
-        <Vector3 name="Size"><X>512</X><Y>1</Y><Z>512</Z></Vector3>
-        <CoordinateFrame name="CFrame"><X>0</X><Y>-0.5</Y><Z>0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-        <Color3uint8 name="Color3uint8">217167242</Color3uint8>
-        <token name="Material">256</token>
-      </Properties>
-    </Item>
-    <Item class="SpawnLocation" referent="Spawn">
-      <Properties>
-        <string name="Name">SpawnLocation</string>
-        <bool name="Anchored">true</bool>
-        <float name="Duration">0</float>
-        <Vector3 name="Size"><X>12</X><Y>1</Y><Z>12</Z></Vector3>
-        <CoordinateFrame name="CFrame"><X>0</X><Y>0.5</Y><Z>0</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-        <Color3uint8 name="Color3uint8">255096181</Color3uint8>
-      </Properties>
-    </Item>
-  </Item>
-  <Item class="Lighting" referent="Lighting">
-    <Properties>
-      <string name="Name">Lighting</string>
-      <float name="Brightness">2</float>
-      <Color3 name="Ambient"><R>0.78</R><G>0.70</G><B>0.82</B></Color3>
-      <Color3 name="OutdoorAmbient"><R>0.65</R><G>0.58</G><B>0.72</B></Color3>
-    </Properties>
-  </Item>
-  <Item class="ReplicatedStorage" referent="ReplicatedStorage">
-    <Properties><string name="Name">ReplicatedStorage</string></Properties>
+  <Item class="Folder" referent="SoftPhonePackage">
+    <Properties><string name="Name">SoftPhonePackage</string></Properties>
     <Item class="Folder" referent="SoftPhoneModules">
       <Properties><string name="Name">SoftPhoneModules</string></Properties>
     <Item class="ModuleScript" referent="MS_Theme">
@@ -48,7 +15,7 @@
 local Theme = {}
 
 Theme.Side = "Right"
-Theme.Version = "2.19"
+Theme.Version = "2.17"
 Theme.EnableSample3DTryOn = false
 Theme.WearablesFolder = "SoftPhoneWearables"
 
@@ -601,203 +568,6 @@ function IconDraw.makeGem(parent: Instance, size: number): Frame
 end
 
 return IconDraw
-]]></ProtectedString>
-      </Properties>
-    </Item>
-
-    <Item class="ModuleScript" referent="MS_NotificationCenter">
-      <Properties>
-        <string name="Name">NotificationCenter</string>
-        <ProtectedString name="Source"><![CDATA[--[[
-	Compact global feedback for app commands.
-	New messages replace the current toast so repeated clicks never stack or overlap.
-]]
-
-local Theme = require(script.Parent.Theme)
-local TweenUtil = require(script.Parent.TweenUtil)
-local IconDraw = require(script.Parent.IconDraw)
-
-local NotificationCenter = {}
-NotificationCenter.__index = NotificationCenter
-
-local APP_ICONS = {
-	Shop = "bag",
-	Gacha = "star",
-	Map = "map",
-	Messages = "mail",
-	Teleport = "portal",
-	Job = "briefcase",
-}
-
-local function corner(parent: Instance, radius: number)
-	local item = Instance.new("UICorner")
-	item.CornerRadius = UDim.new(0, radius)
-	item.Parent = parent
-	return item
-end
-
-local function humanize(value: any): string
-	local text = tostring(value or "")
-	text = text:gsub("_", " "):gsub("(%l)(%u)", "%1 %2")
-	return text:gsub("^%l", string.upper)
-end
-
-local function feedbackText(appId: string, actionName: string, payload): (string, string)
-	payload = typeof(payload) == "table" and payload or {}
-	if actionName == "SelectItem" then
-		return "Item selected", humanize(payload.ItemKey)
-	elseif actionName == "ResetLook" then
-		return "Look reset", "Your preview avatar is back to default."
-	elseif actionName == "RotatePreview" then
-		return "Preview rotated", tostring(math.floor(tonumber(payload.Angle) or 0)) .. " degrees"
-	elseif actionName == "ApplyPreview" then
-		return "Preview applied", humanize(payload.ItemKey)
-	end
-
-	local result = payload.Result and humanize(payload.Result) or "Complete"
-	return humanize(appId), humanize(actionName) .. "  |  " .. result
-end
-
-function NotificationCenter.new(parent: Instance)
-	local self = setmetatable({}, NotificationCenter)
-	self._serial = 0
-	self._activeTween = nil
-	local existing = parent:FindFirstChild("ActionToast")
-	if existing then
-		existing:Destroy()
-	end
-
-	local toast = Instance.new("Frame")
-	toast.Name = "ActionToast"
-	toast.AnchorPoint = Vector2.new(0.5, 0)
-	toast.Position = UDim2.new(0.5, 0, 0, -80)
-	toast.Size = UDim2.new(0.88, 0, 0, 66)
-	toast.BackgroundColor3 = Color3.fromRGB(255, 247, 252)
-	toast.BackgroundTransparency = 0
-	toast.BorderSizePixel = 0
-	toast.ClipsDescendants = true
-	toast.Visible = false
-	toast.ZIndex = 950
-	toast.Parent = parent
-	corner(toast, 8)
-
-	local constraint = Instance.new("UISizeConstraint")
-	constraint.MinSize = Vector2.new(260, 66)
-	constraint.MaxSize = Vector2.new(390, 66)
-	constraint.Parent = toast
-
-	local outline = Instance.new("UIStroke")
-	outline.Color = Theme.Colors.ButtonStroke
-	outline.Thickness = 1.5
-	outline.Transparency = 0.08
-	outline.Parent = toast
-
-	local accent = Instance.new("Frame")
-	accent.Name = "PinkTab"
-	accent.BackgroundColor3 = Theme.Colors.AccentPink
-	accent.BorderSizePixel = 0
-	accent.Size = UDim2.fromOffset(5, 66)
-	accent.ZIndex = 951
-	accent.Parent = toast
-
-	local icon = IconDraw.makeCircleIcon(toast, "gem", Theme.Colors.AccentCream)
-	icon.Name = "AppIcon"
-	icon.Position = UDim2.new(0, 14, 0.5, 0)
-	icon.Size = UDim2.fromOffset(38, 38)
-	icon.ZIndex = 952
-	self.Icon = icon
-
-	local title = Instance.new("TextLabel")
-	title.Name = "Title"
-	title.BackgroundTransparency = 1
-	title.Position = UDim2.fromOffset(64, 11)
-	title.Size = UDim2.new(1, -104, 0, 20)
-	title.Font = Theme.Fonts.Title
-	title.Text = "Updated"
-	title.TextColor3 = Theme.Colors.TextPrimary
-	title.TextSize = 13
-	title.TextTruncate = Enum.TextTruncate.AtEnd
-	title.TextXAlignment = Enum.TextXAlignment.Left
-	title.ZIndex = 952
-	title.Parent = toast
-
-	local detail = Instance.new("TextLabel")
-	detail.Name = "Detail"
-	detail.BackgroundTransparency = 1
-	detail.Position = UDim2.fromOffset(64, 32)
-	detail.Size = UDim2.new(1, -104, 0, 20)
-	detail.Font = Theme.Fonts.Body
-	detail.Text = "Action complete"
-	detail.TextColor3 = Theme.Colors.TextMuted
-	detail.TextSize = 10
-	detail.TextTruncate = Enum.TextTruncate.AtEnd
-	detail.TextXAlignment = Enum.TextXAlignment.Left
-	detail.ZIndex = 952
-	detail.Parent = toast
-
-	local gem = Instance.new("Frame")
-	gem.Name = "Gem"
-	gem.AnchorPoint = Vector2.new(0.5, 0.5)
-	gem.Position = UDim2.new(1, -20, 0.5, 0)
-	gem.Size = UDim2.fromOffset(13, 13)
-	gem.BackgroundColor3 = Theme.Colors.Gem
-	gem.BorderSizePixel = 0
-	gem.Rotation = 45
-	gem.ZIndex = 953
-	gem.Parent = toast
-	corner(gem, 3)
-
-	self.Root = toast
-	self.Title = title
-	self.Detail = detail
-	return self
-end
-
-function NotificationCenter:show(appId: string, actionName: string, payload)
-	self._serial += 1
-	local serial = self._serial
-	if self._activeTween then
-		self._activeTween:Cancel()
-		self._activeTween = nil
-	end
-
-	local title, detail = feedbackText(appId, actionName, payload)
-	self.Title.Text = title
-	self.Detail.Text = detail
-
-	local iconName = APP_ICONS[appId] or "gem"
-	self.Icon:Destroy()
-	self.Icon = IconDraw.makeCircleIcon(self.Root, iconName, Theme.Colors.AccentCream)
-	self.Icon.Name = "AppIcon"
-	self.Icon.Position = UDim2.new(0, 14, 0.5, 0)
-	self.Icon.Size = UDim2.fromOffset(38, 38)
-	self.Icon.ZIndex = 952
-
-	self.Root.Visible = true
-	self.Root.Position = UDim2.new(0.5, 0, 0, -80)
-	self.Root.BackgroundTransparency = 0
-	self._activeTween = TweenUtil.play(self.Root, {
-		Position = UDim2.new(0.5, 0, 0, 72),
-	}, Theme.Tween.QuickTime, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-
-	task.delay(2.2, function()
-		if serial ~= self._serial or not self.Root.Parent then
-			return
-		end
-		local tween = TweenUtil.play(self.Root, {
-			Position = UDim2.new(0.5, 0, 0, -80),
-		}, Theme.Tween.QuickTime, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
-		self._activeTween = tween
-		tween.Completed:Connect(function()
-			if serial == self._serial and self.Root.Parent then
-				self.Root.Visible = false
-				self._activeTween = nil
-			end
-		end)
-	end)
-end
-
-return NotificationCenter
 ]]></ProtectedString>
       </Properties>
     </Item>
@@ -1455,20 +1225,9 @@ function Sidebar:_expandedPos(): UDim2
 end
 
 function Sidebar:setExpanded(expanded: boolean, instant: boolean?)
-	if self._expanded == expanded and not instant then
-		return
-	end
 	self._expanded = expanded
 	local target = expanded and self:_expandedPos() or self:_collapsedPos()
 	local closedRotation = isRightSide() and 4 or -4
-	if self._panelTween then
-		self._panelTween:Cancel()
-		self._panelTween = nil
-	end
-	if self._gemTween then
-		self._gemTween:Cancel()
-		self._gemTween = nil
-	end
 
 	if instant then
 		self.Panel.Position = target
@@ -1483,16 +1242,11 @@ function Sidebar:setExpanded(expanded: boolean, instant: boolean?)
 		Position = target,
 		Rotation = expanded and 0 or closedRotation,
 	}, Theme.Tween.SlideTime, Theme.Tween.SlideStyle, Theme.Tween.SlideDir)
-	self._panelTween = tw
-	self._gemTween = TweenUtil.play(self.GemButton, {
+	TweenUtil.play(self.GemButton, {
 		Rotation = expanded and 45 or 0,
 	}, Theme.Tween.SlideTime, Theme.Tween.SlideStyle, Theme.Tween.SlideDir)
 	tw.Completed:Connect(function()
-		if self._panelTween == tw then
-			self._panelTween = nil
-			self._gemTween = nil
-			self._tweening = false
-		end
+		self._tweening = false
 	end)
 end
 
@@ -2152,7 +1906,6 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 		_open = false,
 		_minimized = false,
 		_maximized = false,
-		_visibilityTween = nil,
 	}
 
 	local normalSize = root.Size
@@ -2218,10 +1971,6 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 
 	function handle:setVisible(visible: boolean, instant: boolean?)
 		self._open = visible
-		if self._visibilityTween then
-			self._visibilityTween:Cancel()
-			self._visibilityTween = nil
-		end
 		if instant then
 			root.Visible = visible
 			root.Position = visible and openPosition(fullScreen) or closedPosition()
@@ -2236,27 +1985,17 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 			root.Visible = true
 			root.Position = closedPosition()
 			root.BackgroundTransparency = 0.28
-			local tween = TweenUtil.play(root, {
+			TweenUtil.play(root, {
 				Position = openPosition(fullScreen),
 				BackgroundTransparency = 0,
 			}, Theme.Tween.WindowTime, Theme.Tween.SlideStyle, Theme.Tween.SlideDir)
-			self._visibilityTween = tween
-			tween.Completed:Connect(function()
-				if self._visibilityTween == tween then
-					self._visibilityTween = nil
-				end
-			end)
 		else
 			local tween = TweenUtil.play(root, {
 				Position = closedPosition(),
 				BackgroundTransparency = 0.28,
 			}, Theme.Tween.WindowTime, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
-			self._visibilityTween = tween
 			tween.Completed:Connect(function()
-				if self._visibilityTween == tween then
-					self._visibilityTween = nil
-				end
-				if not self._open and not self._visibilityTween then
+				if not self._open then
 					root.Visible = false
 					root.BackgroundTransparency = 0
 				end
@@ -3091,7 +2830,7 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?, onAction: ((st
 			state.SelectedBadge.Visible = selected
 		end
 		if not silent and onAction then
-			onAction("Shop", "SelectItem", { ItemKey = item.Key })
+			onAction("Shop", "SelectItem", item.Key)
 		end
 		task.defer(refreshAvatar)
 	end
@@ -3276,21 +3015,21 @@ function ShopWindow.mount(parent: Instance, onClose: (() -> ())?, onAction: ((st
 				end
 			end
 			if onAction then
-				onAction("Shop", "ResetLook", {})
+				onAction("Shop", "ResetLook", nil)
 			end
 			refreshAvatar()
 		end)
 		WindowChrome.addFooterButton(footer, "Rotate", 2, function()
 			previewAngle = (previewAngle + 35) % 360
 			if onAction then
-				onAction("Shop", "RotatePreview", { Angle = previewAngle })
+				onAction("Shop", "RotatePreview", previewAngle)
 			end
 			refreshAvatar()
 		end)
 		WindowChrome.addFooterButton(footer, "Apply Preview", 3, function()
 			if selectedItem then
 				if onAction then
-					onAction("Shop", "ApplyPreview", { ItemKey = selectedItem.Key })
+					onAction("Shop", "ApplyPreview", selectedItem.Key)
 				end
 				previewStatusText.Text = "LOADING PREVIEW"
 				refreshAvatar()
@@ -3356,49 +3095,6 @@ local function playerStat(player: Player, name: string, fallback: number): numbe
 		return value.Value
 	end
 	return fallback
-end
-
-local function watchPlayerStat(player: Player, name: string, fallback: number, callback: (number) -> ())
-	local boundValues = {}
-	local function refresh()
-		callback(playerStat(player, name, fallback))
-	end
-	local function bindValue(value: Instance)
-		if boundValues[value] or value.Name ~= name or not (value:IsA("IntValue") or value:IsA("NumberValue")) then
-			return
-		end
-		boundValues[value] = true
-		value.Changed:Connect(refresh)
-	end
-	local function bindLeaderstats(folder: Instance)
-		for _, child in ipairs(folder:GetChildren()) do
-			bindValue(child)
-		end
-		folder.ChildAdded:Connect(function(child)
-			if child.Name == name then
-				bindValue(child)
-				refresh()
-			end
-		end)
-		folder.ChildRemoved:Connect(function(child)
-			if child.Name == name then
-				refresh()
-			end
-		end)
-	end
-
-	player:GetAttributeChangedSignal(name):Connect(refresh)
-	local leaderstats = player:FindFirstChild("leaderstats")
-	if leaderstats then
-		bindLeaderstats(leaderstats)
-	end
-	player.ChildAdded:Connect(function(child)
-		if child.Name == "leaderstats" then
-			bindLeaderstats(child)
-			refresh()
-		end
-	end)
-	refresh()
 end
 
 local SPECS = {
@@ -3838,23 +3534,8 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 	if id == "Gacha" then
 		setMetric(1, tostring(state.Pity) .. " / 80")
 		setMetric(2, tostring(state.Tokens))
-		watchPlayerStat(Players.LocalPlayer, "GachaPity", 42, function(value)
-			state.Pity = math.max(0, math.floor(value))
-			setMetric(1, tostring(state.Pity) .. " / 80")
-		end)
-		watchPlayerStat(Players.LocalPlayer, "GachaTokens", 8, function(value)
-			state.Tokens = math.max(0, math.floor(value))
-			setMetric(2, tostring(state.Tokens))
-		end)
 	elseif id == "Messages" then
 		setMetric(1, tostring(state.Unread))
-		watchPlayerStat(Players.LocalPlayer, "UnreadMessages", 3, function(value)
-			state.Unread = math.max(0, math.floor(value))
-			setMetric(1, tostring(state.Unread))
-			if onStateChanged then
-				onStateChanged("MessagesUnread", state.Unread)
-			end
-		end)
 	end
 
 	local function showFeedback(titleText: string, sublineText: string, rewardText: string?)
@@ -3972,7 +3653,6 @@ local function paintDashboard(content: Frame, spec, id: string, onStateChanged: 
 
 	local function runCommand(command: string): string
 		local result, payload = executeCommand(command)
-		payload.Result = result
 		if onAction then
 			onAction(id, command == "__PRIMARY__" and spec.Action or command, payload)
 		end
@@ -4253,9 +3933,6 @@ return WindowManager
     <Item class="Folder" referent="SoftPhoneWearables">
       <Properties><string name="Name">SoftPhoneWearables</string></Properties>
     </Item>
-  </Item>
-  <Item class="StarterGui" referent="StarterGui">
-    <Properties><string name="Name">StarterGui</string></Properties>
     <Item class="ScreenGui" referent="SoftPhoneUI">
       <Properties>
         <string name="Name">SoftPhoneUI</string>
@@ -4388,14 +4065,9 @@ windowHost.Parent = screenGui
 
 local sidebar
 local manager
-local notifications
 local oldActionEvent = screenGui:FindFirstChild("SoftPhoneAction")
 if oldActionEvent then
 	oldActionEvent:Destroy()
-end
-local oldBridge = screenGui:FindFirstChild("SoftPhoneWindowManager")
-if oldBridge then
-	oldBridge:Destroy()
 end
 local actionEvent = Instance.new("BindableEvent")
 actionEvent.Name = "SoftPhoneAction"
@@ -4410,10 +4082,6 @@ local ok, initError = pcall(function()
 	local windowManagerModule = modules:WaitForChild("WindowManager", 10)
 	assert(windowManagerModule, "SoftPhoneModules.WindowManager was not found")
 	local WindowManager = require(windowManagerModule)
-	local notificationModule = modules:WaitForChild("NotificationCenter", 10)
-	assert(notificationModule, "SoftPhoneModules.NotificationCenter was not found")
-	local NotificationCenter = require(notificationModule)
-	notifications = NotificationCenter.new(screenGui)
 
 	manager = WindowManager.new(windowHost, function(activeId: string?)
 		if sidebar then
@@ -4427,7 +4095,6 @@ local ok, initError = pcall(function()
 			sidebar:setBadge("Messages", tostring(value))
 		end
 	end, function(appId: string, actionName: string, payload)
-		notifications:show(appId, actionName, payload)
 		actionEvent:Fire(appId, actionName, payload)
 	end)
 
@@ -4479,13 +4146,10 @@ local ok, initError = pcall(function()
 			return Enum.ContextActionResult.Sink
 		end
 		return Enum.ContextActionResult.Pass
-	end, false, Enum.KeyCode.ButtonB, Enum.KeyCode.Escape)
+	end, false, Enum.KeyCode.ButtonB)
 end)
 
 if ok then
-	screenGui.Destroying:Connect(function()
-		ContextActionService:UnbindAction(BACK_ACTION)
-	end)
 	if staticLauncher then
 		staticLauncher:Destroy()
 		staticLauncher = nil
@@ -4495,9 +4159,6 @@ else
 	ContextActionService:UnbindAction(BACK_ACTION)
 	windowHost:Destroy()
 	actionEvent:Destroy()
-	if notifications and notifications.Root then
-		notifications.Root:Destroy()
-	end
 	local errorLabel = staticLauncher :: GuiButton
 	errorLabel.Name = "SoftPhoneError"
 	errorLabel.Text = "UI ERROR\nCHECK OUTPUT"
@@ -4510,17 +4171,18 @@ end
       </Item>
 
     </Item>
-  </Item>
-  <Item class="StarterPlayer" referent="StarterPlayer">
-    <Properties><string name="Name">StarterPlayer</string></Properties>
-    <Item class="StarterPlayerScripts" referent="StarterPlayerScripts">
-      <Properties><string name="Name">StarterPlayerScripts</string></Properties>
+    <Item class="Script" referent="InstallNote">
+      <Properties>
+        <string name="Name">_INSTALL</string>
+        <bool name="Disabled">true</bool>
+        <ProtectedString name="Source"><![CDATA[-- SoftPhoneUI install
+-- 1. Move SoftPhoneModules into ReplicatedStorage
+-- 2. Move SoftPhoneWearables into ReplicatedStorage
+-- 3. Move SoftPhoneUI ScreenGui into StarterGui
+-- 4. Delete this SoftPhonePackage folder
+-- 5. Play (F5) - click the gem on the edge tab
+]]></ProtectedString>
+      </Properties>
     </Item>
-  </Item>
-  <Item class="Players" referent="Players">
-    <Properties>
-      <string name="Name">Players</string>
-      <token name="CharacterAutoLoads">1</token>
-    </Properties>
   </Item>
 </roblox>

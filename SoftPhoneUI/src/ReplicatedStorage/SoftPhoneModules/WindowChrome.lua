@@ -417,8 +417,8 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 		button.BackgroundColor3 = color
 		button.BorderSizePixel = 0
 		button.AnchorPoint = Vector2.new(1, 0.5)
-		button.Position = UDim2.new(1, -10 - (order * 36), 0.5, 0)
-		button.Size = UDim2.fromOffset(30, 30)
+		button.Position = UDim2.new(1, -10 - (order * 38), 0.5, 0)
+		button.Size = UDim2.fromOffset(32, 32)
 		button.Font = Theme.Fonts.Title
 		button.Text = text
 		button.TextSize = 11
@@ -517,6 +517,7 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 		_open = false,
 		_minimized = false,
 		_maximized = false,
+		_visibilityTween = nil,
 	}
 
 	local normalSize = root.Size
@@ -582,6 +583,10 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 
 	function handle:setVisible(visible: boolean, instant: boolean?)
 		self._open = visible
+		if self._visibilityTween then
+			self._visibilityTween:Cancel()
+			self._visibilityTween = nil
+		end
 		if instant then
 			root.Visible = visible
 			root.Position = visible and openPosition(fullScreen) or closedPosition()
@@ -596,17 +601,27 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 			root.Visible = true
 			root.Position = closedPosition()
 			root.BackgroundTransparency = 0.28
-			TweenUtil.play(root, {
+			local tween = TweenUtil.play(root, {
 				Position = openPosition(fullScreen),
 				BackgroundTransparency = 0,
 			}, Theme.Tween.WindowTime, Theme.Tween.SlideStyle, Theme.Tween.SlideDir)
+			self._visibilityTween = tween
+			tween.Completed:Connect(function()
+				if self._visibilityTween == tween then
+					self._visibilityTween = nil
+				end
+			end)
 		else
 			local tween = TweenUtil.play(root, {
 				Position = closedPosition(),
 				BackgroundTransparency = 0.28,
 			}, Theme.Tween.WindowTime, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+			self._visibilityTween = tween
 			tween.Completed:Connect(function()
-				if not self._open then
+				if self._visibilityTween == tween then
+					self._visibilityTween = nil
+				end
+				if not self._open and not self._visibilityTween then
 					root.Visible = false
 					root.BackgroundTransparency = 0
 				end

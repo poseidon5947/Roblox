@@ -17,7 +17,10 @@ White futuristic flip-phone sidebar and six `.exe`-style feature windows for Rob
 | `SoftPhoneUI_Demo_v2_13_FinalPolish.rbxlx` | Previous client-facing polish, compact Shop pricing, and synchronized badges. |
 | `SoftPhoneUI_Demo_v2_14_ReleasePolish.rbxlx` | Previous resilient build with player-stat integration and isolated app loading. |
 | `SoftPhoneUI_Demo_v2_15_IntegrationReady.rbxlx` | Previous build with public action events and per-feature failure isolation. |
-| `SoftPhoneUI_Demo_v2_16_ControllerReady.rbxlx` | Latest build with structured action payloads and explicit controller commands. |
+| `SoftPhoneUI_Demo_v2_16_ControllerReady.rbxlx` | Previous build with structured action payloads and explicit controller commands. |
+| `SoftPhoneUI_Demo_v2_17_CrossPlatform.rbxlx` | Previous build with consistent controller behavior and gamepad Back. |
+| `SoftPhoneUI_Demo_v2_18_LiveState.rbxlx` | Previous build with normalized payloads, live stats, and hardened animation lifecycle. |
+| `SoftPhoneUI_Demo_v2_19_FeedbackPolish.rbxlx` | Latest build with global action feedback, keyboard Back, and hardened window transitions. |
 | `SoftPhoneUI_Package.rbxmx` | Insertable model package with modules and ScreenGui. |
 | `src/` | Rojo-style source tree. |
 | `assets/icons/*.svg` | Editable vector icon sources. |
@@ -45,10 +48,17 @@ White futuristic flip-phone sidebar and six `.exe`-style feature windows for Rob
 - Every app action is published through `PlayerGui.SoftPhoneUI.SoftPhoneAction`.
 - Job display name, level, and XP stay synchronized with player data.
 - External LocalScripts can explicitly open, close, query, or toggle windows and the phone panel.
+- Gamepad `ButtonB` closes the active window first, then retracts the phone panel.
+- Full-screen Gacha retracts the sidebar whether opened by a click or controller command.
+- Gacha and Messages continue following their configured player stats after mount.
+- Repeated external phone commands safely cancel and replace active panel tweens.
+- App commands display a compact pink confirmation toast above every window.
+- Rapid open and close commands safely replace active window transitions.
+- Keyboard `Escape` follows the same close-window-then-phone behavior as gamepad `ButtonB`.
 
 ## Studio Install
 
-1. Insert the latest `SoftPhoneUI_Package_v2_16_ControllerReady.rbxmx` into your existing place.
+1. Insert the latest `SoftPhoneUI_Package_v2_19_FeedbackPolish.rbxmx` into your existing place.
 2. Move `SoftPhoneModules` into `ReplicatedStorage`.
 3. Move `SoftPhoneWearables` into `ReplicatedStorage`.
 4. Move `SoftPhoneUI` into `StarterGui`.
@@ -63,6 +73,7 @@ ReplicatedStorage
     Theme
     TweenUtil
     IconDraw
+    NotificationCenter
     Sidebar
     WindowChrome
     ShopWindow
@@ -141,6 +152,7 @@ The sidebar automatically reads these numeric player attributes or `leaderstats`
 - `Level`
 - `XP`
 - `XPToNext`
+- `UnreadMessages`
 
 Without game-provided values, the polished demo values remain visible. The Job app also displays `Players.LocalPlayer.DisplayName`.
 
@@ -148,7 +160,7 @@ Gacha also reads optional numeric `GachaTokens` and `GachaPity` values when the 
 
 ## Action Integration
 
-`SoftPhoneAction` is a `BindableEvent` created under the player's `SoftPhoneUI` ScreenGui. It emits `appId`, `actionName`, and an optional payload.
+`SoftPhoneAction` is a `BindableEvent` created under the player's `SoftPhoneUI` ScreenGui. It emits `appId`, `actionName`, and a payload table.
 
 ```lua
 local playerGui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
@@ -160,7 +172,7 @@ actions.Event:Connect(function(appId, actionName, payload)
 end)
 ```
 
-Shop emits item keys or preview angles as payloads. Other apps emit structured tables containing values such as tokens, pity, rewards, routes, unread counts, destinations, and job state. A game-specific LocalScript should validate any action before forwarding it to the server.
+Shop payloads contain fields such as `ItemKey` or `Angle`. Other apps emit tables containing values such as tokens, pity, rewards, routes, unread counts, destinations, and job state. Feature-app payloads also include `Result`. A game-specific LocalScript should validate any action before forwarding it to the server.
 
 ## Window Controller
 
@@ -175,6 +187,7 @@ controller:Invoke("Toggle", "Messages")
 controller:Invoke("CloseAll")
 local activeApp = controller:Invoke("GetActive")
 local hasMap = controller:Invoke("IsAvailable", "Map")
+local phoneOpen = controller:Invoke("IsPhoneExpanded")
 controller:Invoke("SetPhoneExpanded", true)
 controller:Invoke("TogglePhone")
 ```

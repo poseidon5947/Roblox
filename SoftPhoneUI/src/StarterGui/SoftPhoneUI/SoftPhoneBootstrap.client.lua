@@ -5,7 +5,10 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ContextActionService = game:GetService("ContextActionService")
 local Workspace = game:GetService("Workspace")
+
+local BACK_ACTION = "SoftPhoneBack"
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -82,9 +85,14 @@ windowHost.Parent = screenGui
 
 local sidebar
 local manager
+local notifications
 local oldActionEvent = screenGui:FindFirstChild("SoftPhoneAction")
 if oldActionEvent then
 	oldActionEvent:Destroy()
+end
+local oldBridge = screenGui:FindFirstChild("SoftPhoneWindowManager")
+if oldBridge then
+	oldBridge:Destroy()
 end
 local actionEvent = Instance.new("BindableEvent")
 actionEvent.Name = "SoftPhoneAction"
@@ -99,24 +107,29 @@ local ok, initError = pcall(function()
 	local windowManagerModule = modules:WaitForChild("WindowManager", 10)
 	assert(windowManagerModule, "SoftPhoneModules.WindowManager was not found")
 	local WindowManager = require(windowManagerModule)
+	local notificationModule = modules:WaitForChild("NotificationCenter", 10)
+	assert(notificationModule, "SoftPhoneModules.NotificationCenter was not found")
+	local NotificationCenter = require(notificationModule)
+	notifications = NotificationCenter.new(screenGui)
 
 	manager = WindowManager.new(windowHost, function(activeId: string?)
 		if sidebar then
 			sidebar:setActive(activeId)
+			if activeId == "Gacha" and sidebar:isExpanded() then
+				sidebar:setExpanded(false, false)
+			end
 		end
 	end, function(eventName: string, value)
 		if sidebar and eventName == "MessagesUnread" then
 			sidebar:setBadge("Messages", tostring(value))
 		end
 	end, function(appId: string, actionName: string, payload)
+		notifications:show(appId, actionName, payload)
 		actionEvent:Fire(appId, actionName, payload)
 	end)
 
 	sidebar = Sidebar.new(screenGui, function(id: string)
-		local activeId = manager:open(id)
-		if activeId == "Gacha" and sidebar:isExpanded() then
-			sidebar:setExpanded(false, false)
-		end
+		manager:open(id)
 	end)
 
 	local bridge = Instance.new("BindableFunction")
@@ -136,6 +149,8 @@ local ok, initError = pcall(function()
 			return manager:getActive()
 		elseif commandOrId == "IsAvailable" then
 			return manager:isAvailable(id)
+		elseif commandOrId == "IsPhoneExpanded" then
+			return sidebar:isExpanded()
 		elseif commandOrId == "SetPhoneExpanded" then
 			local expanded = typeof(targetOrValue) == "boolean" and targetOrValue or value == true
 			sidebar:setExpanded(expanded, false)
@@ -147,17 +162,39 @@ local ok, initError = pcall(function()
 		return manager:open(commandOrId)
 	end
 	bridge.Parent = screenGui
+
+	ContextActionService:BindAction(BACK_ACTION, function(_, inputState)
+		if inputState ~= Enum.UserInputState.Begin then
+			return Enum.ContextActionResult.Pass
+		end
+		if manager:getActive() then
+			manager:closeAll(false)
+			return Enum.ContextActionResult.Sink
+		end
+		if sidebar:isExpanded() then
+			sidebar:setExpanded(false, false)
+			return Enum.ContextActionResult.Sink
+		end
+		return Enum.ContextActionResult.Pass
+	end, false, Enum.KeyCode.ButtonB, Enum.KeyCode.Escape)
 end)
 
 if ok then
+	screenGui.Destroying:Connect(function()
+		ContextActionService:UnbindAction(BACK_ACTION)
+	end)
 	if staticLauncher then
 		staticLauncher:Destroy()
 		staticLauncher = nil
 	end
 	print("[SoftPhoneUI] Ready - click the gem on the edge tab to open Furu Phone.")
 else
+	ContextActionService:UnbindAction(BACK_ACTION)
 	windowHost:Destroy()
 	actionEvent:Destroy()
+	if notifications and notifications.Root then
+		notifications.Root:Destroy()
+	end
 	local errorLabel = staticLauncher :: GuiButton
 	errorLabel.Name = "SoftPhoneError"
 	errorLabel.Text = "UI ERROR\nCHECK OUTPUT"
