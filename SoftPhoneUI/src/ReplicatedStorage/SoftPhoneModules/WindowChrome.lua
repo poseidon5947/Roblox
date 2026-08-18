@@ -410,7 +410,51 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	liveText.Position = UDim2.fromOffset(20, 0)
 	liveText.Size = UDim2.new(1, -22, 1, 0)
 
-	local function makeSystemButton(name: string, color: Color3, order: number, text: string): TextButton
+	local function addSystemGlyph(button: TextButton, glyphName: string)
+		local glyph = Instance.new("Frame")
+		glyph.Name = "Glyph"
+		glyph.AnchorPoint = Vector2.new(0.5, 0.5)
+		glyph.Position = UDim2.fromScale(0.5, 0.5)
+		glyph.Size = UDim2.fromOffset(14, 14)
+		glyph.BackgroundTransparency = 1
+		glyph.ZIndex = button.ZIndex + 1
+		glyph.Parent = button
+
+		local function line(name: string, position: UDim2, size: UDim2, rotation: number?)
+			local item = Instance.new("Frame")
+			item.Name = name
+			item.AnchorPoint = Vector2.new(0.5, 0.5)
+			item.Position = position
+			item.Size = size
+			item.BackgroundColor3 = Theme.Colors.TextPrimary
+			item.BorderSizePixel = 0
+			item.Rotation = rotation or 0
+			item.ZIndex = glyph.ZIndex + 1
+			item.Parent = glyph
+			addCorner(item, 2)
+			return item
+		end
+
+		if glyphName == "Minimize" then
+			line("Line", UDim2.fromScale(0.5, 0.68), UDim2.fromOffset(11, 2))
+		elseif glyphName == "Maximize" then
+			local square = Instance.new("Frame")
+			square.Name = "Square"
+			square.AnchorPoint = Vector2.new(0.5, 0.5)
+			square.Position = UDim2.fromScale(0.5, 0.5)
+			square.Size = UDim2.fromOffset(10, 10)
+			square.BackgroundTransparency = 1
+			square.ZIndex = glyph.ZIndex + 1
+			square.Parent = glyph
+			addCorner(square, 2)
+			addStroke(square, Theme.Colors.TextPrimary, 1.5, 0)
+		else
+			line("SlashA", UDim2.fromScale(0.5, 0.5), UDim2.fromOffset(12, 2), 45)
+			line("SlashB", UDim2.fromScale(0.5, 0.5), UDim2.fromOffset(12, 2), -45)
+		end
+	end
+
+	local function makeSystemButton(name: string, color: Color3, order: number, tooltipText: string): (TextButton, TextLabel)
 		local button = Instance.new("TextButton")
 		button.Name = name
 		button.AutoButtonColor = false
@@ -419,26 +463,38 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 		button.AnchorPoint = Vector2.new(1, 0.5)
 		button.Position = UDim2.new(1, -10 - (order * 38), 0.5, 0)
 		button.Size = UDim2.fromOffset(32, 32)
-		button.Font = Theme.Fonts.Title
-		button.Text = text
-		button.TextSize = 11
-		button.TextColor3 = Theme.Colors.TextPrimary
+		button.ClipsDescendants = false
+		button.Text = ""
 		button.ZIndex = 45
 		button.Parent = titleBar
 		addCorner(button, 9)
 		addStroke(button, Color3.fromRGB(255, 255, 255), 1, 0.2)
+		addSystemGlyph(button, name)
+
+		local tooltip = makeText(button, "Tooltip", tooltipText, Theme.Fonts.Title, 9, Theme.Colors.TextPrimary, 62)
+		tooltip.AnchorPoint = Vector2.new(1, 0)
+		tooltip.Position = UDim2.new(1, 0, 1, 7)
+		tooltip.Size = UDim2.fromOffset(72, 22)
+		tooltip.BackgroundTransparency = 0
+		tooltip.BackgroundColor3 = Theme.Colors.AccentCream
+		tooltip.TextXAlignment = Enum.TextXAlignment.Center
+		tooltip.Visible = false
+		addCorner(tooltip, 6)
+		addStroke(tooltip, Theme.Colors.ButtonStroke, 1, 0.22)
 		button.MouseEnter:Connect(function()
+			tooltip.Visible = true
 			TweenUtil.play(button, { BackgroundTransparency = 0.22 }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
 		end)
 		button.MouseLeave:Connect(function()
+			tooltip.Visible = false
 			TweenUtil.play(button, { BackgroundTransparency = 0 }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
 		end)
-		return button
+		return button, tooltip
 	end
 
-	local minimizeButton = makeSystemButton("Minimize", Theme.Colors.Minimize, 2, "_")
-	local maximizeButton = makeSystemButton("Maximize", Theme.Colors.Maximize, 1, "[]")
-	local closeButton = makeSystemButton("Close", Theme.Colors.CloseRed, 0, "X")
+	local minimizeButton, minimizeTooltip = makeSystemButton("Minimize", Theme.Colors.Minimize, 2, "Minimize")
+	local maximizeButton, maximizeTooltip = makeSystemButton("Maximize", Theme.Colors.Maximize, 1, "Maximize")
+	local closeButton, closeTooltip = makeSystemButton("Close", Theme.Colors.CloseRed, 0, "Close")
 	minimizeButton.Visible = not fullScreen
 	maximizeButton.Visible = not fullScreen
 
@@ -518,6 +574,7 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 		_minimized = false,
 		_maximized = false,
 		_visibilityTween = nil,
+		_sizeTween = nil,
 	}
 
 	local normalSize = root.Size
@@ -548,33 +605,68 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	parent:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateViewportLayout)
 
 	local function setMinimized(minimized: boolean)
+		if handle._sizeTween then
+			handle._sizeTween:Cancel()
+			handle._sizeTween = nil
+		end
+		if minimized and handle._maximized then
+			handle._maximized = false
+			maximizeTooltip.Text = "Maximize"
+			root.Position = normalPosition
+			root.Size = normalSize
+		end
 		handle._minimized = minimized
+		minimizeTooltip.Text = minimized and "Restore" or "Minimize"
 		content.Visible = not minimized
 		menuBar.Visible = not minimized
 		footer.Visible = not minimized
 		sizeConstraint.MinSize = minimized and Vector2.new(300, 56) or Vector2.new(300, 300)
 		local targetSize = minimized and UDim2.new(normalSize.X.Scale, normalSize.X.Offset, 0, 56) or normalSize
-		TweenUtil.play(root, { Size = targetSize }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+		local tween = TweenUtil.play(root, { Size = targetSize }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
+		handle._sizeTween = tween
+		tween.Completed:Connect(function()
+			if handle._sizeTween == tween then
+				handle._sizeTween = nil
+			end
+		end)
 	end
 
 	local function setMaximized(maximized: boolean)
+		if handle._sizeTween then
+			handle._sizeTween:Cancel()
+			handle._sizeTween = nil
+		end
 		if handle._minimized then
-			setMinimized(false)
+			handle._minimized = false
+			minimizeTooltip.Text = "Minimize"
+			content.Visible = true
+			menuBar.Visible = true
+			footer.Visible = true
+			sizeConstraint.MinSize = Vector2.new(300, 300)
+			root.Size = normalSize
 		end
 		handle._maximized = maximized
+		maximizeTooltip.Text = maximized and "Restore" or "Maximize"
+		local tween
 		if maximized then
 			normalSize = root.Size
 			normalPosition = root.Position
-			TweenUtil.play(root, {
+			tween = TweenUtil.play(root, {
 				Position = UDim2.fromScale(0.5, 0.5),
 				Size = fullScreen and UDim2.fromScale(1, 1) or UDim2.fromScale(0.88, 0.84),
 			}, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
 		else
-			TweenUtil.play(root, {
+			tween = TweenUtil.play(root, {
 				Position = normalPosition,
 				Size = normalSize,
 			}, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
 		end
+		handle._sizeTween = tween
+		tween.Completed:Connect(function()
+			if handle._sizeTween == tween then
+				handle._sizeTween = nil
+			end
+		end)
 	end
 
 	function handle:isOpen()
@@ -589,7 +681,7 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 		end
 		if instant then
 			root.Visible = visible
-			root.Position = visible and openPosition(fullScreen) or closedPosition()
+			root.Position = visible and (self._maximized and UDim2.fromScale(0.5, 0.5) or openPosition(fullScreen)) or closedPosition()
 			root.BackgroundTransparency = 0
 			return
 		end
@@ -601,8 +693,9 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 			root.Visible = true
 			root.Position = closedPosition()
 			root.BackgroundTransparency = 0.28
+			local targetPosition = self._maximized and UDim2.fromScale(0.5, 0.5) or openPosition(fullScreen)
 			local tween = TweenUtil.play(root, {
-				Position = openPosition(fullScreen),
+				Position = targetPosition,
 				BackgroundTransparency = 0,
 			}, Theme.Tween.WindowTime, Theme.Tween.SlideStyle, Theme.Tween.SlideDir)
 			self._visibilityTween = tween
@@ -636,6 +729,7 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 		setMaximized(not handle._maximized)
 	end)
 	closeButton.Activated:Connect(function()
+		closeTooltip.Visible = false
 		handle:setVisible(false, false)
 		if onClose then
 			onClose()
@@ -647,7 +741,7 @@ function WindowChrome.create(parent: Instance, id: string, title: string, onClos
 	local startPosition = root.Position
 
 	titleBar.InputBegan:Connect(function(input)
-		if not fullScreen and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+		if not fullScreen and not handle._maximized and not handle._minimized and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
 			dragging = true
 			dragStart = input.Position
 			startPosition = root.Position
@@ -696,11 +790,6 @@ function WindowChrome.addFooterButton(footer: Frame, text: string, order: number
 	button.Parent = footer
 	addCorner(button, 8)
 	addStroke(button, Theme.Colors.ButtonStroke, 1.5, 0.18)
-	addGradient(button, {
-		Color3.fromRGB(255, 255, 255),
-		Theme.Colors.ButtonFillHover,
-	}, 90)
-
 	button.MouseEnter:Connect(function()
 		TweenUtil.play(button, { BackgroundColor3 = Theme.Colors.ButtonFillHover }, Theme.Tween.QuickTime, Enum.EasingStyle.Quad)
 	end)

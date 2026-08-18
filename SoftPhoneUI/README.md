@@ -20,7 +20,8 @@ White futuristic flip-phone sidebar and six `.exe`-style feature windows for Rob
 | `SoftPhoneUI_Demo_v2_16_ControllerReady.rbxlx` | Previous build with structured action payloads and explicit controller commands. |
 | `SoftPhoneUI_Demo_v2_17_CrossPlatform.rbxlx` | Previous build with consistent controller behavior and gamepad Back. |
 | `SoftPhoneUI_Demo_v2_18_LiveState.rbxlx` | Previous build with normalized payloads, live stats, and hardened animation lifecycle. |
-| `SoftPhoneUI_Demo_v2_19_FeedbackPolish.rbxlx` | Latest build with global action feedback, keyboard Back, and hardened window transitions. |
+| `SoftPhoneUI_Demo_v2_19_FeedbackPolish.rbxlx` | Previous build with global action feedback, keyboard Back, and hardened window transitions. |
+| `SoftPhoneUI_Demo_v2_20_WindowPolish.rbxlx` | Latest build with refined window controls, flat command tabs, and consistent window states. |
 | `SoftPhoneUI_Package.rbxmx` | Insertable model package with modules and ScreenGui. |
 | `src/` | Rojo-style source tree. |
 | `assets/icons/*.svg` | Editable vector icon sources. |
@@ -55,10 +56,13 @@ White futuristic flip-phone sidebar and six `.exe`-style feature windows for Rob
 - App commands display a compact pink confirmation toast above every window.
 - Rapid open and close commands safely replace active window transitions.
 - Keyboard `Escape` follows the same close-window-then-phone behavior as gamepad `ButtonB`.
+- Window controls use clean drawn symbols with hover tooltips instead of text approximations.
+- Minimize, maximize, restore, and rapid resize commands preserve a consistent window state.
+- Footer commands use flat light-pink tabs with visible hover feedback.
 
 ## Studio Install
 
-1. Insert the latest `SoftPhoneUI_Package_v2_19_FeedbackPolish.rbxmx` into your existing place.
+1. Insert the latest `SoftPhoneUI_Package_v2_20_WindowPolish.rbxmx` into your existing place.
 2. Move `SoftPhoneModules` into `ReplicatedStorage`.
 3. Move `SoftPhoneWearables` into `ReplicatedStorage`.
 4. Move `SoftPhoneUI` into `StarterGui`.
