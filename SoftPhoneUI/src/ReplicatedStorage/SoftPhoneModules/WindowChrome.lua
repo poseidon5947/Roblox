@@ -101,25 +101,6 @@ local function makeText(parent: Instance, name: string, text: string, font: Enum
 	return label
 end
 
-local function addUploadedIcon(parent: Instance, iconName: string, zIndex: number): boolean
-	local imageId = Theme.IconImages and Theme.IconImages[iconName]
-	if typeof(imageId) ~= "string" or imageId == "" then
-		return false
-	end
-
-	local image = Instance.new("ImageLabel")
-	image.Name = "AppIconImage"
-	image.BackgroundTransparency = 1
-	image.Image = imageId
-	image.ScaleType = Enum.ScaleType.Fit
-	image.AnchorPoint = Vector2.new(0.5, 0.5)
-	image.Position = UDim2.fromScale(0.5, 0.5)
-	image.Size = UDim2.fromScale(0.78, 0.78)
-	image.ZIndex = zIndex
-	image.Parent = parent
-	return true
-end
-
 local function addSparkle(parent: Instance, position: UDim2, size: number, zIndex: number)
 	local sparkle = Instance.new("Frame")
 	sparkle.Name = "Sparkle"
@@ -166,11 +147,12 @@ local function addAppBadge(parent: Instance, id: string, title: string, zIndex: 
 	}, 90)
 
 	local iconName = WINDOW_ICONS[id] or "gem"
-	if not addUploadedIcon(appBadge, iconName, zIndex + 3) then
-		local glyph = makeText(appBadge, "Glyph", string.upper(string.sub(title, 1, 1)), Theme.Fonts.Title, 18, Theme.Colors.AccentPinkDeep, zIndex + 3)
-		glyph.Size = UDim2.fromScale(1, 1)
-		glyph.TextXAlignment = Enum.TextXAlignment.Center
-	end
+	local appIcon = IconDraw.makeCircleIcon(appBadge, iconName, Theme.Colors.AccentCream)
+	appIcon.Name = "AppIcon"
+	appIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+	appIcon.Position = UDim2.fromScale(0.5, 0.5)
+	appIcon.Size = UDim2.fromOffset(32, 32)
+	appIcon.ZIndex = zIndex + 2
 
 	addSparkle(appBadge, UDim2.fromOffset(29, 4), 6, zIndex + 4)
 	return appBadge
@@ -205,12 +187,9 @@ end
 
 local function addBowDecoration(parent: Instance, position: UDim2, zIndex: number)
 	local image = addImageDecoration(parent, "BowDecoration", "bowHeart", position, UDim2.fromOffset(34, 28), zIndex + 4)
-	if image then
-		return
-	end
 
 	local bow = Instance.new("Frame")
-	bow.Name = "BowDecoration"
+	bow.Name = "NativeBowDecoration"
 	bow.BackgroundTransparency = 1
 	bow.Position = position
 	bow.Size = UDim2.fromOffset(56, 40)
@@ -283,23 +262,21 @@ local function addBowDecoration(parent: Instance, position: UDim2, zIndex: numbe
 
 	addSparkle(bow, UDim2.fromOffset(8, 4), 8, zIndex + 4)
 	addSparkle(bow, UDim2.fromOffset(44, 19), 6, zIndex + 4)
+	IconDraw.bindImageFallback(image, bow)
 end
 
 local function addGemDecoration(parent: Instance, position: UDim2, size: number, zIndex: number)
 	local image = addImageDecoration(parent, "GemDecoration", size >= 18 and "gemDiamond" or "gemHeart", position, UDim2.fromOffset(size, size), zIndex + 2)
-	if image then
-		addSparkle(parent, UDim2.new(position.X.Scale, position.X.Offset + size, position.Y.Scale, position.Y.Offset - 4), 7, zIndex + 4)
-		return
-	end
 
 	local gemHost = Instance.new("Frame")
-	gemHost.Name = "GemDecoration"
+	gemHost.Name = "NativeGemDecoration"
 	gemHost.BackgroundTransparency = 1
 	gemHost.Position = position
 	gemHost.Size = UDim2.fromOffset(size + 8, size + 8)
 	gemHost.ZIndex = zIndex
 	gemHost.Parent = parent
 	IconDraw.makeGem(gemHost, size)
+	IconDraw.bindImageFallback(image, gemHost)
 	addSparkle(parent, UDim2.new(position.X.Scale, position.X.Offset + size, position.Y.Scale, position.Y.Offset - 4), 7, zIndex + 2)
 end
 

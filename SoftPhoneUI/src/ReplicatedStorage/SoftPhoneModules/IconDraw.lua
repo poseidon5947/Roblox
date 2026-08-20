@@ -1,7 +1,6 @@
 --[[
 	Glossy UI icon builder.
-	Uses uploaded ImageLabel assets when Theme.IconImages has ids; otherwise draws
-	polished Roblox-native icons from Frames, UIStroke, UICorner, and UIGradient.
+	Native art remains visible until an optional uploaded image is confirmed loaded.
 ]]
 
 local Theme = require(script.Parent.Theme)
@@ -66,10 +65,10 @@ local function frame(parent: Instance, name: string, color: Color3, pos: UDim2, 
 	return f
 end
 
-local function addImage(parent: Instance, iconName: string, z: number): boolean
+local function addImage(parent: Instance, iconName: string, z: number): ImageLabel?
 	local id = imageId(iconName)
 	if not id then
-		return false
+		return nil
 	end
 	local img = Instance.new("ImageLabel")
 	img.Name = "UploadedIcon"
@@ -82,7 +81,22 @@ local function addImage(parent: Instance, iconName: string, z: number): boolean
 	img.ZIndex = z
 	img.Parent = parent
 	corner(img, 999)
-	return true
+	return img
+end
+
+function IconDraw.bindImageFallback(image: ImageLabel?, fallback: GuiObject)
+	if not image then
+		fallback.Visible = true
+		return
+	end
+
+	local function refresh()
+		if fallback.Parent and image.Parent then
+			fallback.Visible = not image.IsLoaded
+		end
+	end
+	refresh()
+	image:GetPropertyChangedSignal("IsLoaded"):Connect(refresh)
 end
 
 local function addShine(parent: Instance, z: number)
@@ -323,6 +337,15 @@ local function drawDelivery(parent: Instance, z: number)
 	frame(parcel, "Tape", WHITE, UDim2.fromScale(0.4, 0), UDim2.fromScale(0.2, 1), z + 2, 1)
 end
 
+local function drawGemIcon(parent: Instance, z: number)
+	local diamond = frame(parent, "Diamond", HOT_PINK, UDim2.fromScale(0.3, 0.3), UDim2.fromScale(0.4, 0.4), z, 5)
+	diamond.Rotation = 45
+	gradient(diamond, { Color3.fromRGB(255, 240, 251), HOT_PINK, LAVENDER }, 90)
+	stroke(diamond, WHITE, 1.8, 0.02)
+	local shine = frame(parent, "GemShine", WHITE, UDim2.fromScale(0.37, 0.28), UDim2.fromScale(0.12, 0.12), z + 1, 2)
+	shine.Rotation = 45
+end
+
 local DRAWERS = {
 	bag = drawBag,
 	star = drawGacha,
@@ -347,6 +370,8 @@ local DRAWERS = {
 	briefcase = drawBriefcase,
 	document = drawDocument,
 	delivery = drawDelivery,
+	gem = drawGemIcon,
+	crystal = drawGemIcon,
 }
 
 function IconDraw.makeCircleIcon(parent: Instance, iconName: string, color: Color3?): Frame
@@ -358,12 +383,13 @@ function IconDraw.makeCircleIcon(parent: Instance, iconName: string, color: Colo
 	gradient(wrap, { WHITE, Theme.Colors.AccentCream, Color3.fromRGB(245, 236, 255) }, 90)
 	addShine(wrap, parentZ + 2)
 
-	if not addImage(wrap, iconName, parentZ + 4) then
-		local drawer = DRAWERS[iconName]
-		if drawer then
-			drawer(wrap, parentZ + 3)
-		end
+	local fallback = frame(wrap, "NativeIcon", WHITE, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), parentZ + 3)
+	fallback.BackgroundTransparency = 1
+	local drawer = DRAWERS[iconName]
+	if drawer then
+		drawer(fallback, parentZ + 3)
 	end
+	IconDraw.bindImageFallback(addImage(wrap, iconName, parentZ + 6), fallback)
 
 	return wrap
 end
@@ -376,16 +402,15 @@ function IconDraw.makeGem(parent: Instance, size: number): Frame
 	gradient(wrap, { Color3.fromRGB(255, 244, 252), HOT_PINK, PINK, LAVENDER }, 90)
 	stroke(wrap, WHITE, 2.5, 0)
 
-	if addImage(wrap, "gem", z + 5) then
-		return wrap
-	end
-
-	local facetA = frame(wrap, "FacetA", Color3.fromRGB(255, 230, 248), UDim2.fromScale(0.1, 0.12), UDim2.fromScale(0.5, 0.22), z + 1, 3)
+	local fallback = frame(wrap, "NativeGem", WHITE, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), z + 1)
+	fallback.BackgroundTransparency = 1
+	local facetA = frame(fallback, "FacetA", Color3.fromRGB(255, 230, 248), UDim2.fromScale(0.1, 0.12), UDim2.fromScale(0.5, 0.22), z + 1, 3)
 	facetA.BackgroundTransparency = 0.12
-	local facetB = frame(wrap, "FacetB", Color3.fromRGB(255, 113, 195), UDim2.fromScale(0.48, 0.2), UDim2.fromScale(0.28, 0.54), z + 1, 3)
+	local facetB = frame(fallback, "FacetB", Color3.fromRGB(255, 113, 195), UDim2.fromScale(0.48, 0.2), UDim2.fromScale(0.28, 0.54), z + 1, 3)
 	facetB.BackgroundTransparency = 0.2
-	local sparkle = frame(wrap, "Sparkle", WHITE, UDim2.fromScale(0.23, 0.22), UDim2.fromScale(0.13, 0.13), z + 2, 2)
+	local sparkle = frame(fallback, "Sparkle", WHITE, UDim2.fromScale(0.23, 0.22), UDim2.fromScale(0.13, 0.13), z + 2, 2)
 	sparkle.Rotation = 45
+	IconDraw.bindImageFallback(addImage(wrap, "gem", z + 5), fallback)
 	return wrap
 end
 

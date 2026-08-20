@@ -130,12 +130,9 @@ end
 local function addBow(parent: Instance, position: UDim2, zIndex: number, imageName: string?, size: Vector2?)
 	local bowSize = size or Vector2.new(42, 34)
 	local image = addImageDecoration(parent, "BowDecoration", imageName or "bowHeart", position, UDim2.fromOffset(bowSize.X, bowSize.Y), zIndex + 4)
-	if image then
-		return image
-	end
 
 	local bow = Instance.new("Frame")
-	bow.Name = "BowDecoration"
+	bow.Name = "NativeBowDecoration"
 	bow.BackgroundTransparency = 1
 	bow.Position = position
 	bow.Size = UDim2.fromOffset(54, 38)
@@ -208,24 +205,23 @@ local function addBow(parent: Instance, position: UDim2, zIndex: number, imageNa
 
 	addSparkle(bow, UDim2.fromOffset(8, 3), 8, zIndex + 4)
 	addSparkle(bow, UDim2.fromOffset(42, 17), 6, zIndex + 4)
+	IconDraw.bindImageFallback(image, bow)
 
 	return bow
 end
 
 local function addGem(parent: Instance, position: UDim2, size: number, zIndex: number, imageName: string?)
 	local image = addImageDecoration(parent, "GemDecoration", imageName or "gemDiamond", position, UDim2.fromOffset(size, size), zIndex + 2)
-	if image then
-		return image
-	end
 
 	local gemHost = Instance.new("Frame")
-	gemHost.Name = "GemDecoration"
+	gemHost.Name = "NativeGemDecoration"
 	gemHost.BackgroundTransparency = 1
 	gemHost.Position = position
 	gemHost.Size = UDim2.fromOffset(size + 8, size + 8)
 	gemHost.ZIndex = zIndex
 	gemHost.Parent = parent
 	IconDraw.makeGem(gemHost, size)
+	IconDraw.bindImageFallback(image, gemHost)
 	return gemHost
 end
 
@@ -327,12 +323,9 @@ function Sidebar:_build()
 	gemHit.Parent = tab
 	self.GemButton = gemHit
 
-	if not addImageDecoration(gemHit, "GemArt", "gemDiamond", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 241) then
-		IconDraw.makeGem(gemHit, Theme.Sizes.GemSize)
-	end
-
-	addImageDecoration(tab, "TopTabGem", "gemHeart", UDim2.new(0.5, -8, 0, 144), UDim2.fromOffset(16, 16), 232)
-	addImageDecoration(tab, "BottomTabGem", "gemDiamond", UDim2.new(0.5, -8, 1, -56), UDim2.fromOffset(16, 16), 232)
+	addGem(gemHit, UDim2.fromScale(0, 0), Theme.Sizes.GemSize, 241, "gemDiamond")
+	addGem(tab, UDim2.new(0.5, -8, 0, 144), 16, 232, "gemHeart")
+	addGem(tab, UDim2.new(0.5, -8, 1, -56), 16, 232, "gemDiamond")
 
 	local header = Instance.new("Frame")
 	header.Name = "Header"
@@ -442,9 +435,7 @@ function Sidebar:_build()
 	currencyGem.Size = UDim2.fromOffset(22, 22)
 	currencyGem.ZIndex = 204
 	currencyGem.Parent = currency
-	if not addImageDecoration(currencyGem, "GemImage", "gemDiamond", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 205) then
-		IconDraw.makeGem(currencyGem, 18)
-	end
+	addGem(currencyGem, UDim2.fromScale(0, 0), 18, 205, "gemDiamond")
 
 	local activePill = Instance.new("Frame")
 	activePill.Name = "ActiveAppPill"

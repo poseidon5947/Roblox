@@ -21,7 +21,8 @@ White futuristic flip-phone sidebar and six `.exe`-style feature windows for Rob
 | `SoftPhoneUI_Demo_v2_17_CrossPlatform.rbxlx` | Previous build with consistent controller behavior and gamepad Back. |
 | `SoftPhoneUI_Demo_v2_18_LiveState.rbxlx` | Previous build with normalized payloads, live stats, and hardened animation lifecycle. |
 | `SoftPhoneUI_Demo_v2_19_FeedbackPolish.rbxlx` | Previous build with global action feedback, keyboard Back, and hardened window transitions. |
-| `SoftPhoneUI_Demo_v2_20_WindowPolish.rbxlx` | Latest build with refined window controls, flat command tabs, and consistent window states. |
+| `SoftPhoneUI_Demo_v2_20_WindowPolish.rbxlx` | Previous build with refined window controls, flat command tabs, and consistent window states. |
+| `SoftPhoneUI_Demo_v2_21_PortableAssets.rbxlx` | Latest build with cross-owner fallbacks for every uploaded icon, decoration, and shop image. |
 | `SoftPhoneUI_Package.rbxmx` | Insertable model package with modules and ScreenGui. |
 | `src/` | Rojo-style source tree. |
 | `assets/icons/*.svg` | Editable vector icon sources. |
@@ -59,10 +60,12 @@ White futuristic flip-phone sidebar and six `.exe`-style feature windows for Rob
 - Window controls use clean drawn symbols with hover tooltips instead of text approximations.
 - Minimize, maximize, restore, and rapid resize commands preserve a consistent window state.
 - Footer commands use flat light-pink tabs with visible hover feedback.
+- Native logos, gems, bows, and shop artwork remain visible when uploaded image IDs are unavailable.
+- Uploaded artwork automatically replaces native fallbacks only after Roblox confirms it loaded.
 
 ## Studio Install
 
-1. Insert the latest `SoftPhoneUI_Package_v2_20_WindowPolish.rbxmx` into your existing place.
+1. Insert the latest `SoftPhoneUI_Package_v2_21_PortableAssets.rbxmx` into your existing place.
 2. Move `SoftPhoneModules` into `ReplicatedStorage`.
 3. Move `SoftPhoneWearables` into `ReplicatedStorage`.
 4. Move `SoftPhoneUI` into `StarterGui`.
@@ -103,6 +106,7 @@ Theme.Side = "Left" -- or "Right"
 - The runtime already draws no-text glossy icons from Roblox UI primitives.
 - Upload generated PNGs from `assets/generated/split/`, then paste their asset ids into `Theme.IconImages`.
 - Decoration PNGs live in `assets/generated/decorations/`; the Roblox runtime also draws native bow/gem decorations without uploads.
+- Image assets owned by another user or group may be blocked in the destination experience. v2.21 keeps native artwork visible until each configured image successfully loads.
 - Put finished layered-clothing Accessories in `ReplicatedStorage/SoftPhoneWearables`.
 - Name each Accessory after its shop key, such as `pixel_bow_jacket`.
 - The shop automatically clones a matching Accessory onto its preview avatar.

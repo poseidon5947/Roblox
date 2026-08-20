@@ -124,19 +124,6 @@ local function renderItemArt(parent: Instance, item)
 	end
 
 	local imageId = Theme.ShopItemImages and Theme.ShopItemImages[item.Key]
-	if typeof(imageId) == "string" and imageId ~= "" then
-		local image = Instance.new("ImageLabel")
-		image.Name = "ProductImage"
-		image.BackgroundTransparency = 1
-		image.Size = UDim2.fromScale(1, 1)
-		image.Image = imageId
-		image.ScaleType = Enum.ScaleType.Crop
-		image.ZIndex = (parent:IsA("GuiObject") and parent.ZIndex or 44) + 1
-		image.Parent = parent
-		corner(image, 9)
-		return
-	end
-
 	local canvas = Instance.new("Frame")
 	canvas.Name = "NativeProductArt"
 	canvas.BackgroundColor3 = Color3.fromRGB(255, 244, 252)
@@ -148,6 +135,19 @@ local function renderItemArt(parent: Instance, item)
 	corner(canvas, 9)
 	gradient(canvas, { Color3.fromRGB(255, 255, 255), Color3.fromRGB(255, 230, 247), Color3.fromRGB(242, 239, 255) }, 90)
 	drawNativeItem(canvas, item)
+
+	if typeof(imageId) == "string" and imageId ~= "" then
+		local image = Instance.new("ImageLabel")
+		image.Name = "ProductImage"
+		image.BackgroundTransparency = 1
+		image.Size = UDim2.fromScale(1, 1)
+		image.Image = imageId
+		image.ScaleType = Enum.ScaleType.Crop
+		image.ZIndex = canvas.ZIndex + 2
+		image.Parent = parent
+		corner(image, 9)
+		IconDraw.bindImageFallback(image, canvas)
+	end
 end
 
 local function clearViewport(world: WorldModel)

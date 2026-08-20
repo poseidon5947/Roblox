@@ -10,8 +10,8 @@ const OUT_PLACE = join(ROOT, "SoftPhoneUI_Demo.rbxlx");
 const OUT_MODEL = join(ROOT, "SoftPhoneUI_Package.rbxmx");
 const OUT_PLACE_UPDATED = join(ROOT, "SoftPhoneUI_Demo_Updated.rbxlx");
 const OUT_MODEL_UPDATED = join(ROOT, "SoftPhoneUI_Package_Updated.rbxmx");
-const OUT_PLACE_LATEST = join(ROOT, "SoftPhoneUI_Demo_v2_20_WindowPolish.rbxlx");
-const OUT_MODEL_LATEST = join(ROOT, "SoftPhoneUI_Package_v2_20_WindowPolish.rbxmx");
+const OUT_PLACE_LATEST = join(ROOT, "SoftPhoneUI_Demo_v2_21_PortableAssets.rbxlx");
+const OUT_MODEL_LATEST = join(ROOT, "SoftPhoneUI_Package_v2_21_PortableAssets.rbxmx");
 
 const MODULE_FILES = [
   "Theme.lua",

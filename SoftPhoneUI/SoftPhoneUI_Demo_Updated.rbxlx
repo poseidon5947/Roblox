@@ -48,7 +48,7 @@
 local Theme = {}
 
 Theme.Side = "Right"
-Theme.Version = "2.20"
+Theme.Version = "2.21"
 Theme.EnableSample3DTryOn = false
 Theme.WearablesFolder = "SoftPhoneWearables"
 
@@ -211,8 +211,7 @@ return TweenUtil
         <string name="Name">IconDraw</string>
         <ProtectedString name="Source"><![CDATA[--[[
 	Glossy UI icon builder.
-	Uses uploaded ImageLabel assets when Theme.IconImages has ids; otherwise draws
-	polished Roblox-native icons from Frames, UIStroke, UICorner, and UIGradient.
+	Native art remains visible until an optional uploaded image is confirmed loaded.
 ]]
 
 local Theme = require(script.Parent.Theme)
@@ -277,10 +276,10 @@ local function frame(parent: Instance, name: string, color: Color3, pos: UDim2, 
 	return f
 end
 
-local function addImage(parent: Instance, iconName: string, z: number): boolean
+local function addImage(parent: Instance, iconName: string, z: number): ImageLabel?
 	local id = imageId(iconName)
 	if not id then
-		return false
+		return nil
 	end
 	local img = Instance.new("ImageLabel")
 	img.Name = "UploadedIcon"
@@ -293,7 +292,22 @@ local function addImage(parent: Instance, iconName: string, z: number): boolean
 	img.ZIndex = z
 	img.Parent = parent
 	corner(img, 999)
-	return true
+	return img
+end
+
+function IconDraw.bindImageFallback(image: ImageLabel?, fallback: GuiObject)
+	if not image then
+		fallback.Visible = true
+		return
+	end
+
+	local function refresh()
+		if fallback.Parent and image.Parent then
+			fallback.Visible = not image.IsLoaded
+		end
+	end
+	refresh()
+	image:GetPropertyChangedSignal("IsLoaded"):Connect(refresh)
 end
 
 local function addShine(parent: Instance, z: number)
@@ -534,6 +548,15 @@ local function drawDelivery(parent: Instance, z: number)
 	frame(parcel, "Tape", WHITE, UDim2.fromScale(0.4, 0), UDim2.fromScale(0.2, 1), z + 2, 1)
 end
 
+local function drawGemIcon(parent: Instance, z: number)
+	local diamond = frame(parent, "Diamond", HOT_PINK, UDim2.fromScale(0.3, 0.3), UDim2.fromScale(0.4, 0.4), z, 5)
+	diamond.Rotation = 45
+	gradient(diamond, { Color3.fromRGB(255, 240, 251), HOT_PINK, LAVENDER }, 90)
+	stroke(diamond, WHITE, 1.8, 0.02)
+	local shine = frame(parent, "GemShine", WHITE, UDim2.fromScale(0.37, 0.28), UDim2.fromScale(0.12, 0.12), z + 1, 2)
+	shine.Rotation = 45
+end
+
 local DRAWERS = {
 	bag = drawBag,
 	star = drawGacha,
@@ -558,6 +581,8 @@ local DRAWERS = {
 	briefcase = drawBriefcase,
 	document = drawDocument,
 	delivery = drawDelivery,
+	gem = drawGemIcon,
+	crystal = drawGemIcon,
 }
 
 function IconDraw.makeCircleIcon(parent: Instance, iconName: string, color: Color3?): Frame
@@ -569,12 +594,13 @@ function IconDraw.makeCircleIcon(parent: Instance, iconName: string, color: Colo
 	gradient(wrap, { WHITE, Theme.Colors.AccentCream, Color3.fromRGB(245, 236, 255) }, 90)
 	addShine(wrap, parentZ + 2)
 
-	if not addImage(wrap, iconName, parentZ + 4) then
-		local drawer = DRAWERS[iconName]
-		if drawer then
-			drawer(wrap, parentZ + 3)
-		end
+	local fallback = frame(wrap, "NativeIcon", WHITE, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), parentZ + 3)
+	fallback.BackgroundTransparency = 1
+	local drawer = DRAWERS[iconName]
+	if drawer then
+		drawer(fallback, parentZ + 3)
 	end
+	IconDraw.bindImageFallback(addImage(wrap, iconName, parentZ + 6), fallback)
 
 	return wrap
 end
@@ -587,16 +613,15 @@ function IconDraw.makeGem(parent: Instance, size: number): Frame
 	gradient(wrap, { Color3.fromRGB(255, 244, 252), HOT_PINK, PINK, LAVENDER }, 90)
 	stroke(wrap, WHITE, 2.5, 0)
 
-	if addImage(wrap, "gem", z + 5) then
-		return wrap
-	end
-
-	local facetA = frame(wrap, "FacetA", Color3.fromRGB(255, 230, 248), UDim2.fromScale(0.1, 0.12), UDim2.fromScale(0.5, 0.22), z + 1, 3)
+	local fallback = frame(wrap, "NativeGem", WHITE, UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), z + 1)
+	fallback.BackgroundTransparency = 1
+	local facetA = frame(fallback, "FacetA", Color3.fromRGB(255, 230, 248), UDim2.fromScale(0.1, 0.12), UDim2.fromScale(0.5, 0.22), z + 1, 3)
 	facetA.BackgroundTransparency = 0.12
-	local facetB = frame(wrap, "FacetB", Color3.fromRGB(255, 113, 195), UDim2.fromScale(0.48, 0.2), UDim2.fromScale(0.28, 0.54), z + 1, 3)
+	local facetB = frame(fallback, "FacetB", Color3.fromRGB(255, 113, 195), UDim2.fromScale(0.48, 0.2), UDim2.fromScale(0.28, 0.54), z + 1, 3)
 	facetB.BackgroundTransparency = 0.2
-	local sparkle = frame(wrap, "Sparkle", WHITE, UDim2.fromScale(0.23, 0.22), UDim2.fromScale(0.13, 0.13), z + 2, 2)
+	local sparkle = frame(fallback, "Sparkle", WHITE, UDim2.fromScale(0.23, 0.22), UDim2.fromScale(0.13, 0.13), z + 2, 2)
 	sparkle.Rotation = 45
+	IconDraw.bindImageFallback(addImage(wrap, "gem", z + 5), fallback)
 	return wrap
 end
 
@@ -937,12 +962,9 @@ end
 local function addBow(parent: Instance, position: UDim2, zIndex: number, imageName: string?, size: Vector2?)
 	local bowSize = size or Vector2.new(42, 34)
 	local image = addImageDecoration(parent, "BowDecoration", imageName or "bowHeart", position, UDim2.fromOffset(bowSize.X, bowSize.Y), zIndex + 4)
-	if image then
-		return image
-	end
 
 	local bow = Instance.new("Frame")
-	bow.Name = "BowDecoration"
+	bow.Name = "NativeBowDecoration"
 	bow.BackgroundTransparency = 1
 	bow.Position = position
 	bow.Size = UDim2.fromOffset(54, 38)
@@ -1015,24 +1037,23 @@ local function addBow(parent: Instance, position: UDim2, zIndex: number, imageNa
 
 	addSparkle(bow, UDim2.fromOffset(8, 3), 8, zIndex + 4)
 	addSparkle(bow, UDim2.fromOffset(42, 17), 6, zIndex + 4)
+	IconDraw.bindImageFallback(image, bow)
 
 	return bow
 end
 
 local function addGem(parent: Instance, position: UDim2, size: number, zIndex: number, imageName: string?)
 	local image = addImageDecoration(parent, "GemDecoration", imageName or "gemDiamond", position, UDim2.fromOffset(size, size), zIndex + 2)
-	if image then
-		return image
-	end
 
 	local gemHost = Instance.new("Frame")
-	gemHost.Name = "GemDecoration"
+	gemHost.Name = "NativeGemDecoration"
 	gemHost.BackgroundTransparency = 1
 	gemHost.Position = position
 	gemHost.Size = UDim2.fromOffset(size + 8, size + 8)
 	gemHost.ZIndex = zIndex
 	gemHost.Parent = parent
 	IconDraw.makeGem(gemHost, size)
+	IconDraw.bindImageFallback(image, gemHost)
 	return gemHost
 end
 
@@ -1134,12 +1155,9 @@ function Sidebar:_build()
 	gemHit.Parent = tab
 	self.GemButton = gemHit
 
-	if not addImageDecoration(gemHit, "GemArt", "gemDiamond", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 241) then
-		IconDraw.makeGem(gemHit, Theme.Sizes.GemSize)
-	end
-
-	addImageDecoration(tab, "TopTabGem", "gemHeart", UDim2.new(0.5, -8, 0, 144), UDim2.fromOffset(16, 16), 232)
-	addImageDecoration(tab, "BottomTabGem", "gemDiamond", UDim2.new(0.5, -8, 1, -56), UDim2.fromOffset(16, 16), 232)
+	addGem(gemHit, UDim2.fromScale(0, 0), Theme.Sizes.GemSize, 241, "gemDiamond")
+	addGem(tab, UDim2.new(0.5, -8, 0, 144), 16, 232, "gemHeart")
+	addGem(tab, UDim2.new(0.5, -8, 1, -56), 16, 232, "gemDiamond")
 
 	local header = Instance.new("Frame")
 	header.Name = "Header"
@@ -1249,9 +1267,7 @@ function Sidebar:_build()
 	currencyGem.Size = UDim2.fromOffset(22, 22)
 	currencyGem.ZIndex = 204
 	currencyGem.Parent = currency
-	if not addImageDecoration(currencyGem, "GemImage", "gemDiamond", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 205) then
-		IconDraw.makeGem(currencyGem, 18)
-	end
+	addGem(currencyGem, UDim2.fromScale(0, 0), 18, 205, "gemDiamond")
 
 	local activePill = Instance.new("Frame")
 	activePill.Name = "ActiveAppPill"
@@ -1736,25 +1752,6 @@ local function makeText(parent: Instance, name: string, text: string, font: Enum
 	return label
 end
 
-local function addUploadedIcon(parent: Instance, iconName: string, zIndex: number): boolean
-	local imageId = Theme.IconImages and Theme.IconImages[iconName]
-	if typeof(imageId) ~= "string" or imageId == "" then
-		return false
-	end
-
-	local image = Instance.new("ImageLabel")
-	image.Name = "AppIconImage"
-	image.BackgroundTransparency = 1
-	image.Image = imageId
-	image.ScaleType = Enum.ScaleType.Fit
-	image.AnchorPoint = Vector2.new(0.5, 0.5)
-	image.Position = UDim2.fromScale(0.5, 0.5)
-	image.Size = UDim2.fromScale(0.78, 0.78)
-	image.ZIndex = zIndex
-	image.Parent = parent
-	return true
-end
-
 local function addSparkle(parent: Instance, position: UDim2, size: number, zIndex: number)
 	local sparkle = Instance.new("Frame")
 	sparkle.Name = "Sparkle"
@@ -1801,11 +1798,12 @@ local function addAppBadge(parent: Instance, id: string, title: string, zIndex: 
 	}, 90)
 
 	local iconName = WINDOW_ICONS[id] or "gem"
-	if not addUploadedIcon(appBadge, iconName, zIndex + 3) then
-		local glyph = makeText(appBadge, "Glyph", string.upper(string.sub(title, 1, 1)), Theme.Fonts.Title, 18, Theme.Colors.AccentPinkDeep, zIndex + 3)
-		glyph.Size = UDim2.fromScale(1, 1)
-		glyph.TextXAlignment = Enum.TextXAlignment.Center
-	end
+	local appIcon = IconDraw.makeCircleIcon(appBadge, iconName, Theme.Colors.AccentCream)
+	appIcon.Name = "AppIcon"
+	appIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+	appIcon.Position = UDim2.fromScale(0.5, 0.5)
+	appIcon.Size = UDim2.fromOffset(32, 32)
+	appIcon.ZIndex = zIndex + 2
 
 	addSparkle(appBadge, UDim2.fromOffset(29, 4), 6, zIndex + 4)
 	return appBadge
@@ -1840,12 +1838,9 @@ end
 
 local function addBowDecoration(parent: Instance, position: UDim2, zIndex: number)
 	local image = addImageDecoration(parent, "BowDecoration", "bowHeart", position, UDim2.fromOffset(34, 28), zIndex + 4)
-	if image then
-		return
-	end
 
 	local bow = Instance.new("Frame")
-	bow.Name = "BowDecoration"
+	bow.Name = "NativeBowDecoration"
 	bow.BackgroundTransparency = 1
 	bow.Position = position
 	bow.Size = UDim2.fromOffset(56, 40)
@@ -1918,23 +1913,21 @@ local function addBowDecoration(parent: Instance, position: UDim2, zIndex: numbe
 
 	addSparkle(bow, UDim2.fromOffset(8, 4), 8, zIndex + 4)
 	addSparkle(bow, UDim2.fromOffset(44, 19), 6, zIndex + 4)
+	IconDraw.bindImageFallback(image, bow)
 end
 
 local function addGemDecoration(parent: Instance, position: UDim2, size: number, zIndex: number)
 	local image = addImageDecoration(parent, "GemDecoration", size >= 18 and "gemDiamond" or "gemHeart", position, UDim2.fromOffset(size, size), zIndex + 2)
-	if image then
-		addSparkle(parent, UDim2.new(position.X.Scale, position.X.Offset + size, position.Y.Scale, position.Y.Offset - 4), 7, zIndex + 4)
-		return
-	end
 
 	local gemHost = Instance.new("Frame")
-	gemHost.Name = "GemDecoration"
+	gemHost.Name = "NativeGemDecoration"
 	gemHost.BackgroundTransparency = 1
 	gemHost.Position = position
 	gemHost.Size = UDim2.fromOffset(size + 8, size + 8)
 	gemHost.ZIndex = zIndex
 	gemHost.Parent = parent
 	IconDraw.makeGem(gemHost, size)
+	IconDraw.bindImageFallback(image, gemHost)
 	addSparkle(parent, UDim2.new(position.X.Scale, position.X.Offset + size, position.Y.Scale, position.Y.Offset - 4), 7, zIndex + 2)
 end
 
@@ -2571,19 +2564,6 @@ local function renderItemArt(parent: Instance, item)
 	end
 
 	local imageId = Theme.ShopItemImages and Theme.ShopItemImages[item.Key]
-	if typeof(imageId) == "string" and imageId ~= "" then
-		local image = Instance.new("ImageLabel")
-		image.Name = "ProductImage"
-		image.BackgroundTransparency = 1
-		image.Size = UDim2.fromScale(1, 1)
-		image.Image = imageId
-		image.ScaleType = Enum.ScaleType.Crop
-		image.ZIndex = (parent:IsA("GuiObject") and parent.ZIndex or 44) + 1
-		image.Parent = parent
-		corner(image, 9)
-		return
-	end
-
 	local canvas = Instance.new("Frame")
 	canvas.Name = "NativeProductArt"
 	canvas.BackgroundColor3 = Color3.fromRGB(255, 244, 252)
@@ -2595,6 +2575,19 @@ local function renderItemArt(parent: Instance, item)
 	corner(canvas, 9)
 	gradient(canvas, { Color3.fromRGB(255, 255, 255), Color3.fromRGB(255, 230, 247), Color3.fromRGB(242, 239, 255) }, 90)
 	drawNativeItem(canvas, item)
+
+	if typeof(imageId) == "string" and imageId ~= "" then
+		local image = Instance.new("ImageLabel")
+		image.Name = "ProductImage"
+		image.BackgroundTransparency = 1
+		image.Size = UDim2.fromScale(1, 1)
+		image.Image = imageId
+		image.ScaleType = Enum.ScaleType.Crop
+		image.ZIndex = canvas.ZIndex + 2
+		image.Parent = parent
+		corner(image, 9)
+		IconDraw.bindImageFallback(image, canvas)
+	end
 end
 
 local function clearViewport(world: WorldModel)
